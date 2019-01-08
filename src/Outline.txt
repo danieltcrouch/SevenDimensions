@@ -1,0 +1,145 @@
+***Plug level on ladders, number of cities, etc, and it tells you WB earned
+
+MENU
+Single [Still in Development]
+Multiplayer [Still in Development]
+Helper (For keeping track of money; reminders; attack bonus)
+Rules
+Go to Bibleopoly [Still in Development]
+
+SINGLE
+New Game
+Load Game [Enter Game Code->GAME SCREEN]
+
+MULTIPLAYER
+New Game
+Load Game [Enter Game Code->GAME SCREEN]
+Join Game [Enter Game Code->START PAGE]
+
+NEW GAME
+Number of Players
+Start [Send email with Code]
+
+START PAGE 
+Type Name
+Pick League
+Pick Color
+Pick Location
+Submit [If not first player, switch to "Go To Game" and if clicked before final player submits, display explanation pop-up]
+
+//*********************************
+
+GAME
+
+LEAGUE
+LINK - Map
+LINK - Other Players
+Next Turn (Button)
+Turn/Phase Info
+League
+Other
+	VP
+	Event Role
+Money
+	WB
+	Artisans
+	Diplomats
+Techs (Buy)
+	Science
+	Religion
+Units (Buy)
+Cards (Buy)
+Cities (Buy)
+	Buildings
+
+MAP
+Tiles
+	Color for Owner
+	Circle for City
+	Corner has A/D value
+	Middle has number for army strength ( SUM([12-hitOfType+1]*countOfType) )
+
+OTHER PLAYERS
+League
+VP
+Techs
+Units
+WB
+Artisans
+Diplomats
+Event
+Card Count
+Visible Cards
+
+//*********************************
+
+GAMEPLAY
+
+Show game info
+	You can always "Update" but main interaction allowed when it is your turn
+Refresh game info after you update, buy, or end of phase
+
+Next Turn [Display explanation if unable to continue]
+	On Buy Phase un-gray Buy Buttons above each section
+	On Move Phase, allow updates to tiles 
+		Warn before going to next turn if no updates entered
+		***How to deal with illegal ending positions or conflicting move?
+	On Refresh Phase, get money
+		Prompt to redeem resources
+	On Sum Phase, reveal com-chest, event, count points
+		Auto-claim community chest if applicable?
+		Pop-up for what even card happened
+		If winner, delete game
+		
+Email at the beginning of each round
+
+Always option to "update" (remove/add) for each section [in multiplayer]
+    Request for approval sent to random other player 
+
+If Card bought [in multi]
+	After bought, pop-up to choose what card it was (all options as to not indicate what cards other players might have) 
+
+//*********************************
+
+AI
+
+Never play cards
+Never Trade
+Spend in multiples of 7WB for settler and minion as long as open cities
+	Then tech Sci/Religion (Religion first if certain League) 
+	Go for wonders in certain order
+	Even Rounds - Highest affordable units
+	Odd Rounds - Buildings
+
+//*********************************
+
+DATABASE
+
+USER
+PlayerID[Email], Password
+
+GAME
+Code, Name, Single, MapID, Round/Phase/Turn
+
+MAP
+ID, Tiles
+
+EVENT (Office and Bad)
+ID, GameCode, PlayerID, Player2ID 
+
+PLAYER
+ID, GameCode, Name, League, Number, VP, WB, Artisans, Diplomats, Resoures, CommunityChests
+
+UNITS
+ID, PlayerID, Type, Tile, CarryingUnitID
+
+TECHS
+ID, PlayerID
+
+CARDS
+ID, PlayerID, Hidden/Shown, RevealTurn, AffectedID
+
+CITIES
+ID, PlayerID, Buildings
+
+//*********************************
