@@ -7,7 +7,7 @@ $homeUrl = "http://seven.religionandstory.com";
 
 function includeHeadInfo()
 {
-    include("$_SERVER[DOCUMENT_ROOT]/../common/html/head.html");
+    include("$_SERVER[DOCUMENT_ROOT]/../common/html/head.php");
 }
 
 function includeHeader()
