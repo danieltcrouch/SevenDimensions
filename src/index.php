@@ -2,7 +2,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Seven Dimensions</title>
     <?php includeHeadInfo(); ?>
 </head>
 
@@ -25,7 +24,10 @@
     <!--Main-->
     <div class="col-10 main">
         <div class="title center">This Page is under construction</div>
-        <br />
+        <br/>
+        <div class="textBlock center">
+            Contact <a class="link" href="mailto:dcrouch1@harding.edu?Subject=Seven%20Dimensions" target="_top">Daniel Crouch</a> for any questions regarding the game.
+        </div>
         <div class="center"><img src="<?php getConstructionImage(); ?>" width="300px"></div>
     </div>
 
