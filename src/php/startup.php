@@ -28,6 +28,9 @@ function includeHeader()
 function includeModals()
 {
     include("$_SERVER[DOCUMENT_ROOT]/../common/html/modal.html");
+    include("$_SERVER[DOCUMENT_ROOT]/../common/html/modal-binary.html");
+    include("$_SERVER[DOCUMENT_ROOT]/../common/html/modal-prompt.html");
+    include("$_SERVER[DOCUMENT_ROOT]/../common/html/modal-prompt-big.html");
     include("$_SERVER[DOCUMENT_ROOT]/../common/html/toaster.html");
 }
 
