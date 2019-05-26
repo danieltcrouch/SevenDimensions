@@ -1,4 +1,4 @@
-<?php include("$_SERVER[DOCUMENT_ROOT]/php/startup.php"); ?>
+<?php include("php/startup.php"); ?>
 <!DOCTYPE html>
 <html>
 <head>

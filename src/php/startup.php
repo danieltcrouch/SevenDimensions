@@ -9,6 +9,19 @@ $description= "Use this Seven Dimensions board game helper (currently in develop
 $keywords   = "Seven Dimensions,faction,victory points,Atlantis,board game,table top game,game,Twilight Imperium";
 $homeUrl    = "https://seven.religionandstory.com";
 
+function getRootPath()
+{
+    $public = "public_html";
+    $path = $_SERVER['DOCUMENT_ROOT'];
+    $length = strpos( $path, $public ) + strlen( $public );
+    return substr( $path, 0, $length ) . "/";
+}
+
+function getSubPath()
+{
+    return getRootPath() . "seven/";
+}
+
 function includeHeadInfo()
 {
     global $siteTitle;
@@ -16,22 +29,22 @@ function includeHeadInfo()
     global $image;
     global $description;
     global $keywords;
-    include("$_SERVER[DOCUMENT_ROOT]/../common/html/head.php");
+    include(getRootPath() . "common/html/head.php");
 }
 
 function includeHeader()
 {
     global $homeUrl;
-    include("$_SERVER[DOCUMENT_ROOT]/../common/html/header.php");
+    include(getRootPath() . "common/html/header.php");
 }
 
 function includeModals()
 {
-    include("$_SERVER[DOCUMENT_ROOT]/../common/html/modal.html");
-    include("$_SERVER[DOCUMENT_ROOT]/../common/html/modal-binary.html");
-    include("$_SERVER[DOCUMENT_ROOT]/../common/html/modal-prompt.html");
-    include("$_SERVER[DOCUMENT_ROOT]/../common/html/modal-prompt-big.html");
-    include("$_SERVER[DOCUMENT_ROOT]/../common/html/toaster.html");
+    include(getRootPath() . "common/html/modal.html");
+    include(getRootPath() . "common/html/modal-binary.html");
+    include(getRootPath() . "common/html/modal-prompt.html");
+    include(getRootPath() . "common/html/modal-prompt-big.html");
+    include(getRootPath() . "common/html/toaster.html");
 }
 
 function getHelpImage()
