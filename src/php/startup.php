@@ -1,13 +1,13 @@
 <?php
 session_start();
 
-$project    = "sevenDimensions";
-$siteTitle  = "Seven Dimensions";
-$pageTitle  = "Seven Dimensions";
-$image      = "https://seven.religionandstory.com/images/seven.jpg";
-$description= "Use this Seven Dimensions board game helper (currently in development) to aid managing your faction.";
-$keywords   = "Seven Dimensions,faction,victory points,Atlantis,board game,table top game,game,Twilight Imperium";
-$homeUrl    = "https://seven.religionandstory.com";
+$project     = "sevenDimensions";
+$siteTitle   = "Seven Dimensions";
+$pageTitle   = "Seven Dimensions";
+$image       = "https://seven.religionandstory.com/images/seven.jpg";
+$description = "Use this Seven Dimensions board game helper (currently in development) to aid managing your faction.";
+$keywords    = "Seven Dimensions,faction,victory points,Atlantis,board game,table top game,game,Twilight Imperium";
+$homeUrl     = "https://seven.religionandstory.com";
 
 function getRootPath()
 {

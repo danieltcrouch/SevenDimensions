@@ -3,6 +3,7 @@
 <html>
 <head>
     <?php includeHeadInfo(); ?>
+    <script src="javascript/game.js"></script>
 </head>
 
 <body>
@@ -23,16 +24,21 @@
 
     <!--Main-->
     <div class="col-10 main">
-        <div class="title center">This Page is under construction</div>
-        <br/>
-        <div class="textBlock center">
-            Contact <a class="link" href="mailto:dcrouch1@harding.edu?Subject=Seven%20Dimensions" target="_top">Daniel Crouch</a> for any questions regarding the game.
+        <div class="center" style="margin-bottom: 1em">
+            <button id="single" name="userType" class="button inverseButton" style="width: 8em; margin: .25em;">Single</button>
+            <button id="multi"  name="userType" class="button inverseButton" style="width: 8em; margin: .25em;">Multi</button>
         </div>
-        <div class="center"><img src="<?php getConstructionImage(); ?>" width="300px"></div>
+        <div class="center">
+            <button id="start" class="button" style="display: none; width: 8em; margin: .25em;" onclick="startGame()">Start</button>
+        </div>
     </div>
 
-    <!--  todo: 7D - Only non-phase options players have are to trade and to nudge (suggest war on another player and get feedback) -- build whole game for single player before making way to do that with real players -->
-
 </body>
+
+<script>
+    setRadioCallback( "userType", function( userType ) {
+        setUserType( userType );
+    });
+</script>
 <?php includeModals(); ?>
 </html>
