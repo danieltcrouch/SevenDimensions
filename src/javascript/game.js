@@ -50,7 +50,7 @@ function loadUser() {
 /****** HANDLERS ******/
 
 function tileClickCallback( tileId ) {
-    //
+    alert( tileId );
 }
 
 /****** OTHER ******/

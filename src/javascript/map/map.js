@@ -2,85 +2,100 @@ const LINE_WIDTH = "2px";
 
 let canvas;
 let context;
-let grid = [];
+let tiles = [];
 
 let hexHeight;
 let hexWidth;
 
 function createMap( divId, callbackFunction ) {
     let div = id( divId );
-    canvas = div.createElement( "CANVAS" );
-    //canvas.width = div.width;
-    canvas.width = 200;
-    canvas.height = 200;
-    var context = canvas.getContext("2d");
+    //const computedStyle = getComputedStyle( div );
+    canvas = document.createElement( "CANVAS" );
+    div.appendChild( canvas );
+    //canvas.width  = computedStyle.width  - 1;
+    //canvas.height = computedStyle.height - 1;
+    canvas.width  = 250;
+    canvas.height = 250;
+    let context = canvas.getContext("2d");
 
+    const centerHex = new Hex( 3, 3, 20 );
     for ( let i = 0; i < 7; i++ ) {
         for ( let j = 0; j < 7; j++ ) {
-            grid.push( new Hex( i, j, 20 ) )
+            const hex = new Hex( i, j, 20 );
+            if ( hex.calculateDistance( centerHex ) < 4 ) {
+                tiles.push( hex );
+
+                context.beginPath();
+                context.moveTo( hex.vertices[0].x + 20, hex.vertices[0].y + 5 );
+                for ( let k = 1; k < hex.vertices.length; k++ ) {
+                    context.lineTo( hex.vertices[k].x + 20, hex.vertices[k].y + 5 );
+                }
+                context.closePath();
+                context.stroke();
+
+                context.fillStyle = "black";
+                context.fillText( hex.id, hex.midPoint.x + 15, hex.midPoint.y + 5 );
+            }
         }
-    }
-
-    for ( let hex in grid ) {
-        var item = grid[hex];
-        context.beginPath();
-        context.moveTo( item.points[0].x, item.points[0].y );
-
-        for ( var k = 1; k < item.points.length; k++ ) {
-            ctx.lineTo( item.points[k].x, item.points[k].y );
-        }
-
-        context.closePath();
-        context.stroke();
-
-        var text = item.id;
-        context.fillStyle = "black";
-        context.fillText( text, item.midPoint.x - 7, item.midPoint.y - item.size / 2.2 );
     }
 }
 
-function Point( x, y ) {
-    this.x = x;
-    this.y = y;
-}
+class Hex {
+    constructor( x, y, diameter ) {
+        this.x = x;
+        this.y = y;
+        this.id = x + "," + y;
+        this.diameter = diameter;
+        this.midPoint = Hex.calculateMidpoint( x, y, diameter );
+        this.vertices = Hex.calculateVertices( this.midPoint, diameter );
+    }
 
-function Hex( x, y, size ) {
-    this.size = 20;
-    this.x = x;
-    this.y = y;
-    this.points = [];
-    this.id = [];
+    static calculateMidpoint( x, y, size ) {
+        const offSetX = (size / 2 * x) * -1;
+        const offSetY = ( x % 2 === 1 ) ? Math.sqrt( 3 ) / 2 * size : 0;
 
-    this.create = function( x, y ) {
-        var offSetX = (size / 2 * x) * -1
-        var offSetY = 0;
-
-        if ( x % 2 == 1 ) {
-            offSetY = Math.sqrt( 3 ) / 2 * this.size;
-        }
-
-        var center = new Point(
-            x * this.size * 2 + offSetX,
-            y * Math.sqrt( 3 ) / 2 * this.size * 2 + offSetY
+        return new Point(
+            x * size * 2 + offSetX,
+            y * Math.sqrt( 3 ) / 2 * size * 2 + offSetY
         );
+    }
 
-        this.midPoint = center;
-
-        this.id[0] = x;
-        this.id[1] = y;
-
-        for ( var i = 0; i < 6; i++ ) {
-            var degree = 60 * i;
-            var radian = Math.PI / 180 * degree;
-
-            var point = new Point(
-                center.x + size * Math.cos( radian ),
-                center.y + size * Math.sin( radian )
-            );
-
-            this.points.push( point );
+    static calculateVertices( midPoint, size ) {
+        let result = [];
+        for ( let i = 0; i < 6; i++ ) {
+            const degree = 60 * i;
+            const radian = Math.PI / 180 * degree;
+            result.push( new Point(
+                midPoint.x + size * Math.cos( radian ),
+                midPoint.y + size * Math.sin( radian )
+            ) );
         }
-    };
+        return result;
+    }
 
-    this.create( x, y );
+    calculateDistance( hex ) {
+        let result = 0;
+        const xDistance = Math.abs( hex.x - this.x );
+        const yDistance = Math.abs( hex.y - this.y );
+        if ( this.x === hex.x ) {
+            result = yDistance;
+        }
+        else if ( this.y === hex.y ) {
+            result = xDistance;
+        }
+        else if ( this.y < hex.y ) {
+            result = xDistance + yDistance - Math.floor( xDistance / 2.0 );
+        }
+        else {
+            result = xDistance + yDistance - Math.ceil( xDistance / 2.0 );
+        }
+        return result;
+    }
+}
+
+class Point {
+    constructor( x, y ) {
+        this.x = x;
+        this.y = y;
+    }
 }

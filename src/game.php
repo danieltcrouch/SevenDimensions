@@ -42,23 +42,23 @@
             <div id="tileDetailsDiv"></div>
         </div>
         <div class="col-6">
-            <div id="roundDetailsDiv">
+            <div id="roundDetailsDiv" class="center" style="margin-bottom: 1em">
                 <div><span style="font-weight: bold">Round: </span><span id="roundValue">0</span></div>
                 <div><span style="font-weight: bold">Turn: </span><span id="turnValue">0</span></div>
                 <div><span style="font-weight: bold">Doomsday Clock: </span><span id="doomsdayValue">0</span></div>
             </div>
-            <div id="mapDiv"></div>
+            <div id="mapDiv" class="center"></div>
         </div>
         <div class="col-2">
-            <div id="phasesDiv">
-                <input id="market"      name="phaseButton" type="button" value="Market">
-                <input id="expansion"   name="phaseButton" type="button" value="Expansion">
-                <input id="harvest"     name="phaseButton" type="button" value="Harvest">
-                <input id="council"     name="phaseButton" type="button" value="Council">
+            <div id="phasesDiv" style="margin-bottom: 1em">
+                <div><input id="market"      name="phaseButton" type="button" value="Market"></div>
+                <div><input id="expansion"   name="phaseButton" type="button" value="Expansion"></div>
+                <div><input id="harvest"     name="phaseButton" type="button" value="Harvest"></div>
+                <div><input id="council"     name="phaseButton" type="button" value="Council"></div>
             </div>
             <div id="playerDiv">
-                <input id="trade"  type="button" value="Trade">
-                <input id="submit" type="button" value="Submit">
+                <div><input id="trade"  type="button" value="Trade"></div>
+                <div><input id="submit" type="button" value="Submit"></div>
             </div>
         </div>
     </div>
