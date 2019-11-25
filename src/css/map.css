@@ -1,0 +1,20 @@
+.tile {
+    fill: white;
+    stroke: black;
+    stroke-width: 1;
+}
+
+.tile:hover {
+    fill: lightgrey;
+}
+
+.tileText {
+    fill: lightgrey;
+    text-anchor: middle;
+    dominant-baseline: central;
+    stroke-width: 0;
+}
+
+.selectedTile {
+    fill: grey;
+}

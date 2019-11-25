@@ -31,6 +31,7 @@
         <div class="center"><img src="<?php getConstructionImage(); ?>" width="300px"></div>
     </div>
 
+    <!-- https://developers.google.com/identity/sign-in/web/sign-in -->
     <!--  todo: 7D - Only non-phase options players have are to trade and to nudge (suggest war on another player and get feedback) -- build whole game for single player before making way to do that with real players -->
 
 </body>
