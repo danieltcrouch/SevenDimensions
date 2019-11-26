@@ -65,7 +65,16 @@ function loadGameState() {
 }
 
 function loadMap() {
-    //game.map
+    for ( let i = 0; i < game.map.length; i++ ) {
+        const tile = game.map[i];
+        if ( tile.terrain === "ATL" ) {
+            hideById(tile.id + "-text");
+            id(tile.id + "-polygon").setAttributeNS(null, "fill", "url(#bear)");
+        }
+        else {
+            id(tile.id + "-text").innerText = tile.terrain.charAt(0);
+        }
+    }
 
     id('tileDetailsDiv').innerText = NO_TILE_DETAILS;
 }
@@ -91,36 +100,32 @@ function loadUser() {
 
 
 function initializeHandlers() {
-    nm( 'phaseButton' ).forEach( b => { b.onclick = phaseButtonHandler });
 }
 
-function phaseButtonHandler( e ) {
-    if ( e.target.id === game.state.phase ) {
-        switch ( game.state.phase ) {
-            case "market":
-                showMarketModal();
-                break;
-            case "expansion":
-                showExpansionModal();
-                break;
-            case "harvest":
-                showHarvestModal();
-                break;
-            case "council":
-                showCouncilModal();
-                break;
-        }
-    }
+function submit() {
+    showMessage( "Submit", "TODO" );
+}
+
+function showActions() {
+    showMessage( "Actions", "TODO" );
+}
+
+function showTrade() {
+    showMessage( "Trade", "TODO" );
+}
+
+function showHelp() {
+    showMessage( "Help", "TODO" );
 }
 
 function tileClickCallback( tileId ) {
-    if ( tileId !== selectedTile.id ) {
+    if ( selectedTile && tileId !== selectedTile.id ) {
         cl('selectedTile').forEach( t => t.classList.remove( "selectedTile" ) );
     }
 
     selectedTile = game.map.find( t => t.id === tileId );
 
-    id('tileDetailsDiv').innerText =
+    id('tileDetailsDiv').innerHTML =
         "Tile Selected: " + tileId + "<br/>" +
         "Value: " + selectedTile.terrain.charAt(0);
     id(tileId).classList.add( "selectedTile" );

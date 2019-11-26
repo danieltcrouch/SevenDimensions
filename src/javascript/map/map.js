@@ -12,6 +12,8 @@ function createMap( divId, callbackFunction ) {
     svg.setAttributeNS(null, "viewBox", "0 0 " + viewBoxWidth + " " + viewBoxHeight );
     div.appendChild( svg );
 
+    appendPatterns( svg );
+
     const centerHex = new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS, TILE_SIDE_LENGTH );
     const maxTileDepth = MAP_TILE_RADIUS * 2;
     for ( let i = 0; i < maxTileDepth; i++ ) {
@@ -42,6 +44,26 @@ function createMap( divId, callbackFunction ) {
            }
        }
     }
+}
+
+function appendPatterns( svg ) {
+    let defs = document.createElementNS( "http://www.w3.org/2000/svg", "defs" );
+
+    let pattern = document.createElementNS( "http://www.w3.org/2000/svg", "pattern" );
+    pattern.id = "bear";
+    pattern.setAttributeNS(null, "patternUnits", "userSpaceOnUse" );
+    pattern.setAttributeNS(null, "width", "100%" );
+    pattern.setAttributeNS(null, "height", "650" );
+    let image = document.createElementNS( "http://www.w3.org/2000/svg", "image" );
+    image.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "https://seven.religionandstory.com/images/bear.png" );
+    image.setAttributeNS(null, "x", "0" );
+    image.setAttributeNS(null, "y", "0" );
+    image.setAttributeNS(null, "width", "300" );
+    image.setAttributeNS(null, "height", "250" );
+    pattern.appendChild( image );
+    defs.appendChild( pattern );
+
+    svg.appendChild( defs );
 }
 
 class Hex {

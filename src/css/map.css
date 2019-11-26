@@ -18,3 +18,7 @@
 .selectedTile {
     fill: grey;
 }
+
+.selectedTile:hover {
+    fill: grey;
+}

@@ -48,10 +48,10 @@
         </div>
         <div class="col-2">
             <div id="playerDiv" class="center">
-                <div><button id="submit" class="button" style="width: 7em; margin-bottom: .5em">Submit</button></div>
-                <div><button id="phase"  class="button" style="width: 7em; margin-bottom: .5em">Actions</button></div>
-                <div><button id="trade"  class="button" style="width: 7em; margin-bottom: .5em">Trade</button></div>
-                <div><button id="help"   class="button" style="width: 7em; margin-bottom: .5em">Help</button></div>
+                <div><button id="submit" class="button" style="width: 7em; margin-bottom: .5em" onclick="submit()">Submit</button></div>
+                <div><button id="phase"  class="button" style="width: 7em; margin-bottom: .5em" onclick="showActions()">Actions</button></div>
+                <div><button id="trade"  class="button" style="width: 7em; margin-bottom: .5em" onclick="showTrade()">Trade</button></div>
+                <div><button id="help"   class="button" style="width: 7em; margin-bottom: .5em" onclick="showHelp()">Help</button></div>
             </div>
         </div>
     </div>
