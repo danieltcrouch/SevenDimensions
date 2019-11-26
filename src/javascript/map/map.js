@@ -53,13 +53,13 @@ function appendPatterns( svg ) {
     pattern.id = "bear";
     pattern.setAttributeNS(null, "patternUnits", "userSpaceOnUse" );
     pattern.setAttributeNS(null, "width", "100%" );
-    pattern.setAttributeNS(null, "height", "650" );
+    pattern.setAttributeNS(null, "height", "100%" );
     let image = document.createElementNS( "http://www.w3.org/2000/svg", "image" );
     image.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "https://seven.religionandstory.com/images/bear.png" );
-    image.setAttributeNS(null, "x", "0" );
-    image.setAttributeNS(null, "y", "0" );
-    image.setAttributeNS(null, "width", "300" );
-    image.setAttributeNS(null, "height", "250" );
+    image.setAttributeNS(null, "x", "50" );
+    image.setAttributeNS(null, "y", "57" );
+    image.setAttributeNS(null, "width", "20" );
+    image.setAttributeNS(null, "height", "30" );
     pattern.appendChild( image );
     defs.appendChild( pattern );
 
