@@ -49,19 +49,38 @@ function createMap( divId, callbackFunction ) {
 function appendPatterns( svg ) {
     let defs = document.createElementNS( "http://www.w3.org/2000/svg", "defs" );
 
+    //todo - make into loop that reads file names
     let pattern = document.createElementNS( "http://www.w3.org/2000/svg", "pattern" );
-    pattern.id = "bear";
-    pattern.setAttributeNS(null, "patternUnits", "userSpaceOnUse" );
-    pattern.setAttributeNS(null, "width", "100%" );
-    pattern.setAttributeNS(null, "height", "100%" );
+    pattern.id = "volcano";
+    pattern.setAttributeNS(null, "patternUnits", "objectBoundingBox" );
+    pattern.setAttributeNS(null, "x", "0" );
+    pattern.setAttributeNS(null, "y", "0" );
+    pattern.setAttributeNS(null, "width", "1" );
+    pattern.setAttributeNS(null, "height", "1" );
     let image = document.createElementNS( "http://www.w3.org/2000/svg", "image" );
-    image.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "https://seven.religionandstory.com/images/bear.png" );
-    image.setAttributeNS(null, "x", "50" );
-    image.setAttributeNS(null, "y", "57" );
-    image.setAttributeNS(null, "width", "20" );
-    image.setAttributeNS(null, "height", "30" );
+    image.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "https://seven.religionandstory.com/images/volcano.png" );
+    image.setAttributeNS(null, "x", "0" );
+    image.setAttributeNS(null, "y", "0" );
+    image.setAttributeNS(null, "width", "20px" );
+    image.setAttributeNS(null, "height", "18px" );
     pattern.appendChild( image );
     defs.appendChild( pattern );
+
+    let pattern2 = document.createElementNS( "http://www.w3.org/2000/svg", "pattern" );
+    pattern2.id = "atlantis";
+    pattern2.setAttributeNS(null, "patternUnits", "objectBoundingBox" );
+    pattern2.setAttributeNS(null, "x", "0" );
+    pattern2.setAttributeNS(null, "y", "0" );
+    pattern2.setAttributeNS(null, "width", "1" );
+    pattern2.setAttributeNS(null, "height", "1" );
+    let image2 = document.createElementNS( "http://www.w3.org/2000/svg", "image" );
+    image2.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "https://seven.religionandstory.com/images/atlantis.png" );
+    image2.setAttributeNS(null, "x", "0" );
+    image2.setAttributeNS(null, "y", "0" );
+    image2.setAttributeNS(null, "width", "20px" );
+    image2.setAttributeNS(null, "height", "18px" );
+    pattern2.appendChild( image2 );
+    defs.appendChild( pattern2 );
 
     svg.appendChild( defs );
 }

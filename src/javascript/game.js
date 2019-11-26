@@ -69,10 +69,14 @@ function loadMap() {
         const tile = game.map[i];
         if ( tile.terrain === "ATL" ) {
             hideById(tile.id + "-text");
-            id(tile.id + "-polygon").setAttributeNS(null, "fill", "url(#bear)");
+            id(tile.id + "-polygon").setAttributeNS(null, "fill", "url(#atlantis)");
+        }
+        else if ( tile.terrain === "VOL" ) {
+            hideById(tile.id + "-text");
+            id(tile.id + "-polygon").setAttributeNS(null, "fill", "url(#volcano)");
         }
         else {
-            id(tile.id + "-text").innerText = tile.terrain.charAt(0);
+            id(tile.id + "-text").innerHTML = tile.terrain.charAt(0);
         }
     }
 
@@ -222,7 +226,7 @@ function getLoadedGame() {
             },
             {
                 id: "2,6",
-                terrain: "2--"
+                terrain: "4--"
             },
             {
                 id: "3,1",
@@ -242,7 +246,7 @@ function getLoadedGame() {
             },
             {
                 id: "3,5",
-                terrain: "1--"
+                terrain: "5--"
             },
             {
                 id: "3,6",
@@ -254,11 +258,11 @@ function getLoadedGame() {
             },
             {
                 id: "4,2",
-                terrain: "4--"
+                terrain: "2--"
             },
             {
                 id: "4,3",
-                terrain: "5--"
+                terrain: "1--"
             },
             {
                 id: "4,4",
@@ -270,7 +274,7 @@ function getLoadedGame() {
             },
             {
                 id: "4,6",
-                terrain: "2--"
+                terrain: "4--"
             },
             {
                 id: "4,7",
@@ -322,7 +326,7 @@ function getLoadedGame() {
             },
             {
                 id: "7,2",
-                terrain: "4--"
+                terrain: "2--"
             },
             {
                 id: "7,3",
