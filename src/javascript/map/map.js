@@ -3,6 +3,161 @@ const TILE_SIDE_LENGTH = 10;
 
 let tiles = [];
 
+function generateRandomTiles( factionCount ) {
+    //space out factions
+    //don't place volcanoes next to capitals
+    return [
+        {
+            id: "1,2",
+            terrain: "1--"
+        },
+        {
+            id: "1,3",
+            terrain: "4--"
+        },
+        {
+            id: "1,4",
+            terrain: "3--"
+        },
+        {
+            id: "1,5",
+            terrain: "CAP"
+        },
+        {
+            id: "2,2",
+            terrain: "4--"
+        },
+        {
+            id: "2,3",
+            terrain: "3--"
+        },
+        {
+            id: "2,4",
+            terrain: "2--"
+        },
+        {
+            id: "2,5",
+            terrain: "1--"
+        },
+        {
+            id: "2,6",
+            terrain: "4--"
+        },
+        {
+            id: "3,1",
+            terrain: "3--"
+        },
+        {
+            id: "3,2",
+            terrain: "4--"
+        },
+        {
+            id: "3,3",
+            terrain: "5--"
+        },
+        {
+            id: "3,4",
+            terrain: "VOL"
+        },
+        {
+            id: "3,5",
+            terrain: "5--"
+        },
+        {
+            id: "3,6",
+            terrain: "2--"
+        },
+        {
+            id: "4,1",
+            terrain: "CAP"
+        },
+        {
+            id: "4,2",
+            terrain: "2--"
+        },
+        {
+            id: "4,3",
+            terrain: "1--"
+        },
+        {
+            id: "4,4",
+            terrain: "ATL"
+        },
+        {
+            id: "4,5",
+            terrain: "1--"
+        },
+        {
+            id: "4,6",
+            terrain: "4--"
+        },
+        {
+            id: "4,7",
+            terrain: "3--"
+        },
+        {
+            id: "5,1",
+            terrain: "4--"
+        },
+        {
+            id: "5,2",
+            terrain: "VOL"
+        },
+        {
+            id: "5,3",
+            terrain: "5--"
+        },
+        {
+            id: "5,4",
+            terrain: "4--"
+        },
+        {
+            id: "5,5",
+            terrain: "3--"
+        },
+        {
+            id: "5,6",
+            terrain: "2--"
+        },
+        {
+            id: "6,2",
+            terrain: "1--"
+        },
+        {
+            id: "6,3",
+            terrain: "2--"
+        },
+        {
+            id: "6,4",
+            terrain: "3--"
+        },
+        {
+            id: "6,5",
+            terrain: "4--"
+        },
+        {
+            id: "6,6",
+            terrain: "5--"
+        },
+        {
+            id: "7,2",
+            terrain: "2--"
+        },
+        {
+            id: "7,3",
+            terrain: "3--"
+        },
+        {
+            id: "7,4",
+            terrain: "2--"
+        },
+        {
+            id: "7,5",
+            terrain: "CAP"
+        },
+    ];
+}
+
 function createMap( divId, callbackFunction ) {
     let div = id( divId );
     let svg = document.createElementNS( "http://www.w3.org/2000/svg", "svg" );
@@ -12,7 +167,7 @@ function createMap( divId, callbackFunction ) {
     svg.setAttributeNS(null, "viewBox", "0 0 " + viewBoxWidth + " " + viewBoxHeight );
     div.appendChild( svg );
 
-    appendPatterns( svg );
+    appendDefinitions( svg );
 
     const centerHex = new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS, TILE_SIDE_LENGTH );
     const maxTileDepth = MAP_TILE_RADIUS * 2;
@@ -46,41 +201,64 @@ function createMap( divId, callbackFunction ) {
     }
 }
 
-function appendPatterns( svg ) {
+function appendDefinitions( svg ) {
+    //todo - change patterns to hard-coded (do the same for the map? probably not)
+
+    const tileImageNames = [
+        { name: "atlantis", path: "atlantis.png" },
+        { name: "volcano", path: "volcano.png" },
+        //{ name: "cnt", path: "heroes/cnt.png" },
+        //{ name: "hem", path: "heroes/hem.png" },
+        //{ name: "dnt", path: "heroes/dnt.png" },
+        //{ name: "atb", path: "heroes/atb.png" },
+        //{ name: "lvm", path: "heroes/lvm.png" },
+        //{ name: "mmc", path: "heroes/mmc.png" },
+        //{ name: "jus", path: "heroes/jus.png" },
+        //{ name: "krt", path: "heroes/krt.png" },
+        //{ name: "lob", path: "heroes/lob.png" },
+        { name: "sdm", path: "heroes/sdm.png" }
+    ];
+
     let defs = document.createElementNS( "http://www.w3.org/2000/svg", "defs" );
 
-    //todo - make into loop that reads file names
-    let pattern = document.createElementNS( "http://www.w3.org/2000/svg", "pattern" );
-    pattern.id = "volcano";
-    pattern.setAttributeNS(null, "patternUnits", "objectBoundingBox" );
-    pattern.setAttributeNS(null, "x", "0" );
-    pattern.setAttributeNS(null, "y", "0" );
-    pattern.setAttributeNS(null, "width", "1" );
-    pattern.setAttributeNS(null, "height", "1" );
-    let image = document.createElementNS( "http://www.w3.org/2000/svg", "image" );
-    image.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "https://seven.religionandstory.com/images/volcano.png" );
-    image.setAttributeNS(null, "x", "0" );
-    image.setAttributeNS(null, "y", "0" );
-    image.setAttributeNS(null, "width", "20px" );
-    image.setAttributeNS(null, "height", "18px" );
-    pattern.appendChild( image );
-    defs.appendChild( pattern );
+    for ( let i = 0; i < tileImageNames.length * 2; i++ ) {
+        const index = Math.floor( i / 2 );
+        let pattern = document.createElementNS( "http://www.w3.org/2000/svg", "pattern" );
+        pattern.id = tileImageNames[index].name + ( ( i % 2 === 0 ) ? "" : "-hover" );
+        pattern.setAttributeNS(null, "patternUnits", "objectBoundingBox" );
+        pattern.setAttributeNS(null, "x", "0" );
+        pattern.setAttributeNS(null, "y", "0" );
+        pattern.setAttributeNS(null, "width", "1" );
+        pattern.setAttributeNS(null, "height", "1" );
+        let image = document.createElementNS( "http://www.w3.org/2000/svg", "image" );
+        image.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "https://seven.religionandstory.com/images/" + tileImageNames[index].path );
+        image.setAttributeNS(null, "x", "0" );
+        image.setAttributeNS(null, "y", "0" );
+        image.setAttributeNS(null, "width", "20px" );
+        image.setAttributeNS(null, "height", "18px" );
+        if ( i % 2 !== 0 ) {
+            image.setAttributeNS(null, "filter", "url(#hover)" );
+        }
+        pattern.appendChild( image );
+        defs.appendChild( pattern );
+    }
 
-    let pattern2 = document.createElementNS( "http://www.w3.org/2000/svg", "pattern" );
-    pattern2.id = "atlantis";
-    pattern2.setAttributeNS(null, "patternUnits", "objectBoundingBox" );
-    pattern2.setAttributeNS(null, "x", "0" );
-    pattern2.setAttributeNS(null, "y", "0" );
-    pattern2.setAttributeNS(null, "width", "1" );
-    pattern2.setAttributeNS(null, "height", "1" );
-    let image2 = document.createElementNS( "http://www.w3.org/2000/svg", "image" );
-    image2.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "https://seven.religionandstory.com/images/atlantis.png" );
-    image2.setAttributeNS(null, "x", "0" );
-    image2.setAttributeNS(null, "y", "0" );
-    image2.setAttributeNS(null, "width", "20px" );
-    image2.setAttributeNS(null, "height", "18px" );
-    pattern2.appendChild( image2 );
-    defs.appendChild( pattern2 );
+    //todo
+    const grayMatrix =
+        " 0 1 0 0 .5 " +
+        " 0 1 0 0 .5 " +
+        " 0 1 0 0 .5 " +
+        " 0 1 0 1  0 ";
+    let filter = document.createElementNS( "http://www.w3.org/2000/svg", "filter" );
+    filter.id = "hover";
+    filter.setAttributeNS(null, "x", "0" );
+    filter.setAttributeNS(null, "y", "0" );
+    let feColorMatrix = document.createElementNS( "http://www.w3.org/2000/svg", "feColorMatrix" );
+    feColorMatrix.setAttributeNS(null, "in", "SourceGraphic" );
+    feColorMatrix.setAttributeNS(null, "type", "matrix" );
+    feColorMatrix.setAttributeNS(null, "values", grayMatrix );
+    filter.appendChild( feColorMatrix );
+    defs.appendChild( filter );
 
     svg.appendChild( defs );
 }

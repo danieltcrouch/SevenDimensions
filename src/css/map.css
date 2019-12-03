@@ -8,6 +8,13 @@
     fill: lightgrey;
 }
 
+.polygonImage {
+}
+
+.polygonImage:hover {
+    filter: url(#hover);
+}
+
 .tileText {
     fill: lightgrey;
     text-anchor: middle;

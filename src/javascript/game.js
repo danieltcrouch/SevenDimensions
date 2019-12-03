@@ -68,12 +68,14 @@ function loadMap() {
     for ( let i = 0; i < game.map.length; i++ ) {
         const tile = game.map[i];
         if ( tile.terrain === "ATL" ) {
-            hideById(tile.id + "-text");
-            id(tile.id + "-polygon").setAttributeNS(null, "fill", "url(#atlantis)");
+            setImageAndHover( tile.id, "atlantis" );
         }
         else if ( tile.terrain === "VOL" ) {
+            //setImageAndHover( tile.id, "volcano" );
+            //todo - is there a way to get this to work? Because it's way cleaner - https://stackoverflow.com/a/46536373/1944695
             hideById(tile.id + "-text");
             id(tile.id + "-polygon").setAttributeNS(null, "fill", "url(#volcano)");
+            id(tile.id + "-polygon").classList.add("polygonImage");
         }
         else {
             id(tile.id + "-text").innerHTML = tile.terrain.charAt(0);
@@ -135,6 +137,19 @@ function tileClickCallback( tileId ) {
     id(tileId).classList.add( "selectedTile" );
 }
 
+function setImageAndHover( tileId, name ) {
+    hideById(tileId + "-text");
+
+    id(tileId + "-polygon").setAttributeNS(null, "fill", "url(#" + name + ")");
+
+    id(tileId).onmouseover = function(){
+        id(tileId + "-polygon").setAttributeNS(null, "fill", "url(#" + name + "-hover)");
+    };
+    id(tileId).onmouseout = function(){
+        id(tileId + "-polygon").setAttributeNS(null, "fill", "url(#" + name + ")");
+    };
+}
+
 
 /****** MARKET ******/
 
@@ -191,156 +206,7 @@ function getLoadedGame() {
             turn: 2,
             event: 0
         },
-        map: [
-            {
-                id: "1,2",
-                terrain: "1--"
-            },
-            {
-                id: "1,3",
-                terrain: "4--"
-            },
-            {
-                id: "1,4",
-                terrain: "3--"
-            },
-            {
-                id: "1,5",
-                terrain: "CAP"
-            },
-            {
-                id: "2,2",
-                terrain: "4--"
-            },
-            {
-                id: "2,3",
-                terrain: "3--"
-            },
-            {
-                id: "2,4",
-                terrain: "2--"
-            },
-            {
-                id: "2,5",
-                terrain: "1--"
-            },
-            {
-                id: "2,6",
-                terrain: "4--"
-            },
-            {
-                id: "3,1",
-                terrain: "3--"
-            },
-            {
-                id: "3,2",
-                terrain: "4--"
-            },
-            {
-                id: "3,3",
-                terrain: "5--"
-            },
-            {
-                id: "3,4",
-                terrain: "VOL"
-            },
-            {
-                id: "3,5",
-                terrain: "5--"
-            },
-            {
-                id: "3,6",
-                terrain: "2--"
-            },
-            {
-                id: "4,1",
-                terrain: "CAP"
-            },
-            {
-                id: "4,2",
-                terrain: "2--"
-            },
-            {
-                id: "4,3",
-                terrain: "1--"
-            },
-            {
-                id: "4,4",
-                terrain: "ATL"
-            },
-            {
-                id: "4,5",
-                terrain: "1--"
-            },
-            {
-                id: "4,6",
-                terrain: "4--"
-            },
-            {
-                id: "4,7",
-                terrain: "3--"
-            },
-            {
-                id: "5,1",
-                terrain: "4--"
-            },
-            {
-                id: "5,2",
-                terrain: "VOL"
-            },
-            {
-                id: "5,3",
-                terrain: "5--"
-            },
-            {
-                id: "5,4",
-                terrain: "4--"
-            },
-            {
-                id: "5,5",
-                terrain: "3--"
-            },
-            {
-                id: "5,6",
-                terrain: "2--"
-            },
-            {
-                id: "6,2",
-                terrain: "1--"
-            },
-            {
-                id: "6,3",
-                terrain: "2--"
-            },
-            {
-                id: "6,4",
-                terrain: "3--"
-            },
-            {
-                id: "6,5",
-                terrain: "4--"
-            },
-            {
-                id: "6,6",
-                terrain: "5--"
-            },
-            {
-                id: "7,2",
-                terrain: "2--"
-            },
-            {
-                id: "7,3",
-                terrain: "3--"
-            },
-            {
-                id: "7,4",
-                terrain: "2--"
-            },
-            {
-                id: "7,5",
-                terrain: "CAP"
-            },
-        ],
+        map: generateRandomTiles( 3 ),
         players: [
             {
                 id: "ABC",
