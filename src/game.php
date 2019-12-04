@@ -44,7 +44,31 @@
             <div id="tileDetailsDiv" style="border: 2px solid black; border-radius: 1em; padding: 1em"></div>
         </div>
         <div class="col-6">
-            <div id="mapDiv" class="center"></div>
+            <div id="mapDiv" class="center">
+                <svg id="map" width="100%">
+                    <defs>
+                        <pattern id="atlantis" patternUnits="objectBoundingBox" x="0" y="0" width="1" height="1">
+                            <image xlink:href="https://seven.religionandstory.com/images/atlantis.png" x="-0.1" y="-0.1" width="16.75%" height="13%"></image>
+                            <!--<image xlink:href="https://seven.religionandstory.com/images/atlantis.png" x="0" y="0" width="20px" height="18px"></image>-->
+                        </pattern>
+                        <pattern id="volcano" patternUnits="objectBoundingBox" x="0" y="0" width="1" height="1">
+                            <image xlink:href="https://seven.religionandstory.com/images/volcano.png" x="-0.1" y="-0.1" width="16.75%" height="13%"></image>
+                            <!--<image xlink:href="https://seven.religionandstory.com/images/volcano.png" x="0" y="0" width="20px" height="18px"></image>-->
+                        </pattern>
+                        <pattern id="sdm" patternUnits="objectBoundingBox" x="0" y="0" width="1" height="1">
+                            <image xlink:href="https://seven.religionandstory.com/images/heroes/sdm.png" x="-0.1" y="-0.1" width="16.75%" height="13%"></image>
+                            <!--<image xlink:href="https://seven.religionandstory.com/images/heroes/sdm.png" x="0" y="0" width="20px" height="18px"></image>-->
+                        </pattern>
+                        <filter id="hover" x="0" y="0">
+                            <feColorMatrix in="SourceGraphic" type="matrix" values=" 0 1 0 0 .66  0 1 0 0 .66  0 1 0 0 .66  0 1 0 1  0 "></feColorMatrix>
+                        </filter>
+                        <filter id="selected" x="0" y="0">
+                            <!--<feColorMatrix in="SourceGraphic" type="matrix" values=" 0 1 0 0 .33  0 1 0 0 .33  0 1 0 0 .33  0 1 0 1  0 "></feColorMatrix>-->
+                            <feColorMatrix in="SourceGraphic" type="matrix" values=" -1 0 0 0 1  0 -1 0 0 1  0 0 -1 0 1 0 0 0 1 0 "></feColorMatrix>
+                        </filter>
+                    </defs>
+                </svg>
+            </div>
         </div>
         <div class="col-2">
             <div id="playerDiv" class="center">
@@ -63,7 +87,7 @@
     const isSecure = true;
     if ( isSecure )
     {
-        createMap( "mapDiv", tileClickCallback );
+        createMap( tileClickCallback );
         loadGame( "<?php echo $_GET['id'] ?>" );
     }
 </script>

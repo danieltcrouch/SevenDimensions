@@ -67,18 +67,21 @@ function loadGameState() {
 function loadMap() {
     for ( let i = 0; i < game.map.length; i++ ) {
         const tile = game.map[i];
-        if ( tile.terrain === "ATL" ) {
-            setImageAndHover( tile.id, "atlantis" );
-        }
-        else if ( tile.terrain === "VOL" ) {
-            //setImageAndHover( tile.id, "volcano" );
-            //todo - is there a way to get this to work? Because it's way cleaner - https://stackoverflow.com/a/46536373/1944695
+
+        id(tile.id + "-text").innerHTML = tile.value + "";
+
+        if ( tile.type === "ATLANTIS" ) {
             hideById(tile.id + "-text");
-            id(tile.id + "-polygon").setAttributeNS(null, "fill", "url(#volcano)");
-            id(tile.id + "-polygon").classList.add("polygonImage");
+            id(tile.id + "-polygon-i").setAttributeNS(null, "fill", "url(#atlantis)");
+            id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
         }
-        else {
-            id(tile.id + "-text").innerHTML = tile.terrain.charAt(0);
+        else if ( tile.type === "CAPITAL" ) {
+            id(tile.id + "-text").innerHTML = "C";
+        }
+        else if ( tile.value === 0 ) {
+            hideById(tile.id + "-text");
+            id(tile.id + "-polygon-i").setAttributeNS(null, "fill", "url(#volcano)");
+            id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
         }
     }
 
@@ -127,27 +130,20 @@ function showHelp() {
 function tileClickCallback( tileId ) {
     if ( selectedTile && tileId !== selectedTile.id ) {
         cl('selectedTile').forEach( t => t.classList.remove( "selectedTile" ) );
+        cl('selectedTileImage').forEach( t => t.classList.remove( "selectedTileImage" ) );
     }
 
     selectedTile = game.map.find( t => t.id === tileId );
 
     id('tileDetailsDiv').innerHTML =
         "Tile Selected: " + tileId + "<br/>" +
-        "Value: " + selectedTile.terrain.charAt(0);
-    id(tileId).classList.add( "selectedTile" );
-}
-
-function setImageAndHover( tileId, name ) {
-    hideById(tileId + "-text");
-
-    id(tileId + "-polygon").setAttributeNS(null, "fill", "url(#" + name + ")");
-
-    id(tileId).onmouseover = function(){
-        id(tileId + "-polygon").setAttributeNS(null, "fill", "url(#" + name + "-hover)");
-    };
-    id(tileId).onmouseout = function(){
-        id(tileId + "-polygon").setAttributeNS(null, "fill", "url(#" + name + ")");
-    };
+        "Value: " + selectedTile.value;
+    if ( isImageTile( tileId ) ) {
+        id( tileId + "-polygon-i" ).classList.add( "selectedTileImage" );
+    }
+    else {
+        id( tileId + "-polygon-s" ).classList.add( "selectedTile" );
+    }
 }
 
 
@@ -191,6 +187,10 @@ function getPhase( index ) {
 
 function getEvent( index ) {
     return EVENTS[index];
+}
+
+function isImageTile( tileId ) {
+    return id(tileId + "-text").style.display === "none";
 }
 
 

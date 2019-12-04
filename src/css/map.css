@@ -4,17 +4,6 @@
     stroke-width: 1;
 }
 
-.tile:hover {
-    fill: lightgrey;
-}
-
-.polygonImage {
-}
-
-.polygonImage:hover {
-    filter: url(#hover);
-}
-
 .tileText {
     fill: lightgrey;
     text-anchor: middle;
@@ -22,10 +11,31 @@
     stroke-width: 0;
 }
 
+.polygonImage {
+}
+
+.polygonShape {
+}
+
+.tile:hover .tileText {
+    fill: white;
+    stroke: lightgrey;
+    stroke-width: .5;
+}
+
+.tile:hover .polygonImage {
+    filter: url(#hover);
+}
+
 .selectedTile {
     fill: grey;
 }
 
-.selectedTile:hover {
-    fill: grey;
+.selectedTileImage {
+    filter: url(#selected);
+}
+
+.tile:hover .polygonImage.selectedTileImage {
+    /* todo - make a filter that makes white into lightgray */
+    filter: url(#selected);
 }
