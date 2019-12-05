@@ -26,20 +26,20 @@
                 <div><span style="font-weight: bold">Turn: </span><span id="turnValue">0</span></div>
                 <div><span style="font-weight: bold">Doomsday Clock: </span><span id="eventValue">0</span></div>
             </div>
-            <!-- TODO - DIVIDER -->
+            <hr>
             <div id="playerDetailsDiv" style="margin-bottom: 2em">
                 <div id="playerName">[Player Username]</div>
                 <div id="factionName" style="margin-bottom: 1em">[Faction]</div>
-                <div><span class="link">Victory Points:</span> <span id="victoryPointsValue">0</span></div>
-                <div><span class="link">War-Bucks:</span> <span id="warBucksValue">0</span></div>
-                <div><span class="link">Advancements </span></div>
-                <div><span class="link" style="padding-left: 1em">Technologies:</span> <span id="technologiesValue">0/15</span></div>
-                <div><span class="link" style="padding-left: 1em">Doctrines:</span> <span id="doctrinesValue">0/12</span></div>
-                <div><span class="link" style="padding-left: 1em">Gardens:</span> <span id="gardensValue">0/5</span></div>
-                <div><span class="link" style="padding-left: 1em">Auction Lots:</span> <span id="auctionLotsValue">0/7</span></div>
-                <div><span class="link">Political Initiative Tokens:</span> <span id="politicalTokensValue">0</span></div>
-                <div><span class="link">Cultural Initiative Tokens:</span> <span id="culturalTokensValue">0</span></div>
-                <div><span class="link">Chaos Cards:</span> <span id="chaosCardsValue">0</span></div>
+                <div><span class="link" onclick="viewVP()">Victory Points:</span> <span id="victoryPointsValue">0</span></div>
+                <div><span class="link" onclick="viewWB()">War-Bucks:</span> <span id="warBucksValue">0</span></div>
+                <div><span style="font-weight: bold">Advancements </span></div>
+                <div><span class="link" style="padding-left: 1em" onclick="viewTechnologies()">Technologies:</span> <span id="technologiesValue">0/15</span></div>
+                <div><span class="link" style="padding-left: 1em" onclick="viewDoctrines()">Doctrines:</span> <span id="doctrinesValue">0/12</span></div>
+                <div><span class="link" style="padding-left: 1em" onclick="viewGardens()">Gardens:</span> <span id="gardensValue">0/5</span></div>
+                <div><span class="link" style="padding-left: 1em" onclick="viewLots()">Auction Lots:</span> <span id="auctionLotsValue">0/7</span></div>
+                <div><span class="link" onclick="viewPIT()">Political Initiative Tokens:</span> <span id="politicalTokensValue">0</span></div>
+                <div><span class="link" onclick="viewCIT()">Cultural Initiative Tokens:</span> <span id="culturalTokensValue">0</span></div>
+                <div><span class="link" onclick="viewCards()">Chaos Cards:</span> <span id="chaosCardsValue">0</span></div>
             </div>
             <div id="tileDetailsDiv" style="border: 2px solid black; border-radius: 1em; padding: 1em"></div>
         </div>
@@ -52,12 +52,13 @@
                             <!--<image xlink:href="https://seven.religionandstory.com/images/atlantis.png" x="0" y="0" width="20px" height="18px"></image>-->
                         </pattern>
                         <pattern id="volcano" patternUnits="objectBoundingBox" x="0" y="0" width="1" height="1">
+                            <!-- todo: This image is 5MB--reduce it -->
                             <image xlink:href="https://seven.religionandstory.com/images/volcano.png" x="-0.1" y="-0.1" width="16.75%" height="13%"></image>
                             <!--<image xlink:href="https://seven.religionandstory.com/images/volcano.png" x="0" y="0" width="20px" height="18px"></image>-->
                         </pattern>
-                        <pattern id="sdm" patternUnits="objectBoundingBox" x="0" y="0" width="1" height="1">
-                            <image xlink:href="https://seven.religionandstory.com/images/heroes/sdm.png" x="-0.1" y="-0.1" width="16.75%" height="13%"></image>
-                            <!--<image xlink:href="https://seven.religionandstory.com/images/heroes/sdm.png" x="0" y="0" width="20px" height="18px"></image>-->
+                        <pattern id="hem" patternUnits="objectBoundingBox" x="0" y="0" width="1" height="1">
+                            <image xlink:href="https://seven.religionandstory.com/images/heroes/hem.png" x="-0.1" y="-0.1" width="16.75%" height="13%"></image>
+                            <!--<image xlink:href="https://seven.religionandstory.com/images/heroes/hem.png" x="0" y="0" width="20px" height="18px"></image>-->
                         </pattern>
                         <filter id="hover" x="0" y="0">
                             <feColorMatrix in="SourceGraphic" type="matrix" values=" 0 1 0 0 .66  0 1 0 0 .66  0 1 0 0 .66  0 1 0 1  0 "></feColorMatrix>

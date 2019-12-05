@@ -76,7 +76,9 @@ function loadMap() {
             id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
         }
         else if ( tile.type === "CAPITAL" ) {
-            id(tile.id + "-text").innerHTML = "C";
+            hideById(tile.id + "-text");
+            id(tile.id + "-polygon-i").setAttributeNS(null, "fill", "url(#hem)");
+            id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
         }
         else if ( tile.value === 0 ) {
             hideById(tile.id + "-text");
@@ -93,15 +95,15 @@ function loadUser() {
     id('playerName').innerText = currentPlayer.username;
     id('factionName').innerText = getFactionName( currentPlayer.factionId );
 
-    //victoryPointsValue
-    //warBucksValue
-    //technologiesValue
-    //doctrinesValue
-    //gardensValue
-    //auctionLotsValue
-    //politicalTokensValue
-    //culturalTokensValue
-    //chaosCardsValue
+    id('victoryPointsValue').innerText = calculateVP( currentPlayer, true ) + "";
+    id('warBucksValue').innerText = currentPlayer.warBucks + "";
+    id('technologiesValue').innerText = currentPlayer.technologies.length + "/" + 15; //TODO
+    id('doctrinesValue').innerText = currentPlayer.doctrines.length + "/" + 12;
+    id('gardensValue').innerText = currentPlayer.gardens.length + "/" + 5;
+    id('auctionLotsValue').innerText = currentPlayer.auction.length + "/" + 7;
+    id('politicalTokensValue').innerText = currentPlayer.pitCount + "";
+    id('culturalTokensValue').innerText = currentPlayer.citCount + "";
+    id('chaosCardsValue').innerText = currentPlayer.chaos.length + "";
 }
 
 
@@ -124,6 +126,42 @@ function showTrade() {
 }
 
 function showHelp() {
+    showMessage( "Help", "TODO" );
+}
+
+function viewVP() {
+    showMessage( "Help", "TODO" );
+}
+
+function viewWB() {
+    showMessage( "Help", "TODO" );
+}
+
+function viewTechnologies() {
+    showMessage( "Help", "TODO" );
+}
+
+function viewDoctrines() {
+    showMessage( "Help", "TODO" );
+}
+
+function viewGardens() {
+    showMessage( "Help", "TODO" );
+}
+
+function viewLots() {
+    showMessage( "Help", "TODO" );
+}
+
+function viewPIT() {
+    showMessage( "Help", "TODO" );
+}
+
+function viewCIT() {
+    showMessage( "Help", "TODO" );
+}
+
+function viewCards() {
     showMessage( "Help", "TODO" );
 }
 
@@ -179,7 +217,16 @@ function showCouncilModal() {
 }
 
 
+/****** UTILITY ******/
+
+
+function calculateVP( player, includeHidden = false ) {
+    return 0;
+}
+
+
 /****** HELPER ******/
+
 
 function getPhase( index ) {
     return PHASES[index];
