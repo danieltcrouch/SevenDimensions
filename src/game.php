@@ -6,6 +6,7 @@
     <link rel="stylesheet" type="text/css" href="css/map.css"/>
     <script src="javascript/game.js"></script>
     <script src="javascript/map/map.js"></script>
+    <script src="javascript/entities/advancements/advancements.js"></script>
 </head>
 
 <body>
@@ -27,14 +28,14 @@
                 <div><span style="font-weight: bold">Doomsday Clock: </span><span id="eventValue">0</span></div>
             </div>
             <hr>
-            <div id="playerDetailsDiv" style="margin-bottom: 2em">
-                <div id="playerName">[Player Username]</div>
+            <div id="playerDetailsDiv" style="margin-top: 2em; margin-bottom: 2em">
+                <div id="playerName" style="font-style: italic">[Player Username]</div>
                 <div id="factionName" style="margin-bottom: 1em">[Faction]</div>
                 <div><span class="link" onclick="viewVP()">Victory Points:</span> <span id="victoryPointsValue">0</span></div>
                 <div><span class="link" onclick="viewWB()">War-Bucks:</span> <span id="warBucksValue">0</span></div>
                 <div><span style="font-weight: bold">Advancements </span></div>
-                <div><span class="link" style="padding-left: 1em" onclick="viewTechnologies()">Technologies:</span> <span id="technologiesValue">0/15</span></div>
-                <div><span class="link" style="padding-left: 1em" onclick="viewDoctrines()">Doctrines:</span> <span id="doctrinesValue">0/12</span></div>
+                <div><span class="link" style="padding-left: 1em" onclick="viewTechnologies()">Technologies:</span> <span id="technologiesValue">0/14</span></div>
+                <div><span class="link" style="padding-left: 1em" onclick="viewDoctrines()">Doctrines:</span> <span id="doctrinesValue">0/11</span></div>
                 <div><span class="link" style="padding-left: 1em" onclick="viewGardens()">Gardens:</span> <span id="gardensValue">0/5</span></div>
                 <div><span class="link" style="padding-left: 1em" onclick="viewLots()">Auction Lots:</span> <span id="auctionLotsValue">0/7</span></div>
                 <div><span class="link" onclick="viewPIT()">Political Initiative Tokens:</span> <span id="politicalTokensValue">0</span></div>
@@ -52,7 +53,6 @@
                             <!--<image xlink:href="https://seven.religionandstory.com/images/atlantis.png" x="0" y="0" width="20px" height="18px"></image>-->
                         </pattern>
                         <pattern id="volcano" patternUnits="objectBoundingBox" x="0" y="0" width="1" height="1">
-                            <!-- todo: This image is 5MB--reduce it -->
                             <image xlink:href="https://seven.religionandstory.com/images/volcano.png" x="-0.1" y="-0.1" width="16.75%" height="13%"></image>
                             <!--<image xlink:href="https://seven.religionandstory.com/images/volcano.png" x="0" y="0" width="20px" height="18px"></image>-->
                         </pattern>
@@ -64,8 +64,25 @@
                             <feColorMatrix in="SourceGraphic" type="matrix" values=" 0 1 0 0 .66  0 1 0 0 .66  0 1 0 0 .66  0 1 0 1  0 "></feColorMatrix>
                         </filter>
                         <filter id="selected" x="0" y="0">
-                            <!--<feColorMatrix in="SourceGraphic" type="matrix" values=" 0 1 0 0 .33  0 1 0 0 .33  0 1 0 0 .33  0 1 0 1  0 "></feColorMatrix>-->
-                            <feColorMatrix in="SourceGraphic" type="matrix" values=" -1 0 0 0 1  0 -1 0 0 1  0 0 -1 0 1 0 0 0 1 0 "></feColorMatrix>
+                            <feColorMatrix in="SourceGraphic" type="matrix" values=" -1 0 0 0 1  0 -1 0 0 1  0 0 -1 0 1  0 0 0 1 0 "></feColorMatrix>
+                        </filter>
+                        <filter id="red" x="0" y="0">
+                            <feColorMatrix in="SourceGraphic" type="matrix" values=" 0 0 0 1 0  0 0 0 0 0  0 0 0 0 0  -1 0 0 1 0 "></feColorMatrix>
+                        </filter>
+                        <filter id="green" x="0" y="0">
+                            <feColorMatrix in="SourceGraphic" type="matrix" values=" 0 0 0 0 0  0 0 0 .1 0  0 0 0 0 0  -1 0 0 1 0 "></feColorMatrix>
+                        </filter>
+                        <filter id="blue" x="0" y="0">
+                            <feColorMatrix in="SourceGraphic" type="matrix" values=" 0 0 0 0 0  0 0 0 0 0  0 0 0 1 0  -1 0 0 1 0 "></feColorMatrix>
+                        </filter>
+                        <filter id="purple" x="0" y="0">
+                            <feColorMatrix in="SourceGraphic" type="matrix" values=" 0 0 0 .1 0  0 0 0 0 0  0 0 0 .1 0  -1 0 0 1 0 "></feColorMatrix>
+                        </filter>
+                        <filter id="orange" x="0" y="0">
+                            <feColorMatrix in="SourceGraphic" type="matrix" values=" 0 0 0 .4 0  0 0 0 .1 0  0 0 0 0 0  -1 0 0 1 0 "></feColorMatrix>
+                        </filter>
+                        <filter id="gray" x="0" y="0">
+                            <feColorMatrix in="SourceGraphic" type="matrix" values=" 0 1 0 0 .33  0 1 0 0 .33  0 1 0 0 .33  0 1 0 1  0 "></feColorMatrix>
                         </filter>
                     </defs>
                 </svg>
@@ -84,12 +101,25 @@
 </body>
 
 <script>
-    const userId = "<?php echo "ABC" ?>";
+    const userId = "<?php echo "1" ?>";
     const isSecure = true;
-    if ( isSecure )
-    {
-        createMap( tileClickCallback );
-        loadGame( "<?php echo $_GET['id'] ?>" );
+
+    docReady( function() {
+        if ( isSecure ) {
+            createMap( tileClickCallback );
+            loadGame( "<?php echo $_GET['id'] ?>" );
+        }
+    } );
+
+
+    //todo - move to Common
+    function docReady( fn ) {
+        if ( document.readyState === "complete" || document.readyState === "interactive" ) {
+            setTimeout( fn, 1 );
+        }
+        else {
+            document.addEventListener( "DOMContentLoaded", fn );
+        }
     }
 </script>
 <?php includeModals(); ?>

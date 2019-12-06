@@ -39,3 +39,59 @@
     /* todo - make a filter that makes white into lightgray */
     filter: url(#selected);
 }
+
+.red {
+    fill: red;
+}
+
+.redImage {
+    filter: url(#red);
+}
+
+.green {
+    fill: green;
+}
+
+.greenImage {
+    filter: url(#green);
+}
+
+.blue {
+    fill: blue;
+}
+
+.blueImage {
+    filter: url(#blue);
+}
+
+.purple {
+    fill: purple;
+}
+
+.purpleImage {
+    filter: url(#purple);
+}
+
+.orange {
+    fill: orange;
+}
+
+.orangeImage {
+    filter: url(#orange);
+}
+
+.gray {
+    fill: gray;
+}
+
+.grayImage {
+    filter: url(#gray);
+}
+
+/* .gold {
+    fill: gold;
+}
+
+.goldImage {
+    filter: url(#gold);
+} */
