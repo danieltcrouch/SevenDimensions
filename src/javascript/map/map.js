@@ -126,9 +126,11 @@ function getAllAdjacentHexes( hex ) {
 }
 
 function createMap( callbackFunction ) {
+    //todo 2 - Finish all Map work, including making image tiles, adding units, highlighting tiles, displaying icons
+    //  You don't have to finish the actual images for each thing, just make placeholders that can be easily subbed out later
     let svg = id( "map" );
     const viewBoxWidth = (TILE_SIDE_LENGTH * 12);
-    const viewBoxHeight = (TILE_SIDE_LENGTH * 13.5); //todo - what's special about these numbers?
+    const viewBoxHeight = (TILE_SIDE_LENGTH * 13.5); //todo 2.5 - what's special about these numbers?
     svg.setAttributeNS(null, "viewBox", "0 0 " + viewBoxWidth + " " + viewBoxHeight );
 
     const centerHex = new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS, TILE_SIDE_LENGTH );

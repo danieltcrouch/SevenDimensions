@@ -4,9 +4,11 @@
 <head>
     <?php includeHeadInfo(); ?>
     <link rel="stylesheet" type="text/css" href="css/map.css"/>
+    <link rel="stylesheet" type="text/css" href="css/game.css"/>
     <script src="javascript/game.js"></script>
     <script src="javascript/map/map.js"></script>
     <script src="javascript/entities/advancements/advancements.js"></script>
+    <script src="javascript/entities/units/units.js"></script>
 </head>
 
 <body>
@@ -37,7 +39,7 @@
                 <div><span class="link" style="padding-left: 1em" onclick="viewTechnologies()">Technologies:</span> <span id="technologiesValue">0/14</span></div>
                 <div><span class="link" style="padding-left: 1em" onclick="viewDoctrines()">Doctrines:</span> <span id="doctrinesValue">0/11</span></div>
                 <div><span class="link" style="padding-left: 1em" onclick="viewGardens()">Gardens:</span> <span id="gardensValue">0/5</span></div>
-                <div><span class="link" style="padding-left: 1em" onclick="viewLots()">Auction Lots:</span> <span id="auctionLotsValue">0/7</span></div>
+                <div><span class="link" style="padding-left: 1em" onclick="viewAuctions()">Auction Lots:</span> <span id="auctionLotsValue">0/7</span></div>
                 <div><span class="link" onclick="viewPIT()">Political Initiative Tokens:</span> <span id="politicalTokensValue">0</span></div>
                 <div><span class="link" onclick="viewCIT()">Cultural Initiative Tokens:</span> <span id="culturalTokensValue">0</span></div>
                 <div><span class="link" onclick="viewCards()">Chaos Cards:</span> <span id="chaosCardsValue">0</span></div>
@@ -102,7 +104,7 @@
 
 <script>
     const userId = "<?php echo "1" ?>";
-    const isSecure = true;
+    const isSecure = true; //todo 10 - https://developers.google.com/identity/sign-in/web/sign-in
 
     docReady( function() {
         if ( isSecure ) {
@@ -112,7 +114,7 @@
     } );
 
 
-    //todo - move to Common
+    //todo 3 - move to Common
     function docReady( fn ) {
         if ( document.readyState === "complete" || document.readyState === "interactive" ) {
             setTimeout( fn, 1 );
@@ -122,5 +124,6 @@
         }
     }
 </script>
+<?php include("html/market-modal.html"); ?>
 <?php includeModals(); ?>
 </html>

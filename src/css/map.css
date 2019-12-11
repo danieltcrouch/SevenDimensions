@@ -36,9 +36,11 @@
 }
 
 .tile:hover .polygonImage.selectedTileImage {
-    /* todo - make a filter that makes white into lightgray */
+    /* todo 2 - make a filter that makes white into lightgray */
     filter: url(#selected);
 }
+
+/*** TEAM CSS ***/
 
 .red {
     fill: red;

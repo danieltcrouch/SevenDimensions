@@ -90,7 +90,7 @@ function loadUser() {
     id('playerName').innerText = currentPlayer.username;
     id('factionName').innerText = getFactionName( currentPlayer.factionId );
 
-    id('victoryPointsValue').innerText = calculateVP( currentPlayer, true ) + "";
+    id('victoryPointsValue').innerText = calculateVP( currentPlayer ) + "";
     id('warBucksValue').innerText = currentPlayer.warBucks + "";
     id('technologiesValue').innerText = getStringBooleanCount( currentPlayer.advancements.technologies ) + "/" + TECHNOLOGIES.length;
     id('doctrinesValue').innerText = getStringBooleanCount( currentPlayer.advancements.doctrines ) + "/" + DOCTRINES.length;
@@ -102,7 +102,7 @@ function loadUser() {
 }
 
 function popModals() {
-    if ( game.state.phase === 0.0 ) {
+    if ( game.state.phase === 0.0 && !currentPlayer.advancements.auctionBid ) {
         showAuctionActions();
     }
 }
@@ -131,43 +131,105 @@ function tileClickCallback( tileId ) {
     id('tileDetailsDiv').innerHTML =
         "Tile Selected: " + tileId + "<br/>" +
         "Value: " + selectedTile.value;
+    //todo 5 - Complete selected Tile section
+    //  display unit hit/move values (show additions/buffs as well)
 }
 
 
-/****** HANDLERS ******/
+/****** PLAYER ******/
 
 
-
+//todo 3 - in Common, make modal remove custom css on close
 function viewVP() {
-    showMessage( "Victory Points", "TODO" );
+    const insurrectionPlayerId = getInsurrectionVictim();
+    const isHighPriestActive = currentPlayer.cards.offices.includes( "0" ) || currentPlayer.selects.highPriestVictim;
+    const message =
+        "<span style='font-weight: bold'>Victory Points Total:</span> " + id('victoryPointsValue').innerText + "<br/>" +
+        "Districts: " + currentPlayer.districts.tiles.length + "<br/>" +
+        "Dimensions: " + currentPlayer.dimensions.length + "<br/>" +
+        "Wonders: " + (currentPlayer.dimensions.filter( d => !!d.wonderTile ).length * 2) + "<br/>" +
+        "Hero: " + (!!currentPlayer.units.hero ? "1" : "0") + "<br/>" +
+        "Chaos Cards: " + (currentPlayer.cards.chaos.charAt(48) === "1" ? "1" : "0") + "<br/>" + //todo 6 - if they have Heaven's Gate cards
+        ( isHighPriestActive ? ( "High Priest: " + (currentPlayer.cards.offices.includes( "0" ) ? "1" : ( currentPlayer.selects.highPriestVictim ? "-1" : "0" ) ) + "<br/>" ) : "" ) +
+        ( ( insurrectionPlayerId && insurrectionPlayerId === currentPlayer.id ) ? "Insurrection Event: -1" : "" );
+    showMessage( "Victory Points", message );
 }
 
 function viewWB() {
-    showMessage( "War-Bucks", "TODO" );
+    const message =
+        "War-Bucks: " + currentPlayer.warBucks + "<br/><br/>" +
+        "<div style='font-weight: bold'>Resources</div>" +
+        "Aether: " + currentPlayer.resources.aether + "<br/>" +
+        "Chronotine: " + currentPlayer.resources.chronotine + "<br/>" +
+        "Unobtanium: " + currentPlayer.resources.unobtanium;
+    showMessage( "War-Bucks", message );
 }
 
 function viewTechnologies() {
-    showMessage( "Technologies", "TODO" );
+    let message = getAdvancementTable(
+        TECHNOLOGIES,
+        currentPlayer.advancements.technologies,
+        function( item ) { return "7WB" }
+    );
+    showMessage( "Technologies", message, {padding: ".5em 20%"} );
 }
 
 function viewDoctrines() {
-    showMessage( "Doctrines", "TODO" );
+    let message = getAdvancementTable(
+        DOCTRINES,
+        currentPlayer.advancements.doctrines,
+        function( item ) { return "7WB" }
+    );
+    showMessage( "Doctrines", message, {padding: ".5em 20%"} );
 }
 
 function viewGardens() {
-    showMessage( "Gardens", "TODO" );
+    let message = getAdvancementTable(
+        GARDENS,
+        currentPlayer.advancements.gardens,
+        function( item ) { return ( item.cost * currentPlayer.districts.tiles.length ) + "WB"; }
+    );
+    message += "<div style='margin-top: .5em'>(Cost calculated by 7WB times the number of districts; must have at least 2 districts.)</div>";
+    showMessage( "Gardens", message, {padding: ".5em 20%"} );
 }
 
-function viewLots() {
-    showMessage( "Auction Lots", "TODO" );
+function viewAuctions() {
+    let message = getAdvancementTable(
+        AUCTIONS,
+        currentPlayer.advancements.auctions,
+        function( item ) {
+            const isLocked = !game.players.some( p => p.advancements.auctionWins[ AUCTIONS.indexOf( item ) ] === "1" );
+            return isLocked ? "<span style='font-style: italic'>Locked</span>" : (item.cost + "WB");
+        }
+    );
+    showMessage( "Auction Lots", message, {padding: ".5em 20%"} );
+}
+
+function getAdvancementTable( data, userData, costFunction ) {
+    let resultHTML = "<table class='advancements'><tbody>";
+    for ( let i = 0; i < data.length; i++ ) {
+        const item = data[i];
+        const ownedClass = ( userData.charAt(i) === "1" ) ? "owned" : "";
+        resultHTML += "<tr class='" + ownedClass + "'><td>" + item.name + "</td>" +
+            "<td>" + item.description + "</td>" +
+            "<td>" + costFunction( item ) + "</td></tr>";
+    }
+    resultHTML += "</tbody></table>";
+    return resultHTML;
 }
 
 function viewPIT() {
-    showMessage( "Political Tokens", "TODO" );
+    const message =
+        "Political Initiative Tokens: " + currentPlayer.initiatives.politicalTokens + "<br/>" +
+        "Tokens currently on map: " + currentPlayer.initiatives.politicalActive.length;
+    showMessage( "Political Tokens", message );
 }
 
 function viewCIT() {
-    showMessage( "Cultural Tokens", "TODO" );
+    const message =
+        "Cultural Initiative Tokens: " + currentPlayer.initiatives.culturalTokens + "<br/>" +
+        "Tokens currently on map: " + currentPlayer.initiatives.culturalActive.length;
+    showMessage( "Cultural Tokens", message );
 }
 
 function viewCards() {
@@ -217,7 +279,8 @@ function showHelp() {
 
 function showAuctionActions() {
     const auctionIndex = getNextAuction( game.players );
-    showPrompt( "Auction", "Enter an amount to bid on " + AUCTIONS[auctionIndex].name + ":", function( response ) {
+    const minimum = Math.floor( AUCTIONS[auctionIndex].cost / 2 );
+    showPrompt( "Auction", "Enter an amount to bid on " + AUCTIONS[auctionIndex].name + " (minimum: " + minimum + "WB):", function( response ) {
         response = parseInt( response );
         if ( Number.isInteger( response ) ) {
             if ( response <= currentPlayer.warBucks ) {
@@ -231,7 +294,9 @@ function showAuctionActions() {
 }
 
 function showMarketActions() {
-    showMessage( "Market", "Make purchases in the player section." );
+    openMarketModal( {
+        resources: currentPlayer.resources
+    } );
 }
 
 
@@ -262,8 +327,27 @@ function showCouncilActions() {
 /****** UTILITY ******/
 
 
-function calculateVP( player, includeHidden = false ) {
-    return 0;
+function calculateVP( player ) {
+    let result = 0;
+    result += player.districts.tiles.length;
+    result += player.dimensions.length;
+    result += player.dimensions.filter( d => !!d.wonderTile ).length * 2;
+    result += !!player.units.hero ? 1 : 0;
+    result += player.cards.offices.includes( "0" ) ? 1 : 0; //High Priest
+    result -= player.selects.highPriestVictim ? 1 : 0;
+    result += player.cards.chaos.charAt(48) === "1" ? 1 : 0; //todo 6 - if they have Heaven's Gate cards
+    result -= getInsurrectionVictim() === player.id ? 1 : 0;
+    return result;
+}
+
+function getInsurrectionVictim() {
+    let result = null;
+    if ( game.state.disaster === 5 ) {
+        game.state.disaster = null;
+        result = game.players.reduce((prev, current) => ( calculateVP(prev) > calculateVP(current) ) ? prev : current).id;
+        game.state.disaster = 5;
+    }
+    return result;
 }
 
 function getNextAuction( players ) {
@@ -361,9 +445,10 @@ function getLoadedGame() {
         state: {
             ambassador: 0,
             round: 0,
-            phase: 0.0,
+            phase: 0.5,
             turn: 0,
-            event: 0
+            event: 0,
+            disaster: null
         },
         map: generateRandomTiles( 3 ),
         players: [
@@ -392,7 +477,9 @@ function getLoadedGame() {
                     culturalActive: [],
                 },
                 cards: {
+                    //todo 6 - or use array of IDs?
                     chaos: "1000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000",
+                    //todo 6 - or use String of Bits?
                     offices: []
                 },
                 units: {
@@ -413,7 +500,11 @@ function getLoadedGame() {
                 religion: {
                     id: 0,
                     tiles: ["1-2"]
+                },
+                selects: {
+                    highPriestVictim: null
                 }
+
             },
             {
                 id: "2",
@@ -458,7 +549,10 @@ function getLoadedGame() {
                     tiles: ["7-2"]
                 },
                 dimensions: [],
-                religion: {}
+                religion: {},
+                selects: {
+                    highPriestVictim: null
+                }
             },
             {
                 id: "3",
@@ -503,7 +597,10 @@ function getLoadedGame() {
                     tiles: ["4-7"]
                 },
                 dimensions: [],
-                religion: {}
+                religion: {},
+                selects: {
+                    highPriestVictim: null
+                }
             },
         ]
     };

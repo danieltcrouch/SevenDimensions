@@ -1,0 +1,200 @@
+<link rel="stylesheet" type="text/css" href="https://religionandstory.com/common/css/modal.css"/>
+
+<div id="marketModal" class="modal-wrapper">
+    <div class="modal-foreground">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span id="modalHeader" class="subtitle">Market Phase</span>
+                <span id="close" class="close">&times;</span>
+            </div>
+            <div id="modalBody" class="modal-body">
+                <div style="margin-bottom: 2em">
+                    <div><label for="resourceACount" style="display: inline-block; width: 6em">Aether     </label><input id="resourceACount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" placeholder="0"> of <span id="resourceAMax">0</span></div>
+                    <div><label for="resourceCCount" style="display: inline-block; width: 6em">Chronotine </label><input id="resourceCCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" placeholder="0"> of <span id="resourceCMax">0</span></div>
+                    <div><label for="resourceUCount" style="display: inline-block; width: 6em">Unobtanium </label><input id="resourceUCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" placeholder="0"> of <span id="resourceUMax">0</span></div>
+                    <button class="button" style="margin-top: .4em; padding: .1em .5em" onclick="convert()">Convert</button>
+                </div>
+                <div style="margin-bottom: 1em">
+                    Units (<span id="unitsCost">0</span>WB):
+                    <div id="unitsWrapper"></div>
+                </div>
+                <div style="margin-bottom: 1em">
+                    <div><label for="technologySelect"  style="display: inline-block; width: 6em">Technology </label><select id="technologySelect"  class="select" style="width: 13em; margin: .1em; padding: .1em" onchange="technologyChange()"></select> (<span id="technologyCost">0</span>WB)</div>
+                    <div><label for="doctrineSelect"    style="display: inline-block; width: 6em">Doctrine   </label><select id="doctrineSelect"    class="select" style="width: 13em; margin: .1em; padding: .1em" onchange="doctrineChange()"></select> (<span id="doctrineCost">0</span>WB)</div>
+                    <div style="margin-top: .5em">
+                        Gardens (<span id="gardensCost">0</span>WB):
+                        <div id="gardens"></div>
+                    </div>
+                    <div style="margin-top: .5em">
+                        Auction Lots (<span id="auctionsCost">0</span>WB):
+                        <div id="auctions"></div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 1em">
+                    <div><label for="cardCount" style="display: inline-block; width: 10em">Chaos Cards (4WB) </label><input id="cardCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" onchange="chaosChange()"> (<span id="cardCost">0</span>WB)</div>
+                </div>
+                <div style="margin-bottom: 1em">
+                    <div><span style="font-weight: bold">Grand Total: </span><span id="totalCost">0</span>WB</div>
+                    <button id="purchase" class="button" style="margin-top: .4em; padding: .1em .5em" onclick="purchase()">Purchase</button>
+                </div>
+                <div style="margin-bottom: 1em">
+                    <!-- Inquisitions-->
+                    <!-- Special Chaos Card abilities-->
+                </div>
+            </div>
+            <div id="modalSubmit" class="modal-submit center">
+                <button id="closeButton" class="button" style="width: 10em" onclick="closeOutModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-background"></div>
+</div>
+
+<script>
+    let marketModalValues;
+    let marketModalCallback;
+    let marketTotal;
+
+    function openMarketModal( currentGame, callback ) {
+        //todo 1 - Custom Modal:
+        //  *Must not exceed money
+        //  *Must not exceed purchase limit
+        //  *Must not exceed unit type limit
+        //  *Units purchased can later be laid on map (cannot finish round until this is done or units are refunded)
+
+        marketModalValues = currentGame;
+        marketModalCallback = callback;
+
+        populateUnits();
+        populateAdvancements();
+        populateData();
+
+        id("marketModal").style.display = "block";
+        setCloseHandlersJS( "marketModal" );
+        blurBackground();
+    }
+
+    function populateUnits() {
+        let wrapper = id('unitsWrapper');
+        wrapper.innerHTML = "";
+        for ( let i = 0; i < UNITS.length; i++ ) {
+            let unit = UNITS[i];
+            const id = "unit" + i + "Count";
+            let div = document.createElement( "DIV" );
+            let label = document.createElement( "LABEL" );
+            label.for = id;
+            label.style.display = "inline-block";
+            label.style.width = "10em";
+            label.innerText = unit.name + " (" + unit.cost + "WB) ";
+            let input = document.createElement( "INPUT" );
+            input.id = id;
+            input.name = "unitCounts";
+            input.type = "number";
+            input.classList.add( "input" );
+            input.style.width = "3em";
+            input.style.margin = ".1em";
+            input.style.padding = ".1em";
+            input.onchange = unitChange;
+            div.appendChild( label );
+            div.appendChild( input );
+            wrapper.appendChild( div );
+        }
+    }
+
+    function populateAdvancements() {
+        addAllToSelect( 'technologySelect', ["None"].concat( TECHNOLOGIES.map( (t,index) => { return {text: t.name, value: index+""}; } ) ) );
+        addAllToSelect( 'doctrineSelect', ["None"].concat( DOCTRINES.map(      (d,index) => { return {text: d.name, value: index+""}; } ) ) );
+        populateAdvancementCheckboxes( GARDENS, "gardens", function( item ) { return ( item.cost * currentPlayer.districts.tiles.length ) + "WB"; } );
+        populateAdvancementCheckboxes( AUCTIONS, "auctions", function( item ) {
+            const isLocked = !game.players.some( p => p.advancements.auctionWins[ AUCTIONS.indexOf( item ) ] === "1" );
+            return isLocked ? "<span style='font-style: italic'>Locked</span>" : (item.cost + "WB");
+        } ); //todo 4 - Move these to the ENUM
+    }
+
+    function populateAdvancementCheckboxes( data, wrapperId, costFunction ) {
+        let wrapper = id( wrapperId );
+        wrapper.innerHTML = "";
+        for ( let i = 0; i < data.length; i++ ) {
+            const id = wrapperId + i;
+            let div = document.createElement( "DIV" );
+            let input = document.createElement( "INPUT" );
+            input.id = id;
+            input.name = wrapperId;
+            input.type = "checkbox";
+            input.onchange = function() { advancementChange( data, costFunction, wrapperId ); };
+            let label = document.createElement( "LABEL" );
+            let cost = costFunction( data[i] );
+            label.for = id;
+            label.innerHTML = data[i].name + " (" + cost + ") ";
+            div.appendChild( input );
+            div.appendChild( label );
+            wrapper.appendChild( div );
+        }
+    }
+
+    function populateData() {
+        id('resourceAMax').innerText = marketModalValues.resources.aether + "";
+        id('resourceCMax').innerText = marketModalValues.resources.chronotine + "";
+        id('resourceUMax').innerText = marketModalValues.resources.unobtanium + "";
+    }
+
+    function unitChange() {
+        let total = 0;
+        let unitCounts = nm('unitCounts');
+        for ( let i = 0; i < unitCounts.length; i++ ) {
+            total += UNITS[i].cost * unitCounts[i].value;
+        }
+        id('unitsCost').innerText = total + "";
+        updateTotal();
+    }
+
+    function technologyChange() {
+        let total = ( parseInt( getSelectedOptionValue( 'technologySelect' ) ) + 1 ) * TECHNOLOGIES[0].cost;
+        id('technologyCost').innerText = total + "";
+        updateTotal();
+    }
+
+    function doctrineChange() {
+        let total = ( parseInt( getSelectedOptionValue( 'doctrineSelect' ) ) + 1 ) * DOCTRINES[0].cost;
+        id('doctrineCost').innerText = total + "";
+        updateTotal();
+    }
+
+    function advancementChange( data, costFunction, wrapperId ) {
+        let total = 0;
+        let advancementChecks = nm(wrapperId);
+        for ( let i = 0; i < advancementChecks.length; i++ ) {
+            if ( advancementChecks[i].checked ) {
+                total += parseInt( costFunction( data[i] ) );
+            }
+        }
+        id(wrapperId + 'Cost').innerText = total + "";
+        updateTotal();
+    }
+
+    function chaosChange() {
+        let total = 4 * id('cardCount').value;
+        id('cardCost').innerText = total + "";
+        updateTotal();
+    }
+
+    function updateTotal() {
+        let total = parseInt( id('unitsCost').innerText ) + parseInt( id('technologyCost').innerText ) + parseInt( id('doctrineCost').innerText ) + parseInt( id('gardensCost').innerText ) + parseInt( id('auctionsCost').innerText ) + parseInt( id('cardCost').innerText );
+        id('totalCost').innerText = total + "";
+    }
+
+    function convert() {
+        //
+    }
+
+    function purchase() {
+        //
+    }
+
+    function closeOutModal() {
+        //id('startSurvey').style.display  = "none";
+
+        closeModalJS( "stateModal" );
+        marketModalCallback( marketModalValues );
+    }
+</script>

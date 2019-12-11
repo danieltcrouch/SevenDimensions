@@ -1,0 +1,23 @@
+.advancements {
+    margin: auto;
+    border-collapse: collapse;
+
+    text-align: left;
+}
+
+.advancements td {
+    padding: .2em .5em;
+}
+
+.advancements td:first-child {
+    font-weight: bold;
+}
+
+.advancements td:nth-child(3) {
+    text-align: center;
+}
+
+.owned {
+    background: lightgray;
+    /*border: solid thick;*/
+}
