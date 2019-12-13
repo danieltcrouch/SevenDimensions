@@ -9,9 +9,9 @@
             </div>
             <div id="modalBody" class="modal-body">
                 <div style="margin-bottom: 2em">
-                    <div><label for="resourceACount" style="display: inline-block; width: 6em">Aether     </label><input id="resourceACount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" placeholder="0"> of <span id="resourceAMax">0</span></div>
-                    <div><label for="resourceCCount" style="display: inline-block; width: 6em">Chronotine </label><input id="resourceCCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" placeholder="0"> of <span id="resourceCMax">0</span></div>
-                    <div><label for="resourceUCount" style="display: inline-block; width: 6em">Unobtanium </label><input id="resourceUCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" placeholder="0"> of <span id="resourceUMax">0</span></div>
+                    <div><label for="resourceACount" style="display: inline-block; width: 6em">Aether     </label><input id="resourceACount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0"> of <span id="resourceAMax">0</span></div>
+                    <div><label for="resourceCCount" style="display: inline-block; width: 6em">Chronotine </label><input id="resourceCCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0"> of <span id="resourceCMax">0</span></div>
+                    <div><label for="resourceUCount" style="display: inline-block; width: 6em">Unobtanium </label><input id="resourceUCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0"> of <span id="resourceUMax">0</span></div>
                     <button class="button" style="margin-top: .4em; padding: .1em .5em" onclick="convert()">Convert</button>
                 </div>
                 <div style="margin-bottom: 1em">
@@ -31,7 +31,7 @@
                     </div>
                 </div>
                 <div style="margin-bottom: 1em">
-                    <div><label for="cardCount" style="display: inline-block; width: 10em">Chaos Cards (4WB) </label><input id="cardCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" onchange="chaosChange()"> (<span id="cardCost">0</span>WB)</div>
+                    <div><label for="cardCount" style="display: inline-block; width: 10em">Chaos Cards (4WB) </label><input id="cardCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" max="7" placeholder="0" onchange="chaosChange()"> (<span id="cardCost">0</span>WB)</div>
                 </div>
                 <div style="margin-bottom: 1em">
                     <div><span style="font-weight: bold">Grand Total: </span><span id="totalCost">0</span>WB</div>
@@ -56,12 +56,6 @@
     let marketTotal;
 
     function openMarketModal( currentGame, callback ) {
-        //todo 1 - Custom Modal:
-        //  *Must not exceed money
-        //  *Must not exceed purchase limit
-        //  *Must not exceed unit type limit
-        //  *Units purchased can later be laid on map (cannot finish round until this is done or units are refunded)
-
         marketModalValues = currentGame;
         marketModalCallback = callback;
 
@@ -94,6 +88,24 @@
             input.style.width = "3em";
             input.style.margin = ".1em";
             input.style.padding = ".1em";
+            input.min = "0";
+            if ( unit.max ) {
+                input.max = unit.max;
+                let currentCount = 0;
+                switch ( i ) {
+                case 5:
+                    currentCount = marketModalValues.units.robot.length;
+                    break;
+                case 6:
+                    currentCount = !!marketModalValues.units.godhand;
+                    break;
+                case 7:
+                    currentCount = !!marketModalValues.units.hero;
+                    break;
+                }
+                input.disabled = unit.max === currentCount;
+            }
+            input.placeholder = "0";
             input.onchange = unitChange;
             div.appendChild( label );
             div.appendChild( input );
@@ -103,7 +115,7 @@
 
     function populateAdvancements() {
         addAllToSelect( 'technologySelect', ["None"].concat( TECHNOLOGIES.map( (t,index) => { return {text: t.name, value: index+""}; } ) ) );
-        addAllToSelect( 'doctrineSelect', ["None"].concat( DOCTRINES.map(      (d,index) => { return {text: d.name, value: index+""}; } ) ) );
+        addAllToSelect( 'doctrineSelect',   ["None"].concat( DOCTRINES.map(    (d,index) => { return {text: d.name, value: index+""}; } ) ) );
         populateAdvancementCheckboxes( GARDENS, "gardens", function( item ) { return ( item.cost * currentPlayer.districts.tiles.length ) + "WB"; } );
         populateAdvancementCheckboxes( AUCTIONS, "auctions", function( item ) {
             const isLocked = !game.players.some( p => p.advancements.auctionWins[ AUCTIONS.indexOf( item ) ] === "1" );
@@ -133,8 +145,11 @@
     }
 
     function populateData() {
+        id('resourceAMax').max = marketModalValues.resources.aether;
         id('resourceAMax').innerText = marketModalValues.resources.aether + "";
+        id('resourceCMax').max = marketModalValues.resources.chronotine;
         id('resourceCMax').innerText = marketModalValues.resources.chronotine + "";
+        id('resourceUMax').max = marketModalValues.resources.unobtanium;
         id('resourceUMax').innerText = marketModalValues.resources.unobtanium + "";
     }
 
@@ -179,8 +194,8 @@
     }
 
     function updateTotal() {
-        let total = parseInt( id('unitsCost').innerText ) + parseInt( id('technologyCost').innerText ) + parseInt( id('doctrineCost').innerText ) + parseInt( id('gardensCost').innerText ) + parseInt( id('auctionsCost').innerText ) + parseInt( id('cardCost').innerText );
-        id('totalCost').innerText = total + "";
+        marketTotal = parseInt( id('unitsCost').innerText ) + parseInt( id('technologyCost').innerText ) + parseInt( id('doctrineCost').innerText ) + parseInt( id('gardensCost').innerText ) + parseInt( id('auctionsCost').innerText ) + parseInt( id('cardCost').innerText );
+        id('totalCost').innerText = marketTotal + "";
     }
 
     function convert() {
@@ -188,13 +203,30 @@
     }
 
     function purchase() {
-        //
+        if ( marketTotal > marketModalValues.warBucks ) {
+            showToaster( "Cannot afford purchase" );
+        }
+        else {
+            if ( false ) {
+                showToaster( "Cannot purchase more than 7 advancements" );
+                //todo 11 - what if they open up the modal twice and buy 6 advancements each time?
+            }
+            else if ( false ) {
+                showToaster( "Cannot purchase more than 7 cards" );
+                //todo 11 - what if they open up the modal twice and buy 6 advancements each time?
+            }
+            else if ( false ) {
+                showToaster( "Too many units of a type" );
+            }
+            else {
+                marketModalValues.warBucks -= marketTotal;
+                closeOutModal();
+            }
+        }
     }
 
     function closeOutModal() {
-        //id('startSurvey').style.display  = "none";
-
-        closeModalJS( "stateModal" );
+        closeModalJS( "marketModal" );
         marketModalCallback( marketModalValues );
     }
 </script>

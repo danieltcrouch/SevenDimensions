@@ -30,6 +30,7 @@ function includeHeadInfo()
     global $description;
     global $keywords;
     include(getRootPath() . "common/html/head.php");
+    include(getSubPath() . "html/includes.html");
 }
 
 function includeHeader()
@@ -55,6 +56,11 @@ function getHelpImage()
 function getConstructionImage()
 {
     echo "https://image.freepik.com/free-icon/traffic-cone-signal-tool-for-traffic_318-62079.jpg";
+}
+
+function getSvgDefinitions()
+{
+    include(getSubPath() . "html/svg-def.html");
 }
 
 ?>

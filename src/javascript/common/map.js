@@ -3,138 +3,109 @@
 const MAP_TILE_RADIUS = 4;
 const TILE_SIDE_LENGTH = 10;
 
-const RESOURCE_TYPES = [ "A", "C", "U" ];
 
-const TILE_TYPES = [
-//Counts inflated from real game in order to fill full hexagon map
-{ type: "NATURE",   value: 0, count: 3, resourceCount: 0 },
-{ type: "NATURE",   value: 1, count: 3, resourceCount: 0 },
-{ type: "NATURE",   value: 2, count: 8, resourceCount: 6 },
-{ type: "NATURE",   value: 3, count: 9, resourceCount: 0 },
-{ type: "NATURE",   value: 4, count: 8, resourceCount: 6 },
-{ type: "NATURE",   value: 5, count: 3, resourceCount: 0 },
-{ type: "CAPITAL",  value: 6, count: 6, resourceCount: 0 },
-{ type: "ATLANTIS", value: 7, count: 1, resourceCount: 1 }
-];
+/*** GENERATE NEW MAP ***/
 
-function generateRandomTiles( factionCount ) {
-    let rawTiles = [];
-    TILE_TYPES.filter( t => t.type === "NATURE" ).forEach( function( type ) {
-        for ( let i = 0; i < type.count; i++ ) {
-            rawTiles.push( {
-                id: null,
-                type: type.type,
-                value: type.value,
-                resource: (i < type.resourceCount) ? RESOURCE_TYPES[Math.floor(Math.random() * RESOURCE_TYPES.length)] : null,
-                description: function() { return "" + this.value + (this.resource ? (", Resource: " + this.resource) : "") }
-            } );
+
+function generateNewMap( factionCount ) {
+    let natureDeck = new Deck();
+    TILE_TYPES.filter( t => isNatureTile( t, true ) ).forEach( function( tileType ) {
+        for ( let i = 0; i < tileType.count; i++ ) {
+            natureDeck.insertCard( Tile.getNewTile( null, tileType, i ), true );
         }
     } );
 
-    for ( let i = rawTiles.length - 1; i > 0; i-- ) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [rawTiles[i], rawTiles[j]] = [rawTiles[j], rawTiles[i]];
+    let result = [];
+    let natureTiles = natureDeck.cards;
+    const centerHex = new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS, 0 );
+    const maxTileDepth = MAP_TILE_RADIUS * 2;
+    const capitalHexIds = getCapitalHexes( factionCount );
+    for ( let i = 0; i < maxTileDepth; i++ ) {
+        for ( let j = 0; j < maxTileDepth; j++ ) {
+            const hex = new Hex( i, j, 0 );
+            if ( hex.calculateDistance( centerHex ) < MAP_TILE_RADIUS ) {
+                if ( hex.id === centerHex.id ) {
+                    result.push( Tile.getAtlantisTile( hex.id ) );
+                }
+                else if ( capitalHexIds.includes( hex.id ) ) {
+                    result.push( Tile.getCapitalTile( hex.id ) );
+                }
+                else if ( isAdjacentToCapitalHex( hex, capitalHexIds ) ) {
+                    let natureTile = natureTiles.splice( natureTiles.findIndex( t => t.tileType.id !== VOLCANO ), 1 );
+                    natureTile.id = hex.id;
+                    result.push( natureTile );
+                }
+                else {
+                    let natureTile = natureTiles.shift();
+                    natureTile.id = hex.id;
+                    result.push( natureTile );
+                }
+            }
+        }
     }
 
+    return result;
+}
+
+function getCapitalHexes( factionCount ) {
     let result = [];
     const centerHex = new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS, 0 );
     const maxTileDepth = MAP_TILE_RADIUS * 2;
     for ( let i = 0; i < maxTileDepth; i++ ) {
         for ( let j = 0; j < maxTileDepth; j++ ) {
             const hex = new Hex( i, j, 0 );
-            if ( hex.calculateDistance( centerHex ) < MAP_TILE_RADIUS ) {
-                if ( hex.id === centerHex.id ) {
-                    const ATLANTIS_TYPE = TILE_TYPES.find( t => t.type === "ATLANTIS" );
-                    result.push( {
-                        id: null,
-                        type: ATLANTIS_TYPE.type,
-                        value: ATLANTIS_TYPE.value,
-                        resource: "ALL",
-                        description: function() { return "Atlantis"; }
-                    } );
+            if ( hex.calculateDistance( centerHex ) === MAP_TILE_RADIUS - 1 ) {
+                if ( getAllAdjacentHexes( hex ).filter( h => h.calculateDistance( centerHex ) < MAP_TILE_RADIUS ).length <= 3 ) { //Corner hex
+                    const isVerticalTop      = hex.y < MAP_TILE_RADIUS;
+                    const isHorizontalLeft   = hex.x < MAP_TILE_RADIUS;
+                    const isHorizontalRight  = hex.x > MAP_TILE_RADIUS;
+                    const isHorizontalMiddle = hex.x === MAP_TILE_RADIUS;
+                    if ( ( isVerticalTop  && isHorizontalLeft ) || //top-left
+                         ( isVerticalTop  && isHorizontalMiddle && factionCount >=  5 ) || //top-middle
+                         ( isVerticalTop  && isHorizontalRight  && factionCount >=  3 ) || //top-right
+                         ( !isVerticalTop && isHorizontalLeft   && factionCount >=  4 ) || //bottom-left
+                         ( !isVerticalTop && isHorizontalMiddle && factionCount === 3 ) || //bottom-middle
+                         ( !isVerticalTop && isHorizontalRight  && factionCount !== 3 ) || //bottom-right
+                         ( factionCount === 6 ) ) {
+                        result.push( hex.id );
+                    }
                 }
-                else if ( isCapitalHex( hex, factionCount ) ) {
-                    const CAPITAL_TYPE = TILE_TYPES.find( t => t.type === "CAPITAL" );
-                    result.push( {
-                        id: null,
-                        type: CAPITAL_TYPE.type,
-                        value: CAPITAL_TYPE.value,
-                        resource: null,
-                        description: function() { return "Capital"; }
-                    } );
-                }
-                else if ( isAdjacentToCapitalHex( hex, factionCount ) ) {
-                    let tileIndex = rawTiles.findIndex( t => t.value > 0 );
-                    result.push( rawTiles[tileIndex] );
-                    rawTiles.splice( tileIndex, 1 );
-                }
-                else {
-                    result.push( rawTiles.shift() );
-                }
-
-                result[result.length - 1].id = hex.id;
             }
         }
-    }
-
-    return result;
-}
-
-function isCapitalHex( hex, factionCount ) {
-    let result = false;
-    const centerHex = new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS, 0 );
-    if ( hex.calculateDistance( centerHex ) === MAP_TILE_RADIUS - 1 )
-    {
-        let isActiveCapital = false;
-        const isCorner = getAllAdjacentHexes( hex ).filter( h => h.calculateDistance( centerHex ) < MAP_TILE_RADIUS ).length <= 3;
-        if ( isCorner )
-        {
-            const isVerticalTop = hex.y < MAP_TILE_RADIUS;
-            const isHorizontalMiddle = hex.x === MAP_TILE_RADIUS;
-            const isHorizontalLeft = hex.x < MAP_TILE_RADIUS;
-            const isHorizontalRight = hex.x > MAP_TILE_RADIUS;
-
-            if ( ( isVerticalTop  && isHorizontalLeft ) || //top-left
-                 ( isVerticalTop  && isHorizontalMiddle && factionCount >=  5 ) || //top-middle
-                 ( isVerticalTop  && isHorizontalRight  && factionCount >=  3 ) || //top-right
-                 ( !isVerticalTop && isHorizontalLeft   && factionCount >=  4 ) || //bottom-left
-                 ( !isVerticalTop && isHorizontalMiddle && factionCount === 3 ) || //bottom-middle
-                 ( !isVerticalTop && isHorizontalRight  && factionCount !== 3 ) || //bottom-right
-                 ( factionCount === 6 ) ) {
-                isActiveCapital = true;
-            }
-        }
-        result = isActiveCapital;
     }
     return result;
 }
 
-function isAdjacentToCapitalHex( hex, factionCount ) {
-    return getAllAdjacentHexes( hex ).some( h => isCapitalHex( h, factionCount ) );
+function isAdjacentToCapitalHex( hex, capitalHexIds ) {
+    return getAllAdjacentHexes( hex ).some( h => capitalHexIds.includes( h.id ) );
 }
 
 function getAllAdjacentHexes( hex ) {
     const shiftValue = (hex.x % 2 === 0) ? -1 : 0;
     return [
         new Hex( hex.x-1, hex.y+shiftValue, 0 ),
-        new Hex( hex.x,      hex.y-1, 0 ),
+        new Hex( hex.x, hex.y-1, 0 ),
         new Hex( hex.x+1, hex.y+shiftValue, 0 ),
         new Hex( hex.x-1, hex.y+1+shiftValue, 0 ),
-        new Hex( hex.x,      hex.y+1, 0 ),
+        new Hex( hex.x, hex.y+1, 0 ),
         new Hex( hex.x+1, hex.y+1+shiftValue, 0 )
     ];
 }
 
-function createMap( callbackFunction ) {
+
+/*** GENERATE MAP DISPLAY ***/
+
+
+function generateMapSVG( callbackFunction ) {
     //todo 2 - Finish all Map work, including making image tiles, adding units, highlighting tiles, displaying icons
     //  You don't have to finish the actual images for each thing, just make placeholders that can be easily subbed out later
     let svg = id( "map" );
-    const viewBoxWidth = (TILE_SIDE_LENGTH * 12);
-    const viewBoxHeight = (TILE_SIDE_LENGTH * 13.5); //todo 2.5 - what's special about these numbers?
+    const maxTileDepth = MAP_TILE_RADIUS * 2;
+    const viewBoxWidth = (TILE_SIDE_LENGTH * 1.5 * maxTileDepth); //point-to-point hexagon height
+    const viewBoxHeight = (TILE_SIDE_LENGTH * Math.sqrt( 3 ) * maxTileDepth); //flat hexagon height
     svg.setAttributeNS(null, "viewBox", "0 0 " + viewBoxWidth + " " + viewBoxHeight );
 
     const centerHex = new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS, TILE_SIDE_LENGTH );
-    const maxTileDepth = MAP_TILE_RADIUS * 2;
     for ( let i = 0; i < maxTileDepth; i++ ) {
        for ( let j = 0; j < maxTileDepth; j++ ) {
            const hex = new Hex( i, j, TILE_SIDE_LENGTH );
@@ -169,6 +140,10 @@ function createMap( callbackFunction ) {
        }
     }
 }
+
+
+/*** HEX & POINT CLASSES ***/
+
 
 class Hex {
     constructor( x, y, sideLength ) {

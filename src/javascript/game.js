@@ -242,7 +242,21 @@ function viewCards() {
 
 
 function submit() {
-    showMessage( "Submit", "TODO" );
+    let isValidToSubmit = true;
+    if ( game.state.phase === 0.0 || game.state.phase === 0.5 ) {
+        if ( hasUnassignedUnits() ) {
+            showToaster( "Must assign purchased units" );
+        }
+    }
+    else if ( game.state.phase === 1 ) {
+        //
+    }
+    else if ( game.state.phase === 2 ) {
+        //
+    }
+    else if ( game.state.phase === 3 ) {
+        //
+    }
 }
 
 function showActions() {
@@ -294,9 +308,13 @@ function showAuctionActions() {
 }
 
 function showMarketActions() {
-    openMarketModal( {
-        resources: currentPlayer.resources
-    } );
+    //todo 6 - should I just treat currentPlayer as global?
+    openMarketModal(
+        currentPlayer,
+        function( response ) {
+            currentPlayer = response;
+        }
+    );
 }
 
 
@@ -436,6 +454,19 @@ function getArrayItemsFromString( array, value ) {
     return result;
 }
 
+function hasUnassignedUnits() {
+    let hasUnassignedUnits = false;
+    hasUnassignedUnits = currentPlayer.units.apostle.some(      u => u.tile === "unassigned" ) ? true : hasUnassignedUnits;
+    hasUnassignedUnits = currentPlayer.units.reaper.some(       u => u.tile === "unassigned" ) ? true : hasUnassignedUnits;
+    hasUnassignedUnits = currentPlayer.units.boomer.some(       u => u.tile === "unassigned" ) ? true : hasUnassignedUnits;
+    hasUnassignedUnits = currentPlayer.units.speedster.some(    u => u.tile === "unassigned" ) ? true : hasUnassignedUnits;
+    hasUnassignedUnits = currentPlayer.units.juggernaut.some(   u => u.tile === "unassigned" ) ? true : hasUnassignedUnits;
+    hasUnassignedUnits = currentPlayer.units.robot.some(        u => u.tile === "unassigned" ) ? true : hasUnassignedUnits;
+    hasUnassignedUnits = currentPlayer.units.godhand                        === "unassigned"   ? true : hasUnassignedUnits;
+    hasUnassignedUnits = currentPlayer.units.hero                           === "unassigned"   ? true : hasUnassignedUnits;
+    return hasUnassignedUnits;
+}
+
 
 /****** TO-DELETE ******/
 
@@ -450,7 +481,7 @@ function getLoadedGame() {
             event: 0,
             disaster: null
         },
-        map: generateRandomTiles( 3 ),
+        map: generateNewMap( 3 ),
         players: [
             {
                 id: "1",
