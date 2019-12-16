@@ -24,7 +24,7 @@ class Deck {
 
     insertCard( card, random = false ) {
         if ( random ) {
-            const randomIndex = Math.floor(Math.random() * this.cards.length);
+            const randomIndex = Math.floor(Math.random() * (this.cards.length + 1));
             this.cards.splice( randomIndex, 0, card );
         }
         else {

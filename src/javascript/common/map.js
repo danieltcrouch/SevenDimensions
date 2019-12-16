@@ -14,7 +14,6 @@ function generateNewMap( factionCount ) {
             natureDeck.insertCard( Tile.getNewTile( null, tileType, i ), true );
         }
     } );
-    //todo 2 - one volcano is always randomized to bottom and therefore never used
 
     let result = [];
     let natureTiles = natureDeck.cards;
