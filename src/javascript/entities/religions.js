@@ -1,10 +1,6 @@
-const HIGH_PRIEST                 = 0;
-const MINISTER_OF_DEVELOPMENT     = 1;
-const MINISTER_OF_FINANCE         = 2;
-const MINISTER_OF_FOREIGN_AFFAIRS = 3;
-const MINISTER_OF_STATE           = 4;
-const MINISTER_OF_TRAVEL          = 5;
-const MINISTER_OF_WAR             = 6;
+const CULT_OF_SECRETS       = 0;
+const PATH_OF_ENLIGHTENMENT = 1;
+const CHURCH_OF_TRUTH       = 2;
 
 const RELIGIONS = [
     new Religion( "0", "Cult of Secrets",       WHISPERS_IN_THE_DESERT ),

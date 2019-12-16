@@ -31,7 +31,7 @@ function generateNewMap( factionCount ) {
                     result.push( Tile.getCapitalTile( hex.id ) );
                 }
                 else if ( isAdjacentToCapitalHex( hex, capitalHexIds ) ) {
-                    let natureTile = natureTiles.splice( natureTiles.findIndex( t => t.tileType.id !== VOLCANO ), 1 );
+                    let natureTile = natureTiles.splice( natureTiles.findIndex( t => t.tileType.id !== VOLCANO ), 1 )[0];
                     natureTile.id = hex.id;
                     result.push( natureTile );
                 }

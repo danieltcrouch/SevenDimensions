@@ -44,19 +44,19 @@ function loadMap() {
     for ( let i = 0; i < game.map.length; i++ ) {
         const tile = game.map[i];
 
-        id(tile.id + "-text").innerHTML = tile.value + "";
+        id(tile.id + "-text").innerHTML = tile.tileType.value + "";
 
-        if ( tile.type === "ATLANTIS" ) {
+        if ( tile.tileType === TILE_TYPES[ATLANTIS] ) {
             hideById(tile.id + "-text");
             id(tile.id + "-polygon-i").setAttributeNS(null, "fill", "url(#atlantis)");
             id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
         }
-        else if ( tile.type === "CAPITAL" ) {
+        else if ( tile.tileType === TILE_TYPES[CAPITAL] ) {
             hideById(tile.id + "-text");
             id(tile.id + "-polygon-i").setAttributeNS(null, "fill", "url(#hem)");
             id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
         }
-        else if ( tile.value === 0 ) {
+        else if ( tile.tileType === TILE_TYPES[VOLCANO] ) {
             hideById(tile.id + "-text");
             id(tile.id + "-polygon-i").setAttributeNS(null, "fill", "url(#volcano)");
             id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
