@@ -46,17 +46,17 @@ function loadMap() {
 
         id(tile.id + "-text").innerHTML = tile.tileType.value + "";
 
-        if ( tile.tileType === TILE_TYPES[ATLANTIS] ) {
+        if ( tile.tileType.id === TILE_TYPES[ATLANTIS].id ) {
             hideById(tile.id + "-text");
             id(tile.id + "-polygon-i").setAttributeNS(null, "fill", "url(#atlantis)");
             id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
         }
-        else if ( tile.tileType === TILE_TYPES[CAPITAL] ) {
+        else if ( tile.tileType.id === TILE_TYPES[CAPITAL].id ) {
             hideById(tile.id + "-text");
             id(tile.id + "-polygon-i").setAttributeNS(null, "fill", "url(#hem)");
             id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
         }
-        else if ( tile.tileType === TILE_TYPES[VOLCANO] ) {
+        else if ( tile.tileType.id === TILE_TYPES[VOLCANO].id ) {
             hideById(tile.id + "-text");
             id(tile.id + "-polygon-i").setAttributeNS(null, "fill", "url(#volcano)");
             id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
@@ -120,19 +120,72 @@ function tileClickCallback( tileId ) {
         cl('selectedTileImage').forEach( t => t.classList.remove( "selectedTileImage" ) );
     }
 
+    //WORKED - id( tileId + "-polygon-i" ).style.display = "none";
+    //WORKED - changing image/text as I do in the load function
+    //WORKED - moving a polygon by its points IF the polygon has a higher z-index (by being declared) after
+    //id("2-2-polygon-i").setAttributeNS(null, "fill", "url(#hem)");
+    //id("2-2-polygon-s").setAttributeNS(null, "fill", "transparent");
+
+    let polygon;
     if ( isImageTile( tileId ) ) {
-        id( tileId + "-polygon-i" ).classList.add( "selectedTileImage" );
+        polygon = id( tileId + "-polygon-i" );
+        polygon.classList.add( "selectedTileImage" );
     }
     else {
-        id( tileId + "-polygon-s" ).classList.add( "selectedTile" );
+        polygon = id( tileId + "-polygon-s" );
+        polygon.classList.add( "selectedTile" );
     }
+    id( "selected-polygon" ).setAttributeNS(null, "points", polygon.getAttributeNS(null, "points") );
 
-    selectedTile = game.map.find( t => t.id === tileId );
+    const tileDetails = getTileDetails( tileId );
+    const playersDescription = tileDetails.players.map( p => p.username ).join(", ");
+    const unitsDescription = getTileUnitsDescription( tileDetails.unitSets, tileDetails.districtPlayer );
     id('tileDetailsDiv').innerHTML =
-        "Tile Selected: " + tileId + "<br/>" +
-        "Value: " + selectedTile.value;
+       "Players: " + playersDescription + "<br/>" +
+       "Tile Type: " + tileDetails.type + "<br/>" +
+       "Population: " + tileDetails.population + "<br/>" +
+       "Units: <br/>" + unitsDescription.join("<br/>");
     //todo 5 - Complete selected Tile section
     //  display unit hit/move values (show additions/buffs as well)
+}
+
+function getTileDetails( id ) {
+    selectedTile = game.map.find( t => t.id === id );
+    const districtPlayer = game.players.find( p => p.districts.tiles.includes( id ) );
+    let players = !!districtPlayer ? [ districtPlayer ] : [];
+    let unitSets = [];
+    game.players.forEach( p => {
+        let units = p.units.filter( u => u.tile === id );
+        if ( units.length > 0 ) {
+            unitSets.push( { id: p.id, units: units } );
+            if ( p.id !== districtPlayer.id ) {
+                players.push( p );
+            }
+        }
+    } );
+    return {
+        id: id,
+        districtPlayer: districtPlayer,
+        players: players,
+        unitSets: unitSets,
+        type: selectedTile.tileType.type,
+        population: selectedTile.tileType.value
+    };
+}
+
+function getTileUnitsDescription( unitSets, districtPlayer ) {
+    let result = [];
+    unitSets.forEach( set => {
+        const isDistrictPlayer = set.id === districtPlayer.id;
+        set.units.forEach( u => {
+            const isMultiple = u.count > 1;
+            const unitType = getUnitTypeFromId( u.id );
+            const unitDescription = isMultiple ? (u.count + " " + unitType.name + "s") : unitType.name;
+            const playerDescription = isDistrictPlayer ? "" : " (" + set.id + ")";
+            result.push( unitDescription + playerDescription );
+        });
+    } );
+    return result;
 }
 
 
@@ -244,7 +297,7 @@ function viewCards() {
 function submit() {
     let isValidToSubmit = true;
     if ( game.state.phase === 0.0 || game.state.phase === 0.5 ) {
-        if ( hasUnassignedUnits() ) {
+        if ( currentPlayer.units.some( u => u.tile === "unassigned" ) ) {
             showToaster( "Must assign purchased units" );
         }
     }
@@ -454,19 +507,6 @@ function getArrayItemsFromString( array, value ) {
     return result;
 }
 
-function hasUnassignedUnits() {
-    let hasUnassignedUnits = false;
-    hasUnassignedUnits = currentPlayer.units.apostle.some(      u => u.tile === "unassigned" ) ? true : hasUnassignedUnits;
-    hasUnassignedUnits = currentPlayer.units.reaper.some(       u => u.tile === "unassigned" ) ? true : hasUnassignedUnits;
-    hasUnassignedUnits = currentPlayer.units.boomer.some(       u => u.tile === "unassigned" ) ? true : hasUnassignedUnits;
-    hasUnassignedUnits = currentPlayer.units.speedster.some(    u => u.tile === "unassigned" ) ? true : hasUnassignedUnits;
-    hasUnassignedUnits = currentPlayer.units.juggernaut.some(   u => u.tile === "unassigned" ) ? true : hasUnassignedUnits;
-    hasUnassignedUnits = currentPlayer.units.robot.some(        u => u.tile === "unassigned" ) ? true : hasUnassignedUnits;
-    hasUnassignedUnits = currentPlayer.units.godhand                        === "unassigned"   ? true : hasUnassignedUnits;
-    hasUnassignedUnits = currentPlayer.units.hero                           === "unassigned"   ? true : hasUnassignedUnits;
-    return hasUnassignedUnits;
-}
-
 
 /****** TO-DELETE ******/
 
@@ -513,16 +553,11 @@ function getLoadedGame() {
                     //todo 6 - or use String of Bits?
                     offices: []
                 },
-                units: {
-                    apostle: [],
-                    reaper: [ { tile: "1-2", count: 3 } ],
-                    boomer: [],
-                    speedster: [],
-                    juggernaut: [],
-                    robot: [],
-                    godhand: null,
-                    hero: "1-2"
-                },
+                units: [
+                    { id: "1", tile: "1-2", count: 3 },
+                    { id: "1", tile: "2-3", count: 1 },
+                    { id: "7", tile: "1-2", count: 1 }
+                ],
                 districts: {
                     capital: "1-2",
                     tiles: ["1-2", "2-3"]
@@ -565,16 +600,11 @@ function getLoadedGame() {
                     chaos: "0100000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000",
                     offices: []
                 },
-                units: {
-                    apostle: [ { tile: "7-2", count: 1 } ],
-                    reaper: [ { tile: "7-2", count: 1 } ],
-                    boomer: [],
-                    speedster: [],
-                    juggernaut: [],
-                    robot: [],
-                    godhand: null,
-                    hero: "7-2"
-                },
+                units: [
+                    { id: "0", tile: "7-2", count: 1 },
+                    { id: "1", tile: "7-2", count: 1 },
+                    { id: "7", tile: "7-2", count: 1 }
+                ],
                 districts: {
                     capital: "7-2",
                     tiles: ["7-2"]
@@ -613,16 +643,7 @@ function getLoadedGame() {
                     chaos: "0010000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000",
                     offices: []
                 },
-                units: {
-                    apostle: [],
-                    reaper: [],
-                    boomer: [],
-                    speedster: [],
-                    juggernaut: [],
-                    robot: [],
-                    godhand: null,
-                    hero: null
-                },
+                units: [],
                 districts: {
                     capital: "4-7",
                     tiles: ["4-7"]

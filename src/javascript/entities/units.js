@@ -7,6 +7,10 @@ const ROBOT        = 5;
 const GODHAND      = 6;
 const HERO         = 7;
 
+function getUnitTypeFromId( id ) {
+    return UNIT_TYPES.find( u => u.id === id );
+}
+
 const UNIT_TYPES = [
     new UnitType( "0", "Apostle",      6,  0,  1 ),
     new UnitType( "1", "Reaper",       1,  12, 1 ),

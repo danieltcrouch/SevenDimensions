@@ -24,6 +24,7 @@ function generateNewMap( factionCount ) {
         for ( let j = 0; j < maxTileDepth; j++ ) {
             const hex = new Hex( i, j, 0 );
             if ( hex.calculateDistance( centerHex ) < MAP_TILE_RADIUS ) {
+                //todo 2 - volcanoes are appearing next to capitals
                 if ( hex.id === centerHex.id ) {
                     result.push( Tile.getAtlantisTile( hex.id ) );
                 }
@@ -112,8 +113,8 @@ function generateMapSVG( callbackFunction ) {
            if ( hex.calculateDistance( centerHex ) < MAP_TILE_RADIUS ) {
                let tile = document.createElementNS( "http://www.w3.org/2000/svg", "g" );
                tile.setAttributeNS(null, "id", hex.id );
-               tile.setAttributeNS(null, "class", "tile" );
                tile.setAttributeNS(null, "onclick", callbackFunction.name + "('" + hex.id + "')" );
+               tile.classList.add( "tile" );
 
                let polygonImage = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
                polygonImage.setAttributeNS(null, "id", hex.id + "-polygon-i" );
@@ -139,6 +140,14 @@ function generateMapSVG( callbackFunction ) {
            }
        }
     }
+
+    let selectedShape = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
+    selectedShape.setAttributeNS(null, "id", "selected-polygon" );
+    selectedShape.setAttributeNS(null, "fill", "transparent");
+    selectedShape.classList.add( "tile" );
+    selectedShape.style.stroke = "gold";
+    selectedShape.style.fill = "transparent";
+    svg.appendChild( selectedShape );
 }
 
 
