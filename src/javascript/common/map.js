@@ -14,6 +14,7 @@ function generateNewMap( factionCount ) {
             natureDeck.insertCard( Tile.getNewTile( null, tileType, i ), true );
         }
     } );
+    //todo 2 - one volcano is always randomized to bottom and therefore never used
 
     let result = [];
     let natureTiles = natureDeck.cards;
@@ -24,7 +25,6 @@ function generateNewMap( factionCount ) {
         for ( let j = 0; j < maxTileDepth; j++ ) {
             const hex = new Hex( i, j, 0 );
             if ( hex.calculateDistance( centerHex ) < MAP_TILE_RADIUS ) {
-                //todo 2 - volcanoes are appearing next to capitals
                 if ( hex.id === centerHex.id ) {
                     result.push( Tile.getAtlantisTile( hex.id ) );
                 }
@@ -32,7 +32,7 @@ function generateNewMap( factionCount ) {
                     result.push( Tile.getCapitalTile( hex.id ) );
                 }
                 else if ( isAdjacentToCapitalHex( hex, capitalHexIds ) ) {
-                    let natureTile = natureTiles.splice( natureTiles.findIndex( t => t.tileType.id !== VOLCANO ), 1 )[0];
+                    let natureTile = natureTiles.splice( natureTiles.findIndex( t => isNatureTile( t.tileType ) ), 1 )[0];
                     natureTile.id = hex.id;
                     result.push( natureTile );
                 }

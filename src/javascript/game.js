@@ -115,10 +115,10 @@ function initializeHandlers() {
 }
 
 function tileClickCallback( tileId ) {
-    if ( selectedTile && tileId !== selectedTile.id ) {
-        cl('selectedTile').forEach( t => t.classList.remove( "selectedTile" ) );
-        cl('selectedTileImage').forEach( t => t.classList.remove( "selectedTileImage" ) );
-    }
+    // if ( selectedTile && tileId !== selectedTile.id ) {
+    //     cl('selectedTile').forEach( t => t.classList.remove( "selectedTile" ) );
+    //     cl('selectedTileImage').forEach( t => t.classList.remove( "selectedTileImage" ) );
+    // }
 
     //WORKED - id( tileId + "-polygon-i" ).style.display = "none";
     //WORKED - changing image/text as I do in the load function
@@ -126,15 +126,7 @@ function tileClickCallback( tileId ) {
     //id("2-2-polygon-i").setAttributeNS(null, "fill", "url(#hem)");
     //id("2-2-polygon-s").setAttributeNS(null, "fill", "transparent");
 
-    let polygon;
-    if ( isImageTile( tileId ) ) {
-        polygon = id( tileId + "-polygon-i" );
-        polygon.classList.add( "selectedTileImage" );
-    }
-    else {
-        polygon = id( tileId + "-polygon-s" );
-        polygon.classList.add( "selectedTile" );
-    }
+    let polygon = isImageTile( tileId ) ? id( tileId + "-polygon-i" ) : id( tileId + "-polygon-s" );
     id( "selected-polygon" ).setAttributeNS(null, "points", polygon.getAttributeNS(null, "points") );
 
     const tileDetails = getTileDetails( tileId );

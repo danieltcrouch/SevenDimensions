@@ -2,8 +2,8 @@ const VOLCANO  = 0;
 const CAPITAL  = 6;
 const ATLANTIS = 7;
 
-function isNatureTile( tile, includeVolcanoes = false ) {
-    return tile.type === "Nature" && !( includeVolcanoes && tile.id === VOLCANO );
+function isNatureTile( tileType, includeVolcanoes = false ) {
+    return tileType.type === "Nature" && ( includeVolcanoes || tileType.id !== (VOLCANO+"") );
 }
 
 const TILE_TYPES = [

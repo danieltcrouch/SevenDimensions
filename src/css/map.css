@@ -27,19 +27,6 @@
     filter: url(#hover);
 }
 
-.selectedTile {
-    fill: grey;
-}
-
-.selectedTileImage {
-    filter: url(#selected);
-}
-
-.tile:hover .polygonImage.selectedTileImage {
-    /* todo 2 - make a filter that makes white into lightgray */
-    filter: url(#selected);
-}
-
 /*** TEAM CSS ***/
 
 .red {
