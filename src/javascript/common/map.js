@@ -145,7 +145,7 @@ function generateMapSVG( callbackFunction ) {
     selectedShape.setAttributeNS(null, "fill", "transparent");
     selectedShape.classList.add( "tile" );
     selectedShape.style.stroke = "gold";
-    selectedShape.style.fill = "transparent";
+    selectedShape.style.fill = "none";
     svg.appendChild( selectedShape );
 }
 
