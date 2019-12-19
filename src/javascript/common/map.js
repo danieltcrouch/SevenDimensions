@@ -85,7 +85,6 @@ function isAdjacentToCapitalHex( hex, capitalHexIds ) {
 
 
 function generateMapSVG( callbackFunction ) {
-    //todo 2 - Move styling to css file
     let svg = id( "map" );
     const maxTileDepth = MAP_TILE_RADIUS * 2;
     const viewBoxWidth = (TILE_SIDE_LENGTH * 1.5 * maxTileDepth); //point-to-point hexagon height
@@ -122,14 +121,14 @@ function generateMapSVG( callbackFunction ) {
                text.innerHTML = "" + j;
                tile.appendChild( text );
 
-               const X_OFFSET = 4;
-               const Y_OFFSET = 6;
+               const X_OFFSET = (TILE_SIDE_LENGTH / 2) - (TILE_SIDE_LENGTH * .1);
+               const Y_OFFSET = (TILE_SIDE_LENGTH / 2) + (TILE_SIDE_LENGTH * .1);
 
                let iconWonder = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
                iconWonder.setAttributeNS(null, "id", hex.id + "-wonder" );
                iconWonder.setAttributeNS(null, "cx", hex.midPoint.x - X_OFFSET );
                iconWonder.setAttributeNS(null, "cy", hex.midPoint.y - Y_OFFSET );
-               iconWonder.setAttributeNS(null, "fill", "url(#arc)");
+               iconWonder.setAttributeNS(null, "fill", "url(#won0)");
                iconWonder.classList.add( "tileIcon" );
                iconWonder.style.display = "none";
                tile.appendChild( iconWonder );
@@ -138,7 +137,7 @@ function generateMapSVG( callbackFunction ) {
                iconCamelot.setAttributeNS(null, "id", hex.id + "-camelot" );
                iconCamelot.setAttributeNS(null, "cx", hex.midPoint.x - 0 );
                iconCamelot.setAttributeNS(null, "cy", hex.midPoint.y - Y_OFFSET );
-               iconCamelot.setAttributeNS(null, "fill", "url(#arc)");
+               iconCamelot.setAttributeNS(null, "fill", "url(#cam)");
                iconWonder.classList.add( "tileIcon" );
                iconCamelot.style.display = "none";
                tile.appendChild( iconCamelot );
@@ -147,7 +146,7 @@ function generateMapSVG( callbackFunction ) {
                iconResource.setAttributeNS(null, "id", hex.id + "-resource" );
                iconResource.setAttributeNS(null, "cx", hex.midPoint.x + X_OFFSET );
                iconResource.setAttributeNS(null, "cy", hex.midPoint.y - Y_OFFSET );
-               iconResource.setAttributeNS(null, "fill", "url(#arc)");
+               iconResource.setAttributeNS(null, "fill", "url(#res0)");
                iconResource.classList.add( "tileIcon" );
                iconResource.style.display = "none";
                tile.appendChild( iconResource );
@@ -156,7 +155,7 @@ function generateMapSVG( callbackFunction ) {
                iconUnit.setAttributeNS(null, "id", hex.id + "-unit" );
                iconUnit.setAttributeNS(null, "cx", hex.midPoint.x - X_OFFSET );
                iconUnit.setAttributeNS(null, "cy", hex.midPoint.y + Y_OFFSET );
-               iconUnit.setAttributeNS(null, "fill", "url(#arc)");
+               iconUnit.setAttributeNS(null, "fill", "url(#unit)");
                iconUnit.classList.add( "tileIcon" );
                iconUnit.style.display = "none";
                tile.appendChild( iconUnit );
@@ -165,7 +164,7 @@ function generateMapSVG( callbackFunction ) {
                iconHero.setAttributeNS(null, "id", hex.id + "-hero" );
                iconHero.setAttributeNS(null, "cx", hex.midPoint.x + 0 );
                iconHero.setAttributeNS(null, "cy", hex.midPoint.y + Y_OFFSET );
-               iconHero.setAttributeNS(null, "fill", "url(#arc)");
+               iconHero.setAttributeNS(null, "fill", "url(#hero0)");
                iconHero.classList.add( "tileIcon" );
                iconHero.style.display = "none";
                tile.appendChild( iconHero );
@@ -174,7 +173,7 @@ function generateMapSVG( callbackFunction ) {
                iconReligion.setAttributeNS(null, "id", hex.id + "-religion" );
                iconReligion.setAttributeNS(null, "cx", hex.midPoint.x + X_OFFSET );
                iconReligion.setAttributeNS(null, "cy", hex.midPoint.y + Y_OFFSET );
-               iconReligion.setAttributeNS(null, "fill", "url(#arc)");
+               iconReligion.setAttributeNS(null, "fill", "url(#rel0)");
                iconReligion.classList.add( "tileIcon" );
                iconReligion.style.display = "none";
                tile.appendChild( iconReligion );
@@ -186,9 +185,8 @@ function generateMapSVG( callbackFunction ) {
                    initiativeToken.setAttributeNS(null, "id", hex.id + "-" + bHexSide.id + "-token" );
                    initiativeToken.setAttributeNS(null, "cx", (hex.midPoint.x + bHexSide.midPoint.x) / 2 );
                    initiativeToken.setAttributeNS(null, "cy", (hex.midPoint.y + bHexSide.midPoint.y) / 2 );
-                   initiativeToken.setAttributeNS(null, "r", "1.5" );
-                   initiativeToken.setAttributeNS(null, "stroke", "none");
-                   initiativeToken.setAttributeNS(null, "fill", "url(#arc)");
+                   initiativeToken.setAttributeNS(null, "fill", "url(#init)");
+                   initiativeToken.classList.add( "tileIcon" );
                    initiativeToken.style.display = "none";
                    svg.appendChild( initiativeToken );
                } );
