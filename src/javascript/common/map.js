@@ -188,7 +188,7 @@ function generateMapSVG( callbackFunction ) {
                    initiativeToken.setAttributeNS(null, "fill", "url(#init)");
                    initiativeToken.classList.add( "tileIcon" );
                    initiativeToken.style.display = "none";
-                   svg.appendChild( initiativeToken );
+                   tile.appendChild( initiativeToken );
                } );
 
                svg.appendChild( tile );

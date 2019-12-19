@@ -69,17 +69,6 @@
             loadGame( "<?php echo $_GET['id'] ?>" );
         }
     } );
-
-
-    //todo 3 - move to Common
-    function docReady( fn ) {
-        if ( document.readyState === "complete" || document.readyState === "interactive" ) {
-            setTimeout( fn, 1 );
-        }
-        else {
-            document.addEventListener( "DOMContentLoaded", fn );
-        }
-    }
 </script>
 <?php include("html/market-modal.html"); ?>
 <?php includeModals(); ?>
