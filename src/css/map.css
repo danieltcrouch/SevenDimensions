@@ -11,10 +11,7 @@
     stroke-width: 0;
 }
 
-.polygonImage {
-}
-
-.polygonShape {
+.tileBackground {
 }
 
 .tile:hover .tileText {
@@ -23,8 +20,14 @@
     stroke-width: .5;
 }
 
-.tile:hover .polygonImage {
+.tile:hover .tileBackground {
     filter: url(#hover);
+}
+
+.tileIcon {
+    r: 1.5;
+    stroke: none;
+    fill: url(#won0);
 }
 
 /*** TEAM CSS ***/

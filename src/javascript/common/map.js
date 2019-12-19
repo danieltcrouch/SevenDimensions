@@ -80,25 +80,12 @@ function isAdjacentToCapitalHex( hex, capitalHexIds ) {
     return getAllAdjacentHexes( hex ).some( h => capitalHexIds.includes( h.id ) );
 }
 
-function getAllAdjacentHexes( hex ) {
-    const shiftValue = (hex.x % 2 === 0) ? -1 : 0;
-    return [
-        new Hex( hex.x-1, hex.y+shiftValue, 0 ),
-        new Hex( hex.x, hex.y-1, 0 ),
-        new Hex( hex.x+1, hex.y+shiftValue, 0 ),
-        new Hex( hex.x-1, hex.y+1+shiftValue, 0 ),
-        new Hex( hex.x, hex.y+1, 0 ),
-        new Hex( hex.x+1, hex.y+1+shiftValue, 0 )
-    ];
-}
-
 
 /*** GENERATE MAP DISPLAY ***/
 
 
 function generateMapSVG( callbackFunction ) {
-    //todo 2 - Finish all Map work, including making image tiles, adding units, highlighting tiles, displaying icons
-    //  You don't have to finish the actual images for each thing, just make placeholders that can be easily subbed out later
+    //todo 2 - Move styling to css file
     let svg = id( "map" );
     const maxTileDepth = MAP_TILE_RADIUS * 2;
     const viewBoxWidth = (TILE_SIDE_LENGTH * 1.5 * maxTileDepth); //point-to-point hexagon height
@@ -115,17 +102,17 @@ function generateMapSVG( callbackFunction ) {
                tile.setAttributeNS(null, "onclick", callbackFunction.name + "('" + hex.id + "')" );
                tile.classList.add( "tile" );
 
-               let polygonImage = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
-               polygonImage.setAttributeNS(null, "id", hex.id + "-polygon-i" );
-               polygonImage.setAttributeNS(null, "points", hex.vertices.map( p => (p.x + "," + p.y) ).join(" ") );
-               polygonImage.classList.add( "polygonImage" );
-               tile.appendChild( polygonImage );
+               let background = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
+               background.setAttributeNS(null, "id", hex.id + "-background" );
+               background.setAttributeNS(null, "points", hex.vertices.map( p => (p.x + "," + p.y) ).join(" ") );
+               background.classList.add( "tileBackground" );
+               tile.appendChild( background );
 
-               let polygonShape = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
-               polygonShape.setAttributeNS(null, "id", hex.id + "-polygon-s" );
-               polygonShape.setAttributeNS(null, "points", hex.vertices.map( p => (p.x + "," + p.y) ).join(" ") );
-               polygonShape.classList.add( "polygonShape" );
-               tile.appendChild( polygonShape );
+               let border = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
+               border.setAttributeNS(null, "id", hex.id + "-border" );
+               border.setAttributeNS(null, "fill", "none" );
+               border.setAttributeNS(null, "points", hex.vertices.map( p => (p.x + "," + p.y) ).join(" ") );
+               tile.appendChild( border );
 
                let text = document.createElementNS( "http://www.w3.org/2000/svg", "text" );
                text.setAttributeNS(null, "id", hex.id + "-text" );
@@ -134,6 +121,77 @@ function generateMapSVG( callbackFunction ) {
                text.setAttributeNS(null, "class", "tileText" );
                text.innerHTML = "" + j;
                tile.appendChild( text );
+
+               const X_OFFSET = 4;
+               const Y_OFFSET = 6;
+
+               let iconWonder = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
+               iconWonder.setAttributeNS(null, "id", hex.id + "-wonder" );
+               iconWonder.setAttributeNS(null, "cx", hex.midPoint.x - X_OFFSET );
+               iconWonder.setAttributeNS(null, "cy", hex.midPoint.y - Y_OFFSET );
+               iconWonder.setAttributeNS(null, "fill", "url(#arc)");
+               iconWonder.classList.add( "tileIcon" );
+               iconWonder.style.display = "none";
+               tile.appendChild( iconWonder );
+
+               let iconCamelot = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
+               iconCamelot.setAttributeNS(null, "id", hex.id + "-camelot" );
+               iconCamelot.setAttributeNS(null, "cx", hex.midPoint.x - 0 );
+               iconCamelot.setAttributeNS(null, "cy", hex.midPoint.y - Y_OFFSET );
+               iconCamelot.setAttributeNS(null, "fill", "url(#arc)");
+               iconWonder.classList.add( "tileIcon" );
+               iconCamelot.style.display = "none";
+               tile.appendChild( iconCamelot );
+
+               let iconResource = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
+               iconResource.setAttributeNS(null, "id", hex.id + "-resource" );
+               iconResource.setAttributeNS(null, "cx", hex.midPoint.x + X_OFFSET );
+               iconResource.setAttributeNS(null, "cy", hex.midPoint.y - Y_OFFSET );
+               iconResource.setAttributeNS(null, "fill", "url(#arc)");
+               iconResource.classList.add( "tileIcon" );
+               iconResource.style.display = "none";
+               tile.appendChild( iconResource );
+
+               let iconUnit = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
+               iconUnit.setAttributeNS(null, "id", hex.id + "-unit" );
+               iconUnit.setAttributeNS(null, "cx", hex.midPoint.x - X_OFFSET );
+               iconUnit.setAttributeNS(null, "cy", hex.midPoint.y + Y_OFFSET );
+               iconUnit.setAttributeNS(null, "fill", "url(#arc)");
+               iconUnit.classList.add( "tileIcon" );
+               iconUnit.style.display = "none";
+               tile.appendChild( iconUnit );
+
+               let iconHero = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
+               iconHero.setAttributeNS(null, "id", hex.id + "-hero" );
+               iconHero.setAttributeNS(null, "cx", hex.midPoint.x + 0 );
+               iconHero.setAttributeNS(null, "cy", hex.midPoint.y + Y_OFFSET );
+               iconHero.setAttributeNS(null, "fill", "url(#arc)");
+               iconHero.classList.add( "tileIcon" );
+               iconHero.style.display = "none";
+               tile.appendChild( iconHero );
+
+               let iconReligion = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
+               iconReligion.setAttributeNS(null, "id", hex.id + "-religion" );
+               iconReligion.setAttributeNS(null, "cx", hex.midPoint.x + X_OFFSET );
+               iconReligion.setAttributeNS(null, "cy", hex.midPoint.y + Y_OFFSET );
+               iconReligion.setAttributeNS(null, "fill", "url(#arc)");
+               iconReligion.classList.add( "tileIcon" );
+               iconReligion.style.display = "none";
+               tile.appendChild( iconReligion );
+
+               const belowHexes = getAllAdjacentHexes( hex ).filter( h => h.calculateDistance( centerHex ) < MAP_TILE_RADIUS ).filter( h => h.x < hex.x );
+               belowHexes.forEach( function( bHex ) {
+                   let bHexSide = new Hex( bHex.x, bHex.y, TILE_SIDE_LENGTH );
+                   let initiativeToken = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
+                   initiativeToken.setAttributeNS(null, "id", hex.id + "-" + bHexSide.id + "-token" );
+                   initiativeToken.setAttributeNS(null, "cx", (hex.midPoint.x + bHexSide.midPoint.x) / 2 );
+                   initiativeToken.setAttributeNS(null, "cy", (hex.midPoint.y + bHexSide.midPoint.y) / 2 );
+                   initiativeToken.setAttributeNS(null, "r", "1.5" );
+                   initiativeToken.setAttributeNS(null, "stroke", "none");
+                   initiativeToken.setAttributeNS(null, "fill", "url(#arc)");
+                   initiativeToken.style.display = "none";
+                   svg.appendChild( initiativeToken );
+               } );
 
                svg.appendChild( tile );
            }
@@ -147,6 +205,18 @@ function generateMapSVG( callbackFunction ) {
     selectedShape.style.stroke = "gold";
     selectedShape.style.fill = "none";
     svg.appendChild( selectedShape );
+}
+
+function getAllAdjacentHexes( hex ) {
+    const shiftValue = (hex.x % 2 === 0) ? -1 : 0;
+    return [
+        new Hex( hex.x-1, hex.y+shiftValue, 0 ),
+        new Hex( hex.x, hex.y-1, 0 ),
+        new Hex( hex.x+1, hex.y+shiftValue, 0 ),
+        new Hex( hex.x-1, hex.y+1+shiftValue, 0 ),
+        new Hex( hex.x, hex.y+1, 0 ),
+        new Hex( hex.x+1, hex.y+1+shiftValue, 0 )
+    ];
 }
 
 

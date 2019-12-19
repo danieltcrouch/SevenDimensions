@@ -48,20 +48,23 @@ function loadMap() {
 
         if ( tile.tileType.id === TILE_TYPES[ATLANTIS].id ) {
             hideById(tile.id + "-text");
-            id(tile.id + "-polygon-i").setAttributeNS(null, "fill", "url(#atlantis)");
-            id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
-
-            addWonderIcon(tile.id);
+            id(tile.id + "-background").setAttributeNS(null, "fill", "url(#atlantis)");
+            //id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
         }
         else if ( tile.tileType.id === TILE_TYPES[CAPITAL].id ) {
             hideById(tile.id + "-text");
-            id(tile.id + "-polygon-i").setAttributeNS(null, "fill", "url(#hem)");
-            id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
+            id(tile.id + "-background").setAttributeNS(null, "fill", "url(#heroTile0)");
+            //id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
         }
         else if ( tile.tileType.id === TILE_TYPES[VOLCANO].id ) {
             hideById(tile.id + "-text");
-            id(tile.id + "-polygon-i").setAttributeNS(null, "fill", "url(#volcano)");
-            id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
+            id(tile.id + "-background").setAttributeNS(null, "fill", "url(#volcano)");
+            //id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
+        }
+
+        const tileDetails = getTileDetails( tile.id );
+        if ( tileDetails.unitSets.length > 0 ) {
+            id(tile.id + "-unit").style.display = "";
         }
     }
 
@@ -71,41 +74,9 @@ function loadMap() {
         let player = game.players[i];
         const color = getColorFromIndex( i );
         player.districts.tiles.forEach( function( tileId ) {
-            if ( isImageTile( tileId ) ) {
-                id( tileId + "-polygon-i" ).classList.add( color + "Image" );
-            }
-            else {
-                id( tileId + "-polygon-s" ).classList.add( color );
-            }
+            id( tileId + "-background" ).classList.add( color + (isImageTile( tileId ) ? "Image" : "") );
         } );
     }
-
-    loadUnits();
-}
-
-function addWonderIcon( tileId ) {
-    let tile = id(tileId);
-    let text = id(tileId + "-text");
-    let circle = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
-    circle.setAttributeNS(null, "id", tileId + "-wonder" );
-    circle.setAttributeNS(null, "cx", text.getAttributeNS(null, "x") - 4 );
-    circle.setAttributeNS(null, "cy", text.getAttributeNS(null, "y") - 6 );
-    circle.setAttributeNS(null, "r", "1.5" );
-    circle.setAttributeNS(null, "stroke", "none");
-    circle.setAttributeNS(null, "fill", "url(#arc)");
-    tile.appendChild( circle );
-    let circle2 = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
-    circle2.setAttributeNS(null, "id", tileId + "-wonder2" );
-    circle2.setAttributeNS(null, "cx", text.getAttributeNS(null, "x") );
-    circle2.setAttributeNS(null, "cy", text.getAttributeNS(null, "y") - 6 );
-    circle2.setAttributeNS(null, "r", "1.5" );
-    circle2.setAttributeNS(null, "stroke", "none");
-    circle2.setAttributeNS(null, "fill", "url(#arc)");
-    tile.appendChild( circle2 );
-}
-
-function loadUnits() {
-    //
 }
 
 function loadUser() {
@@ -149,7 +120,7 @@ function tileClickCallback( tileId ) {
     //id("2-2-polygon-i").setAttributeNS(null, "fill", "url(#hem)");
     //id("2-2-polygon-s").setAttributeNS(null, "fill", "transparent");
 
-    let polygon = isImageTile( tileId ) ? id( tileId + "-polygon-i" ) : id( tileId + "-polygon-s" );
+    let polygon = id( tileId + "-border" );
     id( "selected-polygon" ).setAttributeNS(null, "points", polygon.getAttributeNS(null, "points") );
 
     const tileDetails = getTileDetails( tileId );
