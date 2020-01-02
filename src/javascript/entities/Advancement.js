@@ -4,5 +4,3 @@ class Advancement extends Entity {
         this.description = description;
     }
 }
-
-//todo 4 - finish out all entity files, making classes and helper functions for everything; don't use sub-folders--put it all under entities

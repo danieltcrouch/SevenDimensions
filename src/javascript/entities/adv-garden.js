@@ -4,7 +4,7 @@ const FLOWER_GARDEN    = 2;
 const HANGING_GARDEN   = 3;
 const GARDEN_OF_EDEN   = 4;
 
-function getGardenCost( districtCount ) { return 7 * districtCount; };
+const getGardenCost = function( districtCount ) { return 7 * districtCount; };
 
 const GARDENS = [
     new Advancement( "0", "Garden", "Water Garden",     getGardenCost, "Units defending a district receive +2 on combat rolls" ),

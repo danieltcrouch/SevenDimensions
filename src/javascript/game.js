@@ -80,9 +80,9 @@ function loadMap() {
 }
 
 function loadUser() {
-    currentPlayer = game.players.find( p => p.id === userId );
+    currentPlayer = getPlayer( userId );
     id('playerName').innerText = currentPlayer.username;
-    id('factionName').innerText = getFactionName( currentPlayer.factionId );
+    id('factionName').innerText = getFaction( currentPlayer.factionId ).name;
 
     id('victoryPointsValue').innerText = calculateVP( currentPlayer ) + "";
     id('warBucksValue').innerText = currentPlayer.warBucks + "";
@@ -109,6 +109,8 @@ function initializeHandlers() {
 }
 
 function tileClickCallback( tileId ) {
+    //todo 10 - delete this commented code
+
     // if ( selectedTile && tileId !== selectedTile.id ) {
     //     cl('selectedTile').forEach( t => t.classList.remove( "selectedTile" ) );
     //     cl('selectedTileImage').forEach( t => t.classList.remove( "selectedTileImage" ) );
@@ -124,53 +126,54 @@ function tileClickCallback( tileId ) {
     id( "selected-polygon" ).setAttributeNS(null, "points", polygon.getAttributeNS(null, "points") );
 
     const tileDetails = getTileDetails( tileId );
-    const playersDescription = tileDetails.players.map( p => p.username ).join(", ");
-    const unitsDescription = getTileUnitsDescription( tileDetails.unitSets, tileDetails.districtPlayer );
-    id('tileDetailsDiv').innerHTML =
-       "Players: " + playersDescription + "<br/>" +
-       "Tile Type: " + tileDetails.type + "<br/>" +
-       "Population: " + tileDetails.population + "<br/>" +
-       "Units: <br/>" + unitsDescription.join("<br/>");
-    //todo 5 - Complete selected Tile section
-    //  display unit hit/move values (show additions/buffs as well)
+    let tileDetailsHTML =
+        "Tile Type: " + tileDetails.type + "<br/>" +
+        "Population: " + tileDetails.population + "<br/>";
+    if ( tileDetails.districtPlayerId ) {
+        tileDetailsHTML += "District: " + getPlayer( tileDetails.districtPlayerId ).username + "<br/>";
+    }
+    if ( tileDetails.unitSets.length ) {
+        tileDetailsHTML += "<br/>";
+    }
+    tileDetails.unitSets.forEach( us => {
+        const player = getPlayer( us.id );
+        const unitDescriptions = getUnitSetDescriptions( us, tileDetails.districtPlayerId );
+        tileDetailsHTML += "Units (" + player.username + "): <br/>";
+        tileDetailsHTML += unitDescriptions.join("<br/>");
+        tileDetailsHTML += "<br/><br/>";
+    } );
+    id('tileDetailsDiv').innerHTML = tileDetailsHTML;
 }
 
 function getTileDetails( id ) {
     selectedTile = game.map.find( t => t.id === id );
     const districtPlayer = game.players.find( p => p.districts.tiles.includes( id ) );
-    let players = !!districtPlayer ? [ districtPlayer ] : [];
     let unitSets = [];
     game.players.forEach( p => {
         let units = p.units.filter( u => u.tile === id );
         if ( units.length > 0 ) {
             unitSets.push( { id: p.id, units: units } );
-            if ( p.id !== districtPlayer.id ) {
-                players.push( p );
-            }
         }
     } );
     return {
         id: id,
-        districtPlayer: districtPlayer,
-        players: players,
-        unitSets: unitSets,
         type: selectedTile.tileType.type,
-        population: selectedTile.tileType.value
+        population: selectedTile.tileType.value,
+        districtPlayerId: districtPlayer ? districtPlayer.id : null,
+        unitSets: unitSets
     };
 }
 
-function getTileUnitsDescription( unitSets, districtPlayer ) {
+function getUnitSetDescriptions( unitSet ) {
     let result = [];
-    unitSets.forEach( set => {
-        const isDistrictPlayer = set.id === districtPlayer.id;
-        set.units.forEach( u => {
-            const isMultiple = u.count > 1;
-            const unitType = getUnitTypeFromId( u.id );
-            const unitDescription = isMultiple ? (u.count + " " + unitType.name + "s") : unitType.name;
-            const playerDescription = isDistrictPlayer ? "" : " (" + set.id + ")";
-            result.push( unitDescription + playerDescription );
-        });
-    } );
+    unitSet.units.forEach( u => {
+        const isMultiple = u.count > 1;
+        const unitType = getUnitTypeFromId( u.id );
+        let name = unitType.id === UNIT_TYPES[HERO].id ? getFactionHero( getPlayer( unitSet.id ).factionId ).name : unitType.name;
+        name = isMultiple ? (u.count + " " + name + "s") : name;
+        const unitDescription = name + " (hit: " + unitType.hit + ", move: " + unitType.move + ")";
+        result.push( "<span style='margin-left: 1em'>" + unitDescription + "</span>" );
+    });
     return result;
 }
 
@@ -178,7 +181,6 @@ function getTileUnitsDescription( unitSets, districtPlayer ) {
 /****** PLAYER ******/
 
 
-//todo 3 - in Common, make modal remove custom css on close
 function viewVP() {
     const insurrectionPlayerId = getInsurrectionVictim();
     const isHighPriestActive = currentPlayer.cards.offices.includes( "0" ) || currentPlayer.selects.highPriestVictim;
@@ -423,6 +425,10 @@ function getNextAuction( players ) {
 /****** HELPER ******/
 
 
+function getPlayer( id ) {
+    return game.players.find( p => p.id === id );
+}
+
 function getPhase( index ) {
     return PHASES[ Math.floor( index ) ];
 }
@@ -512,7 +518,7 @@ function getLoadedGame() {
             {
                 id: "1",
                 username: "daniel",
-                factionId: "HEM",
+                factionId: "1",
                 warBucks: 12,
                 resources: {
                     unobtanium: 0,
@@ -561,7 +567,7 @@ function getLoadedGame() {
             {
                 id: "2",
                 username: "michael",
-                factionId: "JUS",
+                factionId: "6",
                 warBucks: 12,
                 resources: {
                     unobtanium: 0,
@@ -588,6 +594,7 @@ function getLoadedGame() {
                 },
                 units: [
                     { id: "0", tile: "7-2", count: 1 },
+                    { id: "0", tile: "1-2", count: 1 },
                     { id: "1", tile: "7-2", count: 1 },
                     { id: "7", tile: "7-2", count: 1 }
                 ],
@@ -604,7 +611,7 @@ function getLoadedGame() {
             {
                 id: "3",
                 username: "stephen",
-                factionId: "LOB",
+                factionId: "8",
                 warBucks: 10,
                 resources: {
                     unobtanium: 0,
@@ -639,77 +646,7 @@ function getLoadedGame() {
                 selects: {
                     highPriestVictim: null
                 }
-            // },
-            // {
-            //     id: "4",
-            //     username: "temp 4",
-            //     factionId: "LOB",
-            //     warBucks: 10,
-            //     units: [],
-            //     districts: {
-            //         capital: "4-1",
-            //         tiles: ["4-1"]
-            //     }
-            // },
-            // {
-            //     id: "5",
-            //     username: "temp 5",
-            //     factionId: "LOB",
-            //     warBucks: 10,
-            //     units: [],
-            //     districts: {
-            //         capital: "7-5",
-            //         tiles: ["7-5"]
-            //     }
-            // },
-            // {
-            //     id: "6",
-            //     username: "temp 6",
-            //     factionId: "LOB",
-            //     warBucks: 10,
-            //     units: [],
-            //     districts: {
-            //         capital: "1-5",
-            //         tiles: ["1-5"]
-            //     }
             }
         ]
     };
-}
-
-function getFactionName( factionId ) {
-    let result = "";
-    switch ( factionId ) {
-        case "CNT":
-            result = "Cyber-NET";
-            break;
-        case "HEM":
-            result = "Holy Empire";
-            break;
-        case "DNT":
-            result = "Dinosaur Nation";
-            break;
-        case "ATB":
-            result = "America the Brave";
-            break;
-        case "LVM":
-            result = "Living Mountain";
-            break;
-        case "MMC":
-            result = "Mega-Money Conglomerate";
-            break;
-        case "JUS":
-            result = "Justice Heroes";
-            break;
-        case "KRT":
-            result = "Knights of the Round Table";
-            break;
-        case "LOB":
-            result = "Lots of Bears";
-            break;
-        case "SDM":
-            result = "Space Demons";
-            break;
-    }
-    return result;
 }

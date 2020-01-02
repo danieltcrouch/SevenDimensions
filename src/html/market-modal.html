@@ -117,10 +117,7 @@
         addAllToSelect( 'technologySelect', ["None"].concat( TECHNOLOGIES.map( (t,index) => { return {text: t.name, value: index+""}; } ) ) );
         addAllToSelect( 'doctrineSelect',   ["None"].concat( DOCTRINES.map(    (d,index) => { return {text: d.name, value: index+""}; } ) ) );
         populateAdvancementCheckboxes( GARDENS, "gardens", function( item ) { return ( item.cost * currentPlayer.districts.tiles.length ) + "WB"; } );
-        populateAdvancementCheckboxes( AUCTIONS, "auctions", function( item ) {
-            const isLocked = !game.players.some( p => p.advancements.auctionWins[ AUCTIONS.indexOf( item ) ] === "1" );
-            return isLocked ? "<span style='font-style: italic'>Locked</span>" : (item.cost + "WB");
-        } ); //todo 4 - Move these to the ENUM
+        populateAdvancementCheckboxes( AUCTIONS, "auctions", function( item ) { return isLockedAuction( item, game.players ) ? LOCKED_SPAN : (item.cost + "WB"); } );
     }
 
     function populateAdvancementCheckboxes( data, wrapperId, costFunction ) {

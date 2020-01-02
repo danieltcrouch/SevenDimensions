@@ -9,6 +9,10 @@ const KNIGHTS_OF_THE_ROUND_TABLE = 7;
 const LOTS_OF_BEARS              = 8;
 const SPACE_DEMONS               = 9;
 
+function getFaction( id ) { return FACTIONS.find( f => f.id === id ); }
+
+function getFactionHero( id ) { return HEROES[ getFaction( id ).heroIndex ]; }
+
 const FACTIONS = [
     new Faction( "0", "Cyber-NET",                  "Science",  VIRUS,                { warBucks: 8,  units: [ {id:"0",count:1}, {id:"1",count:1}, {id:"2",count:1}, {id:"3",count:1} ],                   advancements: { technology: ["0","2"], doctrine: [],        garden: [],    auction: [] },    politicalTokens: 0, culturalTokens: 0, cards: null }, "If a Technology or Doctrine has already been researched by another player, pay half the price for that advancement" ),
     new Faction( "1", "Holy Empire",                "Faith",    THE_GRAND_INQUISITOR, { warBucks: 8,  units: [ {id:"0",count:1}, {id:"1",count:1}, {id:"2",count:1}, {id:"3",count:1} ],                   advancements: { technology: [],        doctrine: ["0","1"], garden: [],    auction: [] },    politicalTokens: 0, culturalTokens: 0, cards: null }, "Cult of Secrets has been founded in the Capital / Receive +1WB for enemy districts practicing Cult of Secrets / All units can spread religion / Enemy Apostles must be accompanied by a combat unit to purge Cult of Secrets and can move no more" ),

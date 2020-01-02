@@ -6,6 +6,12 @@ const THINK_TANK             = 4;
 const ATLANTIS_STOCK         = 5;
 const WEAPONS_MANUFACTURER   = 6;
 
+const LOCKED_SPAN = "<span style='font-style: italic'>Locked</span>";
+
+function isLockedAuction( auction, players ) {
+    return !players.some( p => p.advancements.auctionWins[ AUCTIONS.indexOf( auction ) ] === "1" );
+}
+
 const AUCTIONS = [
     new Advancement( "0", "Auction Lot", "Coastal Property",       function() { return 7;  }, "Every Harvest Phase, receive double the War-Bucks from 1 non-Capital district" ),
     new Advancement( "1", "Auction Lot", "Multi-Level Market",     function() { return 14; }, "Every Harvest Phase, take 3WB from the players to either side" ),
