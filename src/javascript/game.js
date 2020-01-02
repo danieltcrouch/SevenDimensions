@@ -109,7 +109,7 @@ function initializeHandlers() {
 }
 
 function tileClickCallback( tileId ) {
-    //todo 10 - delete this commented code
+    //todo 1 - delete this commented code
 
     // if ( selectedTile && tileId !== selectedTile.id ) {
     //     cl('selectedTile').forEach( t => t.classList.remove( "selectedTile" ) );
@@ -189,8 +189,8 @@ function viewVP() {
         "Districts: " + currentPlayer.districts.tiles.length + "<br/>" +
         "Dimensions: " + currentPlayer.dimensions.length + "<br/>" +
         "Wonders: " + (currentPlayer.dimensions.filter( d => !!d.wonderTile ).length * 2) + "<br/>" +
-        "Hero: " + (!!currentPlayer.units.hero ? "1" : "0") + "<br/>" +
-        "Chaos Cards: " + (currentPlayer.cards.chaos.charAt(48) === "1" ? "1" : "0") + "<br/>" + //todo 6 - if they have Heaven's Gate cards
+        "Hero: " + (hasHero( currentPlayer.units ) ? "1" : "0") + "<br/>" +
+        "Chaos Cards: " + (currentPlayer.cards.chaos.filter( c => isHeavensGate( c ) ).length) + "<br/>" +
         ( isHighPriestActive ? ( "High Priest: " + (currentPlayer.cards.offices.includes( "0" ) ? "1" : ( currentPlayer.selects.highPriestVictim ? "-1" : "0" ) ) + "<br/>" ) : "" ) +
         ( ( insurrectionPlayerId && insurrectionPlayerId === currentPlayer.id ) ? "Insurrection Event: -1" : "" );
     showMessage( "Victory Points", message );
@@ -207,6 +207,7 @@ function viewWB() {
 }
 
 function viewTechnologies() {
+    //todo 8 - table poorly formatted on phone
     let message = getAdvancementTable(
         TECHNOLOGIES,
         currentPlayer.advancements.technologies,
@@ -250,7 +251,7 @@ function getAdvancementTable( data, userData, costFunction ) {
     let resultHTML = "<table class='advancements'><tbody>";
     for ( let i = 0; i < data.length; i++ ) {
         const item = data[i];
-        const ownedClass = ( userData.charAt(i) === "1" ) ? "owned" : "";
+        const ownedClass = ( userData.some( id => id === item.id ) ) ? "owned" : "";
         resultHTML += "<tr class='" + ownedClass + "'><td>" + item.name + "</td>" +
             "<td>" + item.description + "</td>" +
             "<td>" + costFunction( item ) + "</td></tr>";
@@ -349,7 +350,6 @@ function showAuctionActions() {
 }
 
 function showMarketActions() {
-    //todo 6 - should I just treat currentPlayer as global?
     openMarketModal(
         currentPlayer,
         function( response ) {
@@ -391,10 +391,10 @@ function calculateVP( player ) {
     result += player.districts.tiles.length;
     result += player.dimensions.length;
     result += player.dimensions.filter( d => !!d.wonderTile ).length * 2;
-    result += !!player.units.hero ? 1 : 0;
+    result += hasHero( player.units ) ? 1 : 0;
     result += player.cards.offices.includes( "0" ) ? 1 : 0; //High Priest
     result -= player.selects.highPriestVictim ? 1 : 0;
-    result += player.cards.chaos.charAt(48) === "1" ? 1 : 0; //todo 6 - if they have Heaven's Gate cards
+    result += player.cards.chaos.filter( c => isHeavensGate( c ) ).length;
     result -= getInsurrectionVictim() === player.id ? 1 : 0;
     return result;
 }
@@ -499,6 +499,10 @@ function getArrayItemsFromString( array, value ) {
     return result;
 }
 
+function hasHero( units ) {
+    return units.some( u => getUnitTypeFromId( u.id ) === UNIT_TYPES[HERO] );
+}
+
 
 /****** TO-DELETE ******/
 
@@ -526,11 +530,11 @@ function getLoadedGame() {
                     aether: 0
                 },
                 advancements: {
-                    technologies: "1100000000" + "0000",
-                    doctrines: "1000000000" + "0",
-                    gardens: "00000",
-                    auctions: "0000000",
-                    auctionWins: "0000000",
+                    technologies: ["0", "1"], //todo - for most arrays, use String of Bits in DB
+                    doctrines: ["0"],
+                    gardens: [],
+                    auctions: [],
+                    auctionWins: [],
                     auctionBid: null
                 },
                 initiatives: {
@@ -540,9 +544,7 @@ function getLoadedGame() {
                     culturalActive: [],
                 },
                 cards: {
-                    //todo 6 - or use array of IDs?
-                    chaos: "1000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000",
-                    //todo 6 - or use String of Bits?
+                    chaos: ["0", "1"],
                     offices: []
                 },
                 units: [
@@ -575,11 +577,11 @@ function getLoadedGame() {
                     aether: 0
                 },
                 advancements: {
-                    technologies: "1000000000" + "0000",
-                    doctrines: "1100000000" + "0",
-                    gardens: "00000",
-                    auctions: "0000000",
-                    auctionWins: "0000000",
+                    technologies: ["0"],
+                    doctrines: ["0", "1"],
+                    gardens: [],
+                    auctions: [],
+                    auctionWins: [],
                     auctionBid: null
                 },
                 initiatives: {
@@ -589,7 +591,7 @@ function getLoadedGame() {
                     culturalActive: [],
                 },
                 cards: {
-                    chaos: "0100000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000",
+                    chaos: ["1", "48"],
                     offices: []
                 },
                 units: [
@@ -619,11 +621,11 @@ function getLoadedGame() {
                     aether: 0
                 },
                 advancements: {
-                    technologies: "1000000000" + "0000",
-                    doctrines: "1000000000" + "0",
-                    gardens: "00000",
-                    auctions: "1000000",
-                    auctionWins: "0000000",
+                    technologies: ["0"],
+                    doctrines: ["0"],
+                    gardens: ["1"],
+                    auctions: [],
+                    auctionWins: [],
                     auctionBid: null
                 },
                 initiatives: {
@@ -633,7 +635,7 @@ function getLoadedGame() {
                     culturalActive: [],
                 },
                 cards: {
-                    chaos: "0010000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000" + "0000000000",
+                    chaos: ["2"],
                     offices: []
                 },
                 units: [],

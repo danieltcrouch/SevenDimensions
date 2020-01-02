@@ -101,6 +101,7 @@ function generateMapSVG( callbackFunction ) {
                tile.setAttributeNS(null, "onclick", callbackFunction.name + "('" + hex.id + "')" );
                tile.classList.add( "tile" );
 
+               //todo 8 - image not working on phone
                let background = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
                background.setAttributeNS(null, "id", hex.id + "-background" );
                background.setAttributeNS(null, "points", hex.vertices.map( p => (p.x + "," + p.y) ).join(" ") );

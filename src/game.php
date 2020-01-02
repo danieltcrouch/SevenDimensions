@@ -61,7 +61,7 @@
 
 <script>
     const userId = "<?php echo "1" ?>";
-    const isSecure = true; //todo 10 - https://developers.google.com/identity/sign-in/web/sign-in
+    const isSecure = true; //todo 1 - https://developers.google.com/identity/sign-in/web/sign-in
 
     docReady( function() {
         if ( isSecure ) {

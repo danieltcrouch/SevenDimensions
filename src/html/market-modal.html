@@ -55,8 +55,8 @@
     let marketModalCallback;
     let marketTotal;
 
-    function openMarketModal( currentGame, callback ) {
-        marketModalValues = currentGame;
+    function openMarketModal( currentPlayer, callback ) {
+        marketModalValues = currentPlayer;
         marketModalCallback = callback;
 
         populateUnits();
@@ -206,11 +206,11 @@
         else {
             if ( false ) {
                 showToaster( "Cannot purchase more than 7 advancements" );
-                //todo 11 - what if they open up the modal twice and buy 6 advancements each time?
+                //todo 2 - what if they open up the modal twice and buy 6 advancements each time?
             }
             else if ( false ) {
                 showToaster( "Cannot purchase more than 7 cards" );
-                //todo 11 - what if they open up the modal twice and buy 6 advancements each time?
+                //todo 2 - what if they open up the modal twice and buy 6 advancements each time?
             }
             else if ( false ) {
                 showToaster( "Too many units of a type" );
