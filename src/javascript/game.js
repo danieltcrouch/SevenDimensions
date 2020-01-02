@@ -109,7 +109,7 @@ function initializeHandlers() {
 }
 
 function tileClickCallback( tileId ) {
-    //todo 1 - delete this commented code
+    //todo 3 - delete this commented code
 
     // if ( selectedTile && tileId !== selectedTile.id ) {
     //     cl('selectedTile').forEach( t => t.classList.remove( "selectedTile" ) );
@@ -326,7 +326,17 @@ function showTrade() {
 }
 
 function showHelp() {
-    showMessage( "Help", "TODO" );
+    //todo 1
+    let html = "<a class='link' href='#' onclick='signOut();'>Sign out</a>";
+    showMessage( "Help", html );
+}
+
+function signOut() {
+    let auth2 = gapi.auth2.getAuthInstance();
+    auth2.signOut().then( function() {
+        console.log( "User signed out." );
+        window.location = "https://seven.religionandstory.com/lobby.php";
+    } );
 }
 
 
@@ -362,6 +372,7 @@ function showMarketActions() {
 /****** EXPANSION ******/
 
 
+//todo 4
 function showExpansionActions() {
     showMessage( "Expansion", "" );
 }
@@ -370,6 +381,7 @@ function showExpansionActions() {
 /****** HARVEST ******/
 
 
+//todo 5
 function showHarvestActions() {
     showMessage( "Harvest", "" );
 }
@@ -378,6 +390,7 @@ function showHarvestActions() {
 /****** COUNCIL ******/
 
 
+//todo 6
 function showCouncilActions() {
     showMessage( "Council", "" );
 }
@@ -385,6 +398,8 @@ function showCouncilActions() {
 
 /****** UTILITY ******/
 
+
+//todo 7 - make battles
 
 function calculateVP( player ) {
     let result = 0;

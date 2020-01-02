@@ -60,15 +60,24 @@
 </body>
 
 <script>
-    const userId = "<?php echo "1" ?>";
-    const isSecure = true; //todo 1 - https://developers.google.com/identity/sign-in/web/sign-in
+    const userId = "<?php echo $_GET['id']; ?>";
+    function initializeUser() {
+        gapi.load( 'auth2', function() {
+            gapi.auth2.init().then( function( auth2 ){
+                if ( auth2.isSignedIn.get() ) {
+                    initializeGame();
+                }
+                else {
+                    window.location = "https://seven.religionandstory.com/lobby.php";
+                }
+            } );
+        } );
+    }
 
-    docReady( function() {
-        if ( isSecure ) {
-            generateMapSVG( tileClickCallback );
-            loadGame( "<?php echo $_GET['id'] ?>" );
-        }
-    } );
+    function initializeGame( googleUser ) {
+        generateMapSVG( tileClickCallback );
+        loadGame( userId );
+    }
 </script>
 <?php include("html/market-modal.html"); ?>
 <?php includeModals(); ?>

@@ -3,7 +3,6 @@
 <html>
 <head>
     <?php includeHeadInfo(); ?>
-    <script src="javascript/game.js"></script>
 </head>
 
 <body>
@@ -24,21 +23,29 @@
 
     <!--Main-->
     <div class="col-10 main">
-        <div class="center" style="margin-bottom: 1em">
-            <button id="single" name="userType" class="button inverseButton" style="width: 8em; margin: .25em;">Single</button>
-            <button id="multi"  name="userType" class="button inverseButton" style="width: 8em; margin: .25em;">Multi</button>
-        </div>
         <div class="center">
-            <button id="start" class="button" style="display: none; width: 8em; margin: .25em;" onclick="startGame()">Start</button>
+            <div class="g-signin2" data-onsuccess="onSignIn"></div>
         </div>
+<!--        <div class="center" style="margin-bottom: 1em">-->
+<!--            <button id="single" name="userType" class="button inverseButton" style="width: 8em; margin: .25em;">Single</button>-->
+<!--            <button id="multi"  name="userType" class="button inverseButton" style="width: 8em; margin: .25em;">Multi</button>-->
+<!--        </div>-->
+<!--        <div class="center">-->
+<!--            <button id="start" class="button" style="display: none; width: 8em; margin: .25em;" onclick="startGame()">Start</button>-->
+<!--        </div>-->
     </div>
 
 </body>
 
 <script>
-    setRadioCallback( "userType", function( userType ) {
-        setUserType( userType );
-    });
+    function onSignIn( googleUser ) {
+        window.location = "https://seven.religionandstory.com/game.php?id=1"; //todo 10
+        //const profile = googleUser.getBasicProfile();
+        //console.log( 'ID: ' + profile.getId() ); // Do not send to your backend! Use an ID token instead.
+        //console.log( 'Name: ' + profile.getName() );
+        //console.log( 'Image URL: ' + profile.getImageUrl() );
+        //console.log( 'Email: ' + profile.getEmail() ); // This is null if the 'email' scope is not present.
+    }
 </script>
 <?php includeModals(); ?>
 </html>
