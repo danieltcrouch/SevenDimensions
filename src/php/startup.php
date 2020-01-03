@@ -30,7 +30,7 @@ function includeHeadInfo()
     global $description;
     global $keywords;
     include(getRootPath() . "common/html/head.php");
-    include(getSubPath() . "html/includes.html");
+    include(getSubPath() . "html/include-login.html");
 }
 
 function includeHeader()

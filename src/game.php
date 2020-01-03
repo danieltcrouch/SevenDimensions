@@ -3,6 +3,8 @@
 <html>
 <head>
     <?php includeHeadInfo(); ?>
+    <script src="javascript/game.js"></script>
+    <?php include(getSubPath() . "html/include-domain.html"); ?>
 </head>
 
 <body>

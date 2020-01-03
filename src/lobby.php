@@ -3,6 +3,7 @@
 <html>
 <head>
     <?php includeHeadInfo(); ?>
+    <script src="javascript/lobby.js"></script>
 </head>
 
 <body>
