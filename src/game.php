@@ -60,23 +60,11 @@
 </body>
 
 <script>
-    const userId = "<?php echo $_GET['id']; ?>";
-    function initializeUser() {
-        gapi.load( 'auth2', function() {
-            gapi.auth2.init().then( function( auth2 ){
-                if ( auth2.isSignedIn.get() ) {
-                    initializeGame();
-                }
-                else {
-                    window.location = "https://seven.religionandstory.com/lobby.php";
-                }
-            } );
-        } );
-    }
+    const gameId = "<?php echo $_GET['id']; ?>";
 
-    function initializeGame( googleUser ) {
+    function initializeGame() {
         generateMapSVG( tileClickCallback );
-        loadGame( userId );
+        loadGame();
     }
 </script>
 <?php include("html/market-modal.html"); ?>
