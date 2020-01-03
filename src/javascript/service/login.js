@@ -1,14 +1,25 @@
 //https://developers.google.com/identity/sign-in/web/sign-in
+//todo 10 - do this correctly with sessions and auth_tokens and whatever else
+let loginCallback = function() {};
+let isSignInPage = false;
 let userId = "";
+
+function setSignInPage( isSignInPageValue = false ) {
+    isSignInPage = isSignInPageValue;
+}
+
+function setLoginCallback( loginCallbackFunction ) {
+    loginCallback = loginCallbackFunction;
+}
 
 function initializeUser() {
     gapi.load( 'auth2', function() {
         gapi.auth2.init().then( function( auth2 ){
             if ( auth2.isSignedIn.get() ) {
                 userId = auth2.currentUser.get().getId();
-                initializeGame();
+                loginCallback();
             }
-            else {
+            else if ( !isSignInPage ) {
                 window.location = "https://seven.religionandstory.com/";
             }
         } );
@@ -16,18 +27,13 @@ function initializeUser() {
 }
 
 function onSignIn( googleUser ) {
-    window.location = "https://seven.religionandstory.com/lobby.php"; //todo 1
-    //const profile = googleUser.getBasicProfile();
-    //console.log( 'ID: ' + profile.getId() ); // Do not send to your backend! Use an ID token instead.
-    //console.log( 'Name: ' + profile.getName() );
-    //console.log( 'Image URL: ' + profile.getImageUrl() );
-    //console.log( 'Email: ' + profile.getEmail() ); // This is null if the 'email' scope is not present.
+    window.location = "https://seven.religionandstory.com/lobby.php";
 }
 
 function signOut() {
     let auth2 = gapi.auth2.getAuthInstance();
     auth2.signOut().then( function() {
         console.log( "User signed out." );
-        window.location = "https://seven.religionandstory.com/lobby.php";
+        window.location = "https://seven.religionandstory.com/";
     } );
 }

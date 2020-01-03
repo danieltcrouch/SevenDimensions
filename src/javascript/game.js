@@ -8,7 +8,7 @@ let currentPlayer;
 
 /****** LOAD ******/
 
-function loadGame( gameId ) {
+function loadGame() {
     if ( gameId ) {
         //$.post(
         //    "php/controller.php",
@@ -326,7 +326,6 @@ function showTrade() {
 }
 
 function showHelp() {
-    //todo 1
     let html = "<a class='link' href='#' onclick='signOut();'>Sign out</a>";
     showMessage( "Help", html );
 }
@@ -527,7 +526,7 @@ function getLoadedGame() {
         map: generateNewMap( 3 ),
         players: [
             {
-                id: "1",
+                id: "113295997427531114332",
                 username: "daniel",
                 factionId: "1",
                 warBucks: 12,

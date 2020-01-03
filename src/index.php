@@ -27,5 +27,13 @@
     </div>
 
 </body>
+<style>
+    .g-signin2 > div {
+        margin: 0 auto;
+    }
+</style>
+<script>
+    setSignInPage( true );
+</script>
 <?php includeModals(); ?>
 </html>

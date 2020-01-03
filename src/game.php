@@ -64,10 +64,11 @@
 <script>
     const gameId = "<?php echo $_GET['id']; ?>";
 
-    function initializeGame() {
-        generateMapSVG( tileClickCallback );
+    setLoginCallback( function() {
         loadGame();
-    }
+    } );
+
+    generateMapSVG( tileClickCallback );
 </script>
 <?php include("html/market-modal.html"); ?>
 <?php includeModals(); ?>
