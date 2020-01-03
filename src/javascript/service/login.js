@@ -1,5 +1,7 @@
 //https://developers.google.com/identity/sign-in/web/sign-in
 //todo 10 - do this correctly with sessions and auth_tokens and whatever else
+//todo 10 - move Google Sign-In to Common
+//todo 11 - do a major code clean-up across Common and all projects [Seven, Bracket, Reviews, Overflow (except Poker), Turing, Football]
 let loginCallback = function() {};
 let isSignInPage = false;
 let userId = "";

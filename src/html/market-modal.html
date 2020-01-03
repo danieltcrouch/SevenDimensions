@@ -19,8 +19,8 @@
                     <div id="unitsWrapper"></div>
                 </div>
                 <div style="margin-bottom: 1em">
-                    <div><label for="technologySelect"  style="display: inline-block; width: 6em">Technology </label><select id="technologySelect"  class="select" style="width: 13em; margin: .1em; padding: .1em" onchange="technologyChange()"></select> (<span id="technologyCost">0</span>WB)</div>
-                    <div><label for="doctrineSelect"    style="display: inline-block; width: 6em">Doctrine   </label><select id="doctrineSelect"    class="select" style="width: 13em; margin: .1em; padding: .1em" onchange="doctrineChange()"></select> (<span id="doctrineCost">0</span>WB)</div>
+                    <div><label for="technologySelect"  style="display: inline-block; width: 6em">Technology </label><select id="technologySelect" class="select" style="width: 13em; margin: .1em; padding: .1em" onchange="technologyChange()"></select> (<span id="technologyCost">0</span>WB)</div>
+                    <div><label for="doctrineSelect"    style="display: inline-block; width: 6em">Doctrine   </label><select id="doctrineSelect"   class="select" style="width: 13em; margin: .1em; padding: .1em" onchange="doctrineChange()"></select> (<span id="doctrineCost">0</span>WB)</div>
                     <div style="margin-top: .5em">
                         Gardens (<span id="gardensCost">0</span>WB):
                         <div id="gardens"></div>
@@ -71,8 +71,8 @@
     function populateUnits() {
         let wrapper = id('unitsWrapper');
         wrapper.innerHTML = "";
-        for ( let i = 0; i < UNITS.length; i++ ) {
-            let unit = UNITS[i];
+        for ( let i = 0; i < UNIT_TYPES.length; i++ ) {
+            let unit = UNIT_TYPES[i];
             const id = "unit" + i + "Count";
             let div = document.createElement( "DIV" );
             let label = document.createElement( "LABEL" );
@@ -91,19 +91,7 @@
             input.min = "0";
             if ( unit.max ) {
                 input.max = unit.max;
-                let currentCount = 0;
-                switch ( i ) {
-                case 5:
-                    currentCount = marketModalValues.units.robot.length;
-                    break;
-                case 6:
-                    currentCount = !!marketModalValues.units.godhand;
-                    break;
-                case 7:
-                    currentCount = !!marketModalValues.units.hero;
-                    break;
-                }
-                input.disabled = unit.max === currentCount;
+                input.disabled = unit.max === marketModalValues.units.filter( u => u.id === unit.id ).length;
             }
             input.placeholder = "0";
             input.onchange = unitChange;
@@ -154,7 +142,7 @@
         let total = 0;
         let unitCounts = nm('unitCounts');
         for ( let i = 0; i < unitCounts.length; i++ ) {
-            total += UNITS[i].cost * unitCounts[i].value;
+            total += UNIT_TYPES[i].cost * unitCounts[i].value;
         }
         id('unitsCost').innerText = total + "";
         updateTotal();
@@ -204,20 +192,35 @@
             showToaster( "Cannot afford purchase" );
         }
         else {
-            if ( false ) {
-                showToaster( "Cannot purchase more than 7 advancements" );
-                //todo 2 - what if they open up the modal twice and buy 6 advancements each time?
+            const maxAdvancements = 7;
+            const maxCards = 7;
+            const advancementsInCartCount =
+                getSelectedOption( "technologySelect" ) +
+                getSelectedOption( "doctrineSelect" ) +
+                nm('gardens').filter( c => c.checked ).length +
+                nm('auctions').filter( c => c.checked ).length;
+            if ( advancementsInCartCount + marketModalValues.advancements.purchasedCount > maxAdvancements ) {
+                showToaster( "Cannot purchase more than " + maxAdvancements + " advancements" );
             }
-            else if ( false ) {
-                showToaster( "Cannot purchase more than 7 cards" );
-                //todo 2 - what if they open up the modal twice and buy 6 advancements each time?
-            }
-            else if ( false ) {
-                showToaster( "Too many units of a type" );
+            else if ( id('cardCount').value + marketModalValues.cards.purchasedCount > maxCards ) {
+                showToaster( "Cannot purchase more than " + maxCards + " cards" );
             }
             else {
-                marketModalValues.warBucks -= marketTotal;
-                closeOutModal();
+                let isValid = true;
+                let unitCounts = nm('unitCounts');
+                for ( let i = 0; i < unitCounts.length; i++ ) {
+                    const unitInput = unitCounts[i];
+                    const currentCount = marketModalValues.units.filter( u => u.id === (i + "") ).length + unitInput.value;
+                    if ( unitInput.max && currentCount > unitInput.max ) {
+                        isValid = false;
+                        showToaster( "Too many units of a type" );
+                    }
+                }
+
+                if ( isValid ) {
+                    marketModalValues.warBucks -= marketTotal;
+                    closeOutModal();
+                }
             }
         }
     }

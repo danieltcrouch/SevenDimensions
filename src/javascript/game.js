@@ -541,7 +541,8 @@ function getLoadedGame() {
                     gardens: [],
                     auctions: [],
                     auctionWins: [],
-                    auctionBid: null
+                    auctionBid: null,
+                    purchasedCount: 0
                 },
                 initiatives: {
                     politicalTokens: 5,
@@ -551,7 +552,8 @@ function getLoadedGame() {
                 },
                 cards: {
                     chaos: ["0", "1"],
-                    offices: []
+                    offices: [],
+                    purchasedCount: 0
                 },
                 units: [
                     { id: "1", tile: "1-2", count: 3 },
@@ -588,7 +590,8 @@ function getLoadedGame() {
                     gardens: [],
                     auctions: [],
                     auctionWins: [],
-                    auctionBid: null
+                    auctionBid: null,
+                    purchasedCount: 0
                 },
                 initiatives: {
                     politicalTokens: 0,
@@ -598,7 +601,8 @@ function getLoadedGame() {
                 },
                 cards: {
                     chaos: ["1", "48"],
-                    offices: []
+                    offices: [],
+                    purchasedCount: 0
                 },
                 units: [
                     { id: "0", tile: "7-2", count: 1 },
@@ -632,7 +636,8 @@ function getLoadedGame() {
                     gardens: ["1"],
                     auctions: [],
                     auctionWins: [],
-                    auctionBid: null
+                    auctionBid: null,
+                    purchasedCount: 0
                 },
                 initiatives: {
                     politicalTokens: 0,
@@ -642,7 +647,8 @@ function getLoadedGame() {
                 },
                 cards: {
                     chaos: ["2"],
-                    offices: []
+                    offices: [],
+                    purchasedCount: 0
                 },
                 units: [],
                 districts: {

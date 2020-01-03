@@ -6,7 +6,7 @@ const WORLD_MONEY_EXCHANGE = 4;
 const SPIRAL_GARDEN        = 5;
 const BLOOD_ALTAR          = 6;
 
-const UNITS = [
+const WONDERS = [
     new Wonder( "0", "The Arch of Beauty" ),
     new Wonder( "1", "The Great Senatehouse" ),
     new Wonder( "2", "The Space Antenna" ),
