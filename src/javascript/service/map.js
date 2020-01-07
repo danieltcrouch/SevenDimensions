@@ -197,6 +197,17 @@ function generateMapSVG( callbackFunction ) {
        }
     }
 
+    for ( let i = 0; i < (MAP_TILE_RADIUS * 6); i++ ) {
+        let moveShape = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
+        moveShape.setAttributeNS(null, "id", "move-polygon-" + i );
+        moveShape.setAttributeNS(null, "name", "move-polygon" );
+        moveShape.setAttributeNS(null, "fill", "transparent");
+        moveShape.classList.add( "tile" );
+        moveShape.style.stroke = "darkred";
+        moveShape.style.fill = "none";
+        svg.appendChild( moveShape );
+    }
+
     let selectedShape = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
     selectedShape.setAttributeNS(null, "id", "selected-polygon" );
     selectedShape.setAttributeNS(null, "fill", "transparent");
@@ -281,4 +292,54 @@ class Point {
         this.x = x;
         this.y = y;
     }
+}
+
+
+/*** SHORTEST PATH ***/
+
+
+function calculateShortestNonCombatPath( rootTileId, destinationTileId, allTileIds, impassableTileIds, maxMove = 100 ) {
+    let result = [];
+
+    if ( getHexFromId( rootTileId ).calculateDistance( getHexFromId( destinationTileId ) ) <= maxMove ) {
+        let allTiles = allTileIds.map( t => { return {id: t, visited: false, distance: Number.POSITIVE_INFINITY, prev: null }; } );
+        const initialTile = allTiles.find( t => t.id === rootTileId );
+        const destinationTile = allTiles.find( t => t.id === destinationTileId );
+        initialTile.distance = 0;
+
+        while ( !destinationTile.visited ) {
+            let currentTile = allTiles.filter( t => !t.visited ).reduce((a, b) => a.distance < b.distance ? a : b );
+            let adjacentHexes = getAllAdjacentHexes( getHexFromId( currentTile.id ) ).filter( h => allTiles.some( t => t.id === h.id && !t.visited ) ).filter( h => !impassableTileIds.some( tileId => tileId === h.id ) );
+            allTiles.filter( t => adjacentHexes.some( h => h.id === t.id ) ).forEach( t => {
+                if ( currentTile.distance + 1 < t.distance) {
+                    t.distance = currentTile.distance + 1;
+                    t.prev = currentTile.id;
+                }
+            } );
+            currentTile.visited = true;
+
+            if ( currentTile.distance > maxMove ) {
+                impassableTileIds.push( currentTile.id );
+            }
+        }
+
+        if ( destinationTile.distance && destinationTile.distance < Number.POSITIVE_INFINITY ) {
+            let currentTile = destinationTile;
+            while ( currentTile !== initialTile ) {
+                result.push( currentTile.id );
+                currentTile = allTiles.find( t => t.id === currentTile.prev );
+            }
+        }
+    }
+
+    return result;
+}
+
+
+/*** HELPER ***/
+
+
+function getHexFromId( id ) {
+    const indexes = id.split("-");
+    return new Hex( parseInt( indexes[0] ), parseInt( indexes[1] ), 0 );
 }

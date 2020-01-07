@@ -6,6 +6,8 @@ let game;
 let selectedTile;
 let currentPlayer;
 
+let selectedUnits;
+
 /****** LOAD ******/
 
 function loadGame() {
@@ -36,7 +38,7 @@ function loadGameCallback( response ) {
 function loadGameState() {
     id('roundValue').innerText = (game.state.round + 1) + "";
     id('phaseValue').innerText = getPhase(game.state.phase);
-    id('turnValue').innerText = getTurn( game.state.phase, game.state.turn );
+    id('turnValue').innerText = getTurn(game.state.turn);
     id('eventValue').innerText = getEvent(game.state.event);
 }
 
@@ -66,6 +68,8 @@ function loadMap() {
         if ( tileDetails.unitSets.length > 0 ) {
             id(tile.id + "-unit").style.display = "";
         }
+
+        id(tile.id).onmouseover = moveSuggestion;
     }
 
     id('tileDetailsDiv').innerText = NO_TILE_DETAILS;
@@ -96,7 +100,7 @@ function loadUser() {
 }
 
 function popModals() {
-    if ( game.state.phase === 0.0 && !currentPlayer.advancements.auctionBid ) {
+    if ( isMarketAuctionPhase() && !currentPlayer.advancements.auctionBid ) {
         showAuctionActions();
     }
 }
@@ -105,22 +109,57 @@ function popModals() {
 /****** HANDLERS ******/
 
 
+//todo 9 - divide functions into smaller service classes (display-game.js, etc.)
 function initializeHandlers() {
 }
 
+function selectUnitsByTile() {
+    selectedUnits = currentPlayer.units.filter( u => u.tile === selectedTile.id );
+}
+
+function selectUnitsByType( unitTypeId ) {
+    const maxUnits = currentPlayer.units.filter( u => u.tile === selectedTile.id && u.id === unitTypeId )[0].count;
+    showPrompt(
+        "How Many?",
+        "How many units of this type would you like to move?",
+        function( response ) {
+            if ( response <= maxUnits ) {
+                selectUnitsByTypeCallback( unitTypeId, response );
+            }
+        },
+        maxUnits
+    );
+}
+
+function selectUnitsByTypeCallback( unitTypeId, count ) {
+    selectedUnits = currentPlayer.units.filter( u => u.tile === selectedTile.id && u.id === unitTypeId ).slice();
+    selectedUnits[0].count = count;
+}
+
+function moveSuggestion( e ) {
+    if ( isExpansionPhase() && selectedUnits && selectedUnits.length ) {
+        nm('move-polygon').forEach( p => p.style.display = "none" );
+
+        const rootTileId = selectedUnits[0].tile;
+        const destinationTileId = e.currentTarget.id;
+        const allTiles = game.map.map( t => t.id );
+        const impassableTiles = allTiles.filter( t => {
+            const tileDetails = getTileDetails( t );
+            return tileDetails.type === TILE_TYPES[VOLCANO].name ||
+                (tileDetails.type === TILE_TYPES[CAPITAL].name && tileDetails.districtPlayerId !== currentPlayer.id ) ||
+                tileDetails.unitSets.filter( s => s.id !== currentPlayer.id ).some( s => s.combat );
+        } );
+        const maxMove = Math.min( ...selectedUnits.map( u => getUnitTypeFromId( u.id ).move ) );
+        let pathTiles = calculateShortestNonCombatPath( rootTileId, destinationTileId, allTiles, impassableTiles, maxMove );
+        for ( let i = 0; i < pathTiles.length; i++ ) {
+            id( "move-polygon-" + i ).style.display = "";
+            id( "move-polygon-" + i ).setAttributeNS(null, "points", id(pathTiles[i] + "-background").getAttributeNS(null, "points") );
+        }
+    }
+}
+
 function tileClickCallback( tileId ) {
-    //todo 3 - delete this commented code
-
-    // if ( selectedTile && tileId !== selectedTile.id ) {
-    //     cl('selectedTile').forEach( t => t.classList.remove( "selectedTile" ) );
-    //     cl('selectedTileImage').forEach( t => t.classList.remove( "selectedTileImage" ) );
-    // }
-
-    //WORKED - id( tileId + "-polygon-i" ).style.display = "none";
-    //WORKED - changing image/text as I do in the load function
-    //WORKED - moving a polygon by its points IF the polygon has a higher z-index (by being declared) after
-    //id("2-2-polygon-i").setAttributeNS(null, "fill", "url(#hem)");
-    //id("2-2-polygon-s").setAttributeNS(null, "fill", "transparent");
+    selectedTile = game.map.find( t => t.id === tileId );
 
     let polygon = id( tileId + "-border" );
     id( "selected-polygon" ).setAttributeNS(null, "points", polygon.getAttributeNS(null, "points") );
@@ -138,27 +177,34 @@ function tileClickCallback( tileId ) {
     tileDetails.unitSets.forEach( us => {
         const player = getPlayer( us.id );
         const unitDescriptions = getUnitSetDescriptions( us, tileDetails.districtPlayerId );
-        tileDetailsHTML += "Units (" + player.username + "): <br/>";
+        const isCurrentPlayer = isExpansionPhase() && us.id === currentPlayer.id;
+        const classHTML = isCurrentPlayer ? "link" : "";
+        const selectUnitsHTML = isCurrentPlayer ? "selectUnitsByTile()" : "";
+        tileDetailsHTML += "<span class='" + classHTML + "' onclick='" + selectUnitsHTML + "'>Units (" + player.username + "): </span><br/>";
         tileDetailsHTML += unitDescriptions.join("<br/>");
         tileDetailsHTML += "<br/><br/>";
     } );
     id('tileDetailsDiv').innerHTML = tileDetailsHTML;
+
+    if ( isExpansionPhase() ) {
+        selectedUnits = tileDetails.unitSets[0].units;
+    }
 }
 
 function getTileDetails( id ) {
-    selectedTile = game.map.find( t => t.id === id );
+    let tile = game.map.find( t => t.id === id );
     const districtPlayer = game.players.find( p => p.districts.tiles.includes( id ) );
     let unitSets = [];
     game.players.forEach( p => {
         let units = p.units.filter( u => u.tile === id );
         if ( units.length > 0 ) {
-            unitSets.push( { id: p.id, units: units } );
+            unitSets.push( { id: p.id, combat: !units.every( u => u.id === UNIT_TYPES[APOSTLE].id ), units: units } );
         }
     } );
     return {
         id: id,
-        type: selectedTile.tileType.type,
-        population: selectedTile.tileType.value,
+        type: tile.tileType.name.replace(/[0-9]/g, ""),
+        population: tile.tileType.value,
         districtPlayerId: districtPlayer ? districtPlayer.id : null,
         unitSets: unitSets
     };
@@ -172,7 +218,10 @@ function getUnitSetDescriptions( unitSet ) {
         let name = unitType.id === UNIT_TYPES[HERO].id ? getFactionHero( getPlayer( unitSet.id ).factionId ).name : unitType.name;
         name = isMultiple ? (u.count + " " + name + "s") : name;
         const unitDescription = name + " (hit: " + unitType.hit + ", move: " + unitType.move + ")";
-        result.push( "<span style='margin-left: 1em'>" + unitDescription + "</span>" );
+        const isCurrentPlayer = isExpansionPhase() && unitSet.id === currentPlayer.id;
+        const classHTML = isCurrentPlayer ? "link" : "";
+        const selectUnitsHTML = isCurrentPlayer ? "selectUnitsByType(\"" + u.id + "\")" : "";
+        result.push( "<span class='" + classHTML + "' style='margin-left: 1em' onclick='" + selectUnitsHTML + "'>" + unitDescription + "</span>" );
     });
     return result;
 }
@@ -229,7 +278,7 @@ function viewGardens() {
     let message = getAdvancementTable(
         GARDENS,
         currentPlayer.advancements.gardens,
-        function( item ) { return ( item.cost * currentPlayer.districts.tiles.length ) + "WB"; }
+        function( item ) { return item.costFunction( currentPlayer.districts.tiles.length ) + "WB"; }
     );
     message += "<div style='margin-top: .5em'>(Cost calculated by 7WB times the number of districts; must have at least 2 districts.)</div>";
     showMessage( "Gardens", message, {padding: ".5em 20%"} );
@@ -239,10 +288,7 @@ function viewAuctions() {
     let message = getAdvancementTable(
         AUCTIONS,
         currentPlayer.advancements.auctions,
-        function( item ) {
-            const isLocked = !game.players.some( p => p.advancements.auctionWins[ AUCTIONS.indexOf( item ) ] === "1" );
-            return isLocked ? "<span style='font-style: italic'>Locked</span>" : (item.cost + "WB");
-        }
+        function( item ) { return isLockedAuction( item, game.players ) ? LOCKED_SPAN : (item.costFunction() + "WB"); }
     );
     showMessage( "Auction Lots", message, {padding: ".5em 20%"} );
 }
@@ -285,39 +331,44 @@ function viewCards() {
 
 function submit() {
     let isValidToSubmit = true;
-    if ( game.state.phase === 0.0 || game.state.phase === 0.5 ) {
-        if ( currentPlayer.units.some( u => u.tile === "unassigned" ) ) {
-            showToaster( "Must assign purchased units" );
+    if ( isMarketPhase() ) {
+        if ( isMarketAuctionPhase() ) {
+            showAuctionActions();
+        }
+        else {
+            if ( currentPlayer.units.some( u => u.tile === "unassigned" ) ) {
+                showToaster( "Must assign purchased units" );
+            }
         }
     }
-    else if ( game.state.phase === 1 ) {
+    else if ( isExpansionPhase() ) {
         //
     }
-    else if ( game.state.phase === 2 ) {
+    else if ( isHarvestPhase() ) {
         //
     }
-    else if ( game.state.phase === 3 ) {
+    else if ( isCouncilPhase() ) {
         //
     }
 }
 
 function showActions() {
-    switch ( game.state.phase ) {
-        case 0.0:
+    if ( isMarketPhase() ) {
+        if ( isMarketAuctionPhase() ) {
             showAuctionActions();
-            break;
-        case 0.5:
+        }
+        else {
             showMarketActions();
-            break;
-        case 1:
-            showExpansionActions();
-            break;
-        case 2:
-            showHarvestActions();
-            break;
-        case 3:
-            showCouncilActions();
-            break;
+        }
+    }
+    else if ( isExpansionPhase() ) {
+        showExpansionActions();
+    }
+    else if ( isHarvestPhase() ) {
+        showHarvestActions();
+    }
+    else if ( isCouncilPhase() ) {
+        showCouncilActions();
     }
 }
 
@@ -365,7 +416,7 @@ function showMarketActions() {
 
 //todo 4
 function showExpansionActions() {
-    showMessage( "Expansion", "" );
+    showMessage( "Expansion", "Click on a tile, then click on the units you would like to move." );
 }
 
 
@@ -409,7 +460,7 @@ function getInsurrectionVictim() {
     let result = null;
     if ( game.state.disaster === 5 ) {
         game.state.disaster = null;
-        result = game.players.reduce((prev, current) => ( calculateVP(prev) > calculateVP(current) ) ? prev : current).id;
+        result = game.players.reduce( (prev, current) => ( calculateVP(prev) > calculateVP(current) ) ? prev : current ).id;
         game.state.disaster = 5;
     }
     return result;
@@ -439,16 +490,22 @@ function getPhase( index ) {
     return PHASES[ Math.floor( index ) ];
 }
 
-function getTurn( phase, turn ) {
+function isMarketAuctionPhase() { return game.state.phase === 0 && game.state.turn === -1; }
+function isMarketPhase() { return game.state.phase === 0; }
+function isExpansionPhase() { return game.state.phase === 1; }
+function isHarvestPhase() { return game.state.phase === 2; }
+function isCouncilPhase() { return game.state.phase === 3; }
+
+function getTurn( index ) {
     let result;
-    if ( phase === 0.0 ) {
+    if ( isMarketAuctionPhase() ) {
         result = "(Auction)";
     }
-    else if ( phase === 3 ) {
+    else if ( isCouncilPhase() ) {
         result = "All";
     }
     else {
-        result = game.players[turn].username;
+        result = game.players[index].username;
     }
     return result;
 }
@@ -518,7 +575,7 @@ function getLoadedGame() {
         state: {
             ambassador: 0,
             round: 0,
-            phase: 0.5,
+            phase: 1,
             turn: 0,
             event: 0,
             disaster: null
