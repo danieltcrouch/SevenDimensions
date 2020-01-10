@@ -22,3 +22,27 @@ const UNIT_TYPES = [
     new UnitType( "6", "Godhand",      13, 4,  1, 1 ),
     new UnitType( "7", "Hero",         25, 7,  2, 1 )
 ];
+
+const APOSTLE_FOUND = "0";
+const APOSTLE_EVANG = "1";
+
+function performApostleAbility( abilityId, unit, player ) {
+    if ( abilityId === APOSTLE_FOUND ) {
+        //remove unit in both places
+        //add district to player
+        //remove unit display (combine to killing in object in abstracted method for adding/removing units)
+        //add district display
+    }
+    else if ( abilityId === APOSTLE_EVANG ) {
+        //add religion to player
+        //add religion display
+    }
+}
+
+function addUnit( unit, player ) {
+    //
+}
+
+function removeUnit() {
+    //
+}

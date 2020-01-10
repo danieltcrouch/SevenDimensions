@@ -6,7 +6,8 @@ let game;
 let selectedTile;
 let currentPlayer;
 
-let selectedUnits;
+let selectedUnits = [];
+let suggestedPath = [];
 
 /****** LOAD ******/
 
@@ -56,12 +57,10 @@ function loadMap() {
         else if ( tile.tileType.id === TILE_TYPES[CAPITAL].id ) {
             hideById(tile.id + "-text");
             id(tile.id + "-background").setAttributeNS(null, "fill", "url(#heroTile0)");
-            //id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
         }
         else if ( tile.tileType.id === TILE_TYPES[VOLCANO].id ) {
             hideById(tile.id + "-text");
             id(tile.id + "-background").setAttributeNS(null, "fill", "url(#volcano)");
-            //id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
         }
 
         const tileDetails = getTileDetails( tile.id );
@@ -69,7 +68,7 @@ function loadMap() {
             id(tile.id + "-unit").style.display = "";
         }
 
-        id(tile.id).onmouseover = moveSuggestion;
+        id(tile.id).onmouseover = tileHoverCallback;
     }
 
     id('tileDetailsDiv').innerText = NO_TILE_DETAILS;
@@ -97,6 +96,8 @@ function loadUser() {
     id('politicalTokensValue').innerText = currentPlayer.initiatives.politicalTokens + "";
     id('culturalTokensValue').innerText = currentPlayer.initiatives.culturalTokens + "";
     id('chaosCardsValue').innerText = getStringBooleanCount( currentPlayer.cards.chaos ) + "";
+
+    currentPlayer.unitsDisambiguous = disambiguateUnits( currentPlayer.units );
 }
 
 function popModals() {
@@ -113,35 +114,100 @@ function popModals() {
 function initializeHandlers() {
 }
 
-function selectUnitsByTile() {
-    selectedUnits = currentPlayer.units.filter( u => u.tile === selectedTile.id );
+function selectUnits( e ) {
+    const spanId = e.target.id;
+    const tileId = selectedTile.id;
+    const selectionType = spanId.split('-')[1];
+    const isAllUnits = selectionType === "all";
+    const unitTypeId = !isAllUnits ? selectionType.split('#')[0] : null;
+    const movesRemaining = !isAllUnits ? parseInt( selectionType.split('#')[1] ) : null;
+
+    const isAllCurrentlySelected = id(spanId).style.background === "lightgray";
+    const isUnitTypeCurrentlyIncluded = selectedUnits.some( u => u.unitType.id === unitTypeId );
+    if ( selectedUnits.length && ( ( isAllUnits && isAllCurrentlySelected ) || ( !isAllUnits && isUnitTypeCurrentlyIncluded ) ) ) {
+        id(spanId).style.background = "";
+        if ( isAllUnits ) {
+            document.querySelectorAll( '*[id^="unit-"]' ).forEach( s => s.style.background = "" );
+            unselectUnits();
+        }
+        else {
+            selectedUnits = selectedUnits.filter( u => !( u.unitType.id === unitTypeId && u.movesRemaining === movesRemaining ) );
+            if ( !selectedUnits.length ) {
+                id("unit-all").style.background = "";
+                unselectUnits();
+            }
+        }
+    }
+    else {
+        const relevantUnits = currentPlayer.unitsDisambiguous.filter( u => u.tileId === tileId );
+        id(spanId).style.background = "lightgray";
+        if ( isAllUnits ) {
+            document.querySelectorAll( '*[id^="unit-"]' ).forEach( s => s.style.background = "lightgray" );
+            selectedUnits = relevantUnits;
+        }
+        else {
+            const units = relevantUnits.filter( u => u.unitType.id === unitTypeId && u.movesRemaining === movesRemaining );
+            if ( units.length > 1 ) {
+                selectUnitsByType( units );
+            }
+            else {
+                selectedUnits = selectedUnits.concat( units );
+            }
+        }
+    }
+
+    performUnitAbilities();
 }
 
-function selectUnitsByType( unitTypeId ) {
-    const maxUnits = currentPlayer.units.filter( u => u.tile === selectedTile.id && u.id === unitTypeId )[0].count;
+function selectUnitsByType( units ) {
+    const maxUnits = units.length;
     showPrompt(
         "How Many?",
-        "How many units of this type would you like to move?",
+        "How many units of this type would you like to select?",
         function( response ) {
-            if ( response <= maxUnits ) {
-                selectUnitsByTypeCallback( unitTypeId, response );
+            const count = response ? parseInt( response ) : null;
+            if ( count ) {
+                if ( count <= maxUnits && count > 0 ) {
+                    selectedUnits = selectedUnits.concat( units.slice(0, count) );
+                }
+                else {
+                    selectUnitsByType( units );
+                }
             }
         },
-        maxUnits
+        "Up to " + maxUnits
     );
 }
 
-function selectUnitsByTypeCallback( unitTypeId, count ) {
-    selectedUnits = currentPlayer.units.filter( u => u.tile === selectedTile.id && u.id === unitTypeId ).slice();
-    selectedUnits[0].count = count;
+function performUnitAbilities() {
+    if ( selectedUnits.length === 1 ) {
+        const selectedUnit = selectedUnits[0];
+        if ( selectedUnit.unitType === UNIT_TYPES[APOSTLE] ) {
+            showBinaryChoice(
+                "Apostle",
+                "Choose an ability:",
+                "Found District",
+                "Evangelize",
+                function( response ) {
+                    performApostleAbility( response ? "0" : "1" );
+            });
+        }
+    }
 }
 
-function moveSuggestion( e ) {
-    if ( isExpansionPhase() && selectedUnits && selectedUnits.length ) {
+function tileHoverCallback( e ) {
+    const tileId = e.currentTarget.id;
+    if ( isExpansionPhase() && selectedUnits.length ) {
+        moveSuggestion( tileId );
+    }
+}
+
+function moveSuggestion( tileId ) {
+    if ( isExpansionPhase() && selectedUnits.length ) {
         nm('move-polygon').forEach( p => p.style.display = "none" );
 
-        const rootTileId = selectedUnits[0].tile;
-        const destinationTileId = e.currentTarget.id;
+        const rootTileId = selectedTile.id;
+        const destinationTileId = tileId;
         const allTiles = game.map.map( t => t.id );
         const impassableTiles = allTiles.filter( t => {
             const tileDetails = getTileDetails( t );
@@ -149,16 +215,54 @@ function moveSuggestion( e ) {
                 (tileDetails.type === TILE_TYPES[CAPITAL].name && tileDetails.districtPlayerId !== currentPlayer.id ) ||
                 tileDetails.unitSets.filter( s => s.id !== currentPlayer.id ).some( s => s.combat );
         } );
-        const maxMove = Math.min( ...selectedUnits.map( u => getUnitTypeFromId( u.id ).move ) );
-        let pathTiles = calculateShortestNonCombatPath( rootTileId, destinationTileId, allTiles, impassableTiles, maxMove );
-        for ( let i = 0; i < pathTiles.length; i++ ) {
+        const maxMove = Math.min( ...selectedUnits.map( u => u.movesRemaining ) );
+        suggestedPath = calculateShortestNonCombatPath( rootTileId, destinationTileId, allTiles, impassableTiles, maxMove );
+        for ( let i = 0; i < suggestedPath.length; i++ ) {
             id( "move-polygon-" + i ).style.display = "";
-            id( "move-polygon-" + i ).setAttributeNS(null, "points", id(pathTiles[i] + "-background").getAttributeNS(null, "points") );
+            id( "move-polygon-" + i ).setAttributeNS(null, "points", id(suggestedPath[i] + "-background").getAttributeNS(null, "points") );
         }
     }
 }
 
 function tileClickCallback( tileId ) {
+    if ( isExpansionPhase() && suggestedPath.includes( tileId ) ) {
+        moveUnits( tileId );
+    }
+    else {
+        selectTile( tileId );
+    }
+}
+
+function moveUnits( tileId ) {
+    const rootTileId = selectedTile.id;
+    const destinationTileId = tileId;
+    selectedUnits.forEach( su => {
+        let unitDisambiguous = currentPlayer.unitsDisambiguous.find( u => u.id === su.id );
+        unitDisambiguous.movesRemaining -= suggestedPath.length;
+        unitDisambiguous.tileId = destinationTileId;
+        currentPlayer.units.find( u => u.id === su.unitType.id && u.tile === rootTileId ).count--;
+        currentPlayer.units = currentPlayer.units.filter( u => u.count > 0 );
+        let unit = currentPlayer.units.find( u => u.id === su.unitType.id && u.tile === destinationTileId );
+        if ( unit ) {
+            unit.count++;
+        }
+        else {
+            currentPlayer.units.push( { id: su.unitType.id, tile: destinationTileId, count: 1} );
+        }
+    } );
+
+    id(destinationTileId + "-unit").style.display = "";
+    if ( getTileDetails( rootTileId ).unitSets.length === 0 ) {
+        id(rootTileId + "-unit").style.display = "none";
+    }
+
+    unselectUnits();
+    selectTile( rootTileId );
+    suggestedPath = [];
+}
+
+function selectTile( tileId ) {
+    const isTileChange = !selectedTile || selectedTile.id !== tileId;
     selectedTile = game.map.find( t => t.id === tileId );
 
     let polygon = id( tileId + "-border" );
@@ -176,18 +280,24 @@ function tileClickCallback( tileId ) {
     }
     tileDetails.unitSets.forEach( us => {
         const player = getPlayer( us.id );
-        const unitDescriptions = getUnitSetDescriptions( us, tileDetails.districtPlayerId );
-        const isCurrentPlayer = isExpansionPhase() && us.id === currentPlayer.id;
-        const classHTML = isCurrentPlayer ? "link" : "";
-        const selectUnitsHTML = isCurrentPlayer ? "selectUnitsByTile()" : "";
-        tileDetailsHTML += "<span class='" + classHTML + "' onclick='" + selectUnitsHTML + "'>Units (" + player.username + "): </span><br/>";
-        tileDetailsHTML += unitDescriptions.join("<br/>");
-        tileDetailsHTML += "<br/><br/>";
+        let unitDescriptions = us.units.map( u => getUnitDisplayName( u.id, u.count, us.id ) );
+        let titleSpan = "<span>";
+        let unitSpans = Array(unitDescriptions.length).fill( "<span style='margin-left: 1em'>" );
+        const isExpansionPlayer = isExpansionPhase() && us.id === currentPlayer.id;
+        if ( isExpansionPlayer ) {
+            titleSpan = "<span id='unit-all' class='link' onclick='selectUnits(event)'>";
+            let units = consolidateActiveUnits( currentPlayer.unitsDisambiguous.filter( u => u.tileId === tileId ) );
+            unitDescriptions = units.map( u => getUnitDisplayName( u.id, u.count, us.id ) + " (" + u.movesRemaining + ")" );
+            unitSpans = units.map( u => `<span id='unit-${u.id}#${u.movesRemaining}' class='link' style='margin-left: 1em' onclick='selectUnits(event)'>` );
+        }
+        tileDetailsHTML += titleSpan + "Units (" + player.username + "):" + "</span><br/>";
+        tileDetailsHTML += unitDescriptions.map( (unit,index) => unitSpans[index] + unit + "</span><br/>" ).join("\n");
+        tileDetailsHTML += "<br/>";
     } );
     id('tileDetailsDiv').innerHTML = tileDetailsHTML;
 
-    if ( isExpansionPhase() ) {
-        selectedUnits = tileDetails.unitSets[0].units;
+    if ( isExpansionPhase() && isTileChange ) {
+        unselectUnits();
     }
 }
 
@@ -210,20 +320,33 @@ function getTileDetails( id ) {
     };
 }
 
-function getUnitSetDescriptions( unitSet ) {
+function getUnitDisplayName( unitTypeId, unitCount, playerId ) {
+    const isMultiple = unitCount > 1;
+    const unitType = getUnitTypeFromId( unitTypeId );
+    const heroName = playerId ? getFactionHero( getPlayer( playerId ).factionId ).name : UNIT_TYPES[HERO].name;
+    let name = unitTypeId === UNIT_TYPES[HERO].id ? heroName : unitType.name;
+    name = isMultiple ? (unitCount + " " + name + "s") : name;
+    return name;
+}
+
+function consolidateActiveUnits( units ) {
     let result = [];
-    unitSet.units.forEach( u => {
-        const isMultiple = u.count > 1;
-        const unitType = getUnitTypeFromId( u.id );
-        let name = unitType.id === UNIT_TYPES[HERO].id ? getFactionHero( getPlayer( unitSet.id ).factionId ).name : unitType.name;
-        name = isMultiple ? (u.count + " " + name + "s") : name;
-        const unitDescription = name + " (hit: " + unitType.hit + ", move: " + unitType.move + ")";
-        const isCurrentPlayer = isExpansionPhase() && unitSet.id === currentPlayer.id;
-        const classHTML = isCurrentPlayer ? "link" : "";
-        const selectUnitsHTML = isCurrentPlayer ? "selectUnitsByType(\"" + u.id + "\")" : "";
-        result.push( "<span class='" + classHTML + "' style='margin-left: 1em' onclick='" + selectUnitsHTML + "'>" + unitDescription + "</span>" );
-    });
+    for ( let i = 0; i < units.length; i++ ) {
+        let activeUnit = units[i];
+        let consolidatedUnit = result.find( u => u.id === activeUnit.unitType.id && u.movesRemaining === activeUnit.movesRemaining );
+        if ( consolidatedUnit ) {
+            consolidatedUnit.count++;
+        }
+        else {
+            result.push( {id: activeUnit.unitType.id, tile: activeUnit.tileId, movesRemaining: activeUnit.movesRemaining, count: 1 } );
+        }
+    }
     return result;
+}
+
+function unselectUnits() {
+    selectedUnits = [];
+    document.querySelectorAll( '*[id^="move-polygon-"]' ).forEach( m => m.style.display = "none" );
 }
 
 
@@ -233,15 +356,19 @@ function getUnitSetDescriptions( unitSet ) {
 function viewVP() {
     const insurrectionPlayerId = getInsurrectionVictim();
     const isHighPriestActive = currentPlayer.cards.offices.includes( "0" ) || currentPlayer.selects.highPriestVictim;
-    const message =
-        "<span style='font-weight: bold'>Victory Points Total:</span> " + id('victoryPointsValue').innerText + "<br/>" +
-        "Districts: " + currentPlayer.districts.tiles.length + "<br/>" +
-        "Dimensions: " + currentPlayer.dimensions.length + "<br/>" +
-        "Wonders: " + (currentPlayer.dimensions.filter( d => !!d.wonderTile ).length * 2) + "<br/>" +
-        "Hero: " + (hasHero( currentPlayer.units ) ? "1" : "0") + "<br/>" +
-        "Chaos Cards: " + (currentPlayer.cards.chaos.filter( c => isHeavensGate( c ) ).length) + "<br/>" +
-        ( isHighPriestActive ? ( "High Priest: " + (currentPlayer.cards.offices.includes( "0" ) ? "1" : ( currentPlayer.selects.highPriestVictim ? "-1" : "0" ) ) + "<br/>" ) : "" ) +
-        ( ( insurrectionPlayerId && insurrectionPlayerId === currentPlayer.id ) ? "Insurrection Event: -1" : "" );
+    let message =
+        `<span style='font-weight: bold'>Victory Points Total:</span> ${id('victoryPointsValue').innerText}<br/>
+        Districts: ${currentPlayer.districts.tiles.length}<br/>
+        Dimensions: ${currentPlayer.dimensions.length}<br/
+        Wonders: ${(currentPlayer.dimensions.filter( d => !!d.wonderTile ).length * 2)}<br/>
+        Hero: ${(hasHero( currentPlayer.units ) ? "1" : "0")}<br/>
+        Chaos Cards: ${(currentPlayer.cards.chaos.filter( c => isHeavensGate( c ) ).length)}<br/>`;
+    if ( isHighPriestActive ) {
+        message += `High Priest: ${currentPlayer.cards.offices.includes( "0" ) ? "1" : ( currentPlayer.selects.highPriestVictim ? "-1" : "0" )}<br/>`;
+    }
+    if ( insurrectionPlayerId && insurrectionPlayerId === currentPlayer.id ) {
+        message += "Insurrection Event: -1<br/>";
+    }
     showMessage( "Victory Points", message );
 }
 
@@ -414,7 +541,6 @@ function showMarketActions() {
 /****** EXPANSION ******/
 
 
-//todo 4
 function showExpansionActions() {
     showMessage( "Expansion", "Click on a tile, then click on the units you would like to move." );
 }
@@ -442,6 +568,18 @@ function showCouncilActions() {
 
 
 //todo 7 - make battles
+
+function disambiguateUnits( units ) {
+    let result = [];
+    for ( let i = 0; i < units.length; i++ ) {
+       const unitTileType = units[i];
+       for ( let j = 0; j < unitTileType.count; j++ ) {
+           const id = ( Math.floor( Math.random() * 10000 ) + "" ).padStart( 4, '0' );
+           result.push( new Unit( id, getUnitTypeFromId( unitTileType.id ), unitTileType.tile ) );
+       }
+    }
+    return result;
+}
 
 function calculateVP( player ) {
     let result = 0;

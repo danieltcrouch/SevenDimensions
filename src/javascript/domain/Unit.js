@@ -15,6 +15,7 @@ class Unit extends Entity {
         super( id, unitType.type, unitType.name, function() { return unitType.cost; } );
         this.unitType = unitType;
         this.tileId = tileId;
+        this.movesRemaining = unitType.move;
     }
 }
 
