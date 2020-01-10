@@ -105,7 +105,7 @@
         addAllToSelect( 'technologySelect', ["None"].concat( TECHNOLOGIES.map( (t,index) => { return {text: t.name, value: index+""}; } ) ) );
         addAllToSelect( 'doctrineSelect',   ["None"].concat( DOCTRINES.map(    (d,index) => { return {text: d.name, value: index+""}; } ) ) );
         populateAdvancementCheckboxes( GARDENS, "gardens", function( item ) { return item.costFunction( currentPlayer.districts.tiles.length ) + "WB"; } );
-        populateAdvancementCheckboxes( AUCTIONS, "auctions", function( item ) { return isLockedAuction( item, game.players ) ? LOCKED_SPAN : (item.costFunction() + "WB"); } );
+        populateAdvancementCheckboxes( AUCTIONS, "auctions", function( item ) { return item.getCostOrLocked( game.players ); } );
     }
 
     function populateAdvancementCheckboxes( data, wrapperId, costFunction ) {

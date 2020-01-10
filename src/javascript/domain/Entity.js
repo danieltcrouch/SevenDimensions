@@ -6,3 +6,5 @@ class Entity {
         this.costFunction = costFunction;
     }
 }
+
+function getEntity( id, list ) { return list.find( i => i.id === id ); }

@@ -415,7 +415,7 @@ function viewAuctions() {
     let message = getAdvancementTable(
         AUCTIONS,
         currentPlayer.advancements.auctions,
-        function( item ) { return isLockedAuction( item, game.players ) ? LOCKED_SPAN : (item.costFunction() + "WB"); }
+        function( item ) { return item.getCostOrLocked( game.players ); }
     );
     showMessage( "Auction Lots", message, {padding: ".5em 20%"} );
 }
@@ -731,7 +731,7 @@ function getLoadedGame() {
                     aether: 0
                 },
                 advancements: {
-                    technologies: ["0", "1"], //todo - for most arrays, use String of Bits in DB
+                    technologies: ["0", "1"], //todo 9 - for most arrays, use String of Bits in DB
                     doctrines: ["0"],
                     gardens: [],
                     auctions: [],
