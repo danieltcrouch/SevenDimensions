@@ -7,7 +7,7 @@ class Faction extends Entity {
         this.description = description;
     }
 
-    static getFactionHero( id ) { return HEROES[ getFaction( id ).heroIndex ]; }
+    static getHero( id ) { return HEROES[ getFaction( id ).heroIndex ]; }
 }
 
 function getFaction( id ) { return getEntity( id, FACTIONS ); }

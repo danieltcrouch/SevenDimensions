@@ -322,8 +322,8 @@ function getTileDetails( id ) {
 
 function getUnitDisplayName( unitTypeId, unitCount, playerId ) {
     const isMultiple = unitCount > 1;
-    const unitType = getUnitTypeFromId( unitTypeId );
-    const heroName = playerId ? getFactionHero( getPlayer( playerId ).factionId ).name : UNIT_TYPES[HERO].name;
+    const unitType = getUnitType( unitTypeId );
+    const heroName = playerId ? Faction.getHero( getPlayer( playerId ).factionId ).name : UNIT_TYPES[HERO].name;
     let name = unitTypeId === UNIT_TYPES[HERO].id ? heroName : unitType.name;
     name = isMultiple ? (unitCount + " " + name + "s") : name;
     return name;
@@ -575,7 +575,7 @@ function disambiguateUnits( units ) {
        const unitTileType = units[i];
        for ( let j = 0; j < unitTileType.count; j++ ) {
            const id = ( Math.floor( Math.random() * 10000 ) + "" ).padStart( 4, '0' );
-           result.push( new Unit( id, getUnitTypeFromId( unitTileType.id ), unitTileType.tile ) );
+           result.push( new Unit( id, getUnitType( unitTileType.id ), unitTileType.tile ) );
        }
     }
     return result;
@@ -701,7 +701,7 @@ function getArrayItemsFromString( array, value ) {
 }
 
 function hasHero( units ) {
-    return units.some( u => getUnitTypeFromId( u.id ) === UNIT_TYPES[HERO] );
+    return units.some( u => getUnitType( u.id ) === UNIT_TYPES[HERO] );
 }
 
 
@@ -713,7 +713,7 @@ function getLoadedGame() {
         state: {
             ambassador: 0,
             round: 0,
-            phase: 1,
+            phase: 2,
             turn: 0,
             event: 0,
             disaster: null
