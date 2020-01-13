@@ -111,9 +111,9 @@ function performApostleAbility( abilityId, unit, player ) {
 }
 
 function addUnit( unit, player ) {
-    //todo 4.5 - move to move service
+    //todo 9 - move to move service
 }
 
 function removeUnit() {
-    //todo 4.5 - move to move service
+    //todo 9 - move to move service
 }

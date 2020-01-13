@@ -373,12 +373,11 @@ function viewVP() {
 }
 
 function viewWB() {
+    const resourceDisplay = currentPlayer.resources.map( r => r.count + " " + getResource(r.id).name + (r.count > 1 ? "s" : "") ).join("<br/>");
     const message =
         "War-Bucks: " + currentPlayer.warBucks + "<br/><br/>" +
         "<div style='font-weight: bold'>Resources</div>" +
-        "Aether: " + currentPlayer.resources.aether + "<br/>" +
-        "Chronotine: " + currentPlayer.resources.chronotine + "<br/>" +
-        "Unobtanium: " + currentPlayer.resources.unobtanium;
+        (resourceDisplay || "None");
     showMessage( "War-Bucks", message );
 }
 
@@ -549,9 +548,64 @@ function showExpansionActions() {
 /****** HARVEST ******/
 
 
-//todo 5
 function showHarvestActions() {
-    showMessage( "Harvest", "" );
+    if ( !currentPlayer.hasReaped ) {
+        const warBuckReward = calculateWarBuckHarvestReward();
+        const resourceReward = calculateResourceHarvestReward();
+        const resourceDisplay = resourceReward.map( r => r.count + " " + getResource(r.id).name + (r.count > 1 ? "s" : "") ).join(", ");
+        const message =
+            `This harvest, you are rewarded:<br/>
+             ${warBuckReward}WB from districts<br/>
+             ${resourceDisplay}`;
+        showConfirm(
+            "Harvest",
+            message,
+            function( response ) {
+                if ( response ) {
+                    currentPlayer.warBucks += warBuckReward;
+                    id('warBucksValue').innerText = currentPlayer.warBucks;
+                    resourceReward.forEach( r => {
+                        const currentResource = currentPlayer.resources.find( cr => cr.id === r.id );
+                        if ( currentResource ) {
+                            currentResource.count += r.count;
+                        }
+                        else {
+                            currentPlayer.resources.push( {id: r.id, count: r.count} );
+                        }
+                    } );
+                    currentPlayer.hasReaped = true;
+                }
+        } );
+    }
+    else {
+        showMessage( "Harvest", "You have already reaped your rewards this phase." );
+    }
+}
+
+function calculateWarBuckHarvestReward() {
+    const districts = currentPlayer.districts.tiles.reduce( function( total, tileId ){
+        return total + game.map.find( t => t.id === tileId ).tileType.value;
+    }, 0 );
+    const religion = 0;
+    return districts + religion;
+}
+
+function calculateResourceHarvestReward() {
+    return currentPlayer.districts.tiles.reduce( function( result, tileId ) {
+        const tileResources = game.map.find( t => t.id === tileId ).resources;
+        if ( tileResources ) {
+            tileResources.forEach( r => {
+                const currentResource = result.find( cr => cr.id === r.id );
+                if ( currentResource ) {
+                    currentResource.count++;
+                }
+                else {
+                    result.push( {id: r.id, count: 1} );
+                }
+            } );
+        }
+        return result;
+    }, [] );
 }
 
 
@@ -723,13 +777,10 @@ function getLoadedGame() {
             {
                 id: "113295997427531114332",
                 username: "daniel",
+                hasReaped: false,
                 factionId: "1",
                 warBucks: 12,
-                resources: {
-                    unobtanium: 0,
-                    chronotine: 0,
-                    aether: 0
-                },
+                resources: [ {id: "0", count: 1} ],
                 advancements: {
                     technologies: ["0", "1"], //todo 9 - for most arrays, use String of Bits in DB
                     doctrines: ["0"],
@@ -772,13 +823,10 @@ function getLoadedGame() {
             {
                 id: "2",
                 username: "michael",
+                hasOpened: false,
                 factionId: "6",
                 warBucks: 12,
-                resources: {
-                    unobtanium: 0,
-                    chronotine: 0,
-                    aether: 0
-                },
+                resources: [],
                 advancements: {
                     technologies: ["0"],
                     doctrines: ["0", "1"],
@@ -818,13 +866,10 @@ function getLoadedGame() {
             {
                 id: "3",
                 username: "stephen",
+                hasOpened: false,
                 factionId: "8",
                 warBucks: 10,
-                resources: {
-                    unobtanium: 0,
-                    chronotine: 0,
-                    aether: 0
-                },
+                resources: [],
                 advancements: {
                     technologies: ["0"],
                     doctrines: ["0"],
