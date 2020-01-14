@@ -6,9 +6,6 @@ let game;
 let selectedTile;
 let currentPlayer;
 
-let selectedUnits = [];
-let suggestedPath = [];
-
 /****** LOAD ******/
 
 function loadGame() {
@@ -30,8 +27,6 @@ function loadGameCallback( response ) {
     loadGameState();
     loadMap();
     loadUser();
-
-    initializeHandlers();
 
     popModals();
 }
@@ -93,8 +88,7 @@ function loadUser() {
     id('doctrinesValue').innerText = getStringBooleanCount( currentPlayer.advancements.doctrines ) + "/" + DOCTRINES.length;
     id('gardensValue').innerText = getStringBooleanCount( currentPlayer.advancements.gardens ) + "/" + GARDENS.length;
     id('auctionLotsValue').innerText = getStringBooleanCount( currentPlayer.advancements.auctions ) + "/" + AUCTIONS.length;
-    id('politicalTokensValue').innerText = currentPlayer.initiatives.politicalTokens + "";
-    id('culturalTokensValue').innerText = currentPlayer.initiatives.culturalTokens + "";
+    id('initiativeTokensValue').innerText = ( currentPlayer.initiatives.politicalTokens + currentPlayer.initiatives.culturalTokens ) + "";
     id('chaosCardsValue').innerText = getStringBooleanCount( currentPlayer.cards.chaos ) + "";
 
     currentPlayer.unitsDisambiguous = disambiguateUnits( currentPlayer.units );
@@ -111,9 +105,6 @@ function popModals() {
 
 
 //todo 9 - divide functions into smaller service classes (display-game.js, etc.)
-function initializeHandlers() {
-}
-
 function selectUnits( e ) {
     const spanId = e.target.id;
     const tileId = selectedTile.id;
@@ -432,18 +423,11 @@ function getAdvancementTable( data, userData, costFunction ) {
     return resultHTML;
 }
 
-function viewPIT() {
+function viewInitiatives() {
     const message =
         "Political Initiative Tokens: " + currentPlayer.initiatives.politicalTokens + "<br/>" +
-        "Tokens currently on map: " + currentPlayer.initiatives.politicalActive.length;
-    showMessage( "Political Tokens", message );
-}
-
-function viewCIT() {
-    const message =
-        "Cultural Initiative Tokens: " + currentPlayer.initiatives.culturalTokens + "<br/>" +
-        "Tokens currently on map: " + currentPlayer.initiatives.culturalActive.length;
-    showMessage( "Cultural Tokens", message );
+        "Cultural Initiative Tokens: " + currentPlayer.initiatives.culturalTokens;
+    showMessage( "Initiative Tokens", message );
 }
 
 function viewCards() {
@@ -612,9 +596,24 @@ function calculateResourceHarvestReward() {
 /****** COUNCIL ******/
 
 
-//todo 6
 function showCouncilActions() {
-    showMessage( "Council", "" );
+    if ( game.state.subPhase === 0 ) {
+        openCouncilModal(
+            currentPlayer,
+            function( response ) {
+                currentPlayer = response;
+            }
+        );
+    }
+    else {
+        openEventModal(
+            currentPlayer,
+            game.state.event,
+            function( response ) {
+                //
+            }
+        );
+    }
 }
 
 
@@ -682,8 +681,8 @@ function getPhase( index ) {
     return PHASES[ Math.floor( index ) ];
 }
 
-function isMarketAuctionPhase() { return game.state.phase === 0 && game.state.turn === -1; }
-function isMarketPhase() { return game.state.phase === 0; }
+function isMarketAuctionPhase() { return game.state.phase === 0 && game.state.subPhase === 0; }
+function isMarketPhase() { return game.state.phase === 0 && game.state.subPhase === 1; }
 function isExpansionPhase() { return game.state.phase === 1; }
 function isHarvestPhase() { return game.state.phase === 2; }
 function isCouncilPhase() { return game.state.phase === 3; }
@@ -767,7 +766,8 @@ function getLoadedGame() {
         state: {
             ambassador: 0,
             round: 0,
-            phase: 2,
+            phase: 3,
+            subPhase: 0,
             turn: 0,
             event: 0,
             disaster: null

@@ -1,5 +1,4 @@
 //redblobgames.com/grids/hexagons/
-
 const MAP_TILE_RADIUS = 4;
 const TILE_SIDE_LENGTH = 10;
 
@@ -17,12 +16,12 @@ function generateNewMap( factionCount ) {
 
     let result = [];
     let natureTiles = natureDeck.cards;
-    const centerHex = new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS, 0 );
+    const centerHex = new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS );
     const maxTileDepth = MAP_TILE_RADIUS * 2;
     const capitalHexIds = getCapitalHexes( factionCount );
     for ( let i = 0; i < maxTileDepth; i++ ) {
         for ( let j = 0; j < maxTileDepth; j++ ) {
-            const hex = new Hex( i, j, 0 );
+            const hex = new Hex( i, j );
             if ( hex.calculateDistance( centerHex ) < MAP_TILE_RADIUS ) {
                 if ( hex.id === centerHex.id ) {
                     result.push( Tile.getAtlantisTile( hex.id ) );
@@ -49,11 +48,11 @@ function generateNewMap( factionCount ) {
 
 function getCapitalHexes( factionCount ) {
     let result = [];
-    const centerHex = new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS, 0 );
+    const centerHex = new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS );
     const maxTileDepth = MAP_TILE_RADIUS * 2;
     for ( let i = 0; i < maxTileDepth; i++ ) {
         for ( let j = 0; j < maxTileDepth; j++ ) {
-            const hex = new Hex( i, j, 0 );
+            const hex = new Hex( i, j );
             if ( hex.calculateDistance( centerHex ) === MAP_TILE_RADIUS - 1 ) {
                 if ( getAllAdjacentHexes( hex ).filter( h => h.calculateDistance( centerHex ) < MAP_TILE_RADIUS ).length <= 3 ) { //Corner hex
                     const isVerticalTop      = hex.y < MAP_TILE_RADIUS;
@@ -217,24 +216,12 @@ function generateMapSVG( callbackFunction ) {
     svg.appendChild( selectedShape );
 }
 
-function getAllAdjacentHexes( hex ) {
-    const shiftValue = (hex.x % 2 === 0) ? -1 : 0;
-    return [
-        new Hex( hex.x-1, hex.y+shiftValue, 0 ),
-        new Hex( hex.x, hex.y-1, 0 ),
-        new Hex( hex.x+1, hex.y+shiftValue, 0 ),
-        new Hex( hex.x-1, hex.y+1+shiftValue, 0 ),
-        new Hex( hex.x, hex.y+1, 0 ),
-        new Hex( hex.x+1, hex.y+1+shiftValue, 0 )
-    ];
-}
-
 
 /*** HEX & POINT CLASSES ***/
 
 
 class Hex {
-    constructor( x, y, sideLength ) {
+    constructor( x, y, sideLength = 0 ) {
         this.x = x;
         this.y = y;
         this.id = x + "-" + y;
@@ -336,10 +323,22 @@ function calculateShortestNonCombatPath( rootTileId, destinationTileId, allTileI
 }
 
 
-/*** HELPER ***/
+/*** UTILITY ***/
 
 
 function getHexFromId( id ) {
     const indexes = id.split("-");
-    return new Hex( parseInt( indexes[0] ), parseInt( indexes[1] ), 0 );
+    return new Hex( parseInt( indexes[0] ), parseInt( indexes[1] ) );
+}
+
+function getAllAdjacentHexes( hex ) {
+    const shiftValue = (hex.x % 2 === 0) ? -1 : 0;
+    return [
+        new Hex( hex.x-1, hex.y+shiftValue ),
+        new Hex( hex.x, hex.y-1 ),
+        new Hex( hex.x+1, hex.y+shiftValue ),
+        new Hex( hex.x-1, hex.y+1+shiftValue ),
+        new Hex( hex.x, hex.y+1 ),
+        new Hex( hex.x+1, hex.y+1+shiftValue )
+    ];
 }

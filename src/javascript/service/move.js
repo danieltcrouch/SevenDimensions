@@ -1,0 +1,3 @@
+let selectedUnits = [];
+let suggestedPath = [];
+

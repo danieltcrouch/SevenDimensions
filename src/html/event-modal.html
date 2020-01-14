@@ -1,0 +1,41 @@
+<link rel="stylesheet" type="text/css" href="https://religionandstory.com/common/css/modal.css"/>
+
+<div id="eventModal" class="modal-wrapper">
+    <div class="modal-foreground">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span id="modalHeader" class="subtitle">Doomsday Clock</span>
+                <span id="close" class="close">&times;</span>
+            </div>
+            <div id="modalBody" class="modal-body">
+            </div>
+            <div id="modalSubmit" class="modal-submit center">
+                <button id="closeButton" class="button" style="width: 10em" onclick="closeOutModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-background"></div>
+</div>
+
+<script>
+    let eventModalEvent;
+    let eventModalPlayers;
+    let eventModalCallback;
+
+    function openEventModal( event, players, callback ) {
+        eventModalEvent = event;
+        eventModalPlayers = players;
+        eventModalCallback = callback;
+
+        //todo 6
+
+        id("eventModal").style.display = "block";
+        setCloseHandlersJS( "eventModal" );
+        blurBackground();
+    }
+
+    function closeOutModal() {
+        closeModalJS( "eventModal" );
+        marketModalCallback( marketModalValues );
+    }
+</script>

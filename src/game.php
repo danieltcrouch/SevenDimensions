@@ -36,8 +36,7 @@
                 <div><span class="link" style="padding-left: 1em" onclick="viewDoctrines()">Doctrines:</span> <span id="doctrinesValue">0/11</span></div>
                 <div><span class="link" style="padding-left: 1em" onclick="viewGardens()">Gardens:</span> <span id="gardensValue">0/5</span></div>
                 <div><span class="link" style="padding-left: 1em" onclick="viewAuctions()">Auction Lots:</span> <span id="auctionLotsValue">0/7</span></div>
-                <div><span class="link" onclick="viewPIT()">Political Initiative Tokens:</span> <span id="politicalTokensValue">0</span></div>
-                <div><span class="link" onclick="viewCIT()">Cultural Initiative Tokens:</span> <span id="culturalTokensValue">0</span></div>
+                <div><span class="link" onclick="viewInitiatives()">Initiative Tokens:</span> <span id="initiativeTokensValue">0</span></div>
                 <div><span class="link" onclick="viewCards()">Chaos Cards:</span> <span id="chaosCardsValue">0</span></div>
             </div>
             <div id="tileDetailsDiv" style="border: 2px solid black; border-radius: 1em; padding: 1em"></div>

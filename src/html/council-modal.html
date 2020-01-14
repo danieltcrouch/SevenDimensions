@@ -1,0 +1,39 @@
+<link rel="stylesheet" type="text/css" href="https://religionandstory.com/common/css/modal.css"/>
+
+<div id="councilModal" class="modal-wrapper">
+    <div class="modal-foreground">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span id="modalHeader" class="subtitle">Council</span>
+                <span id="close" class="close">&times;</span>
+            </div>
+            <div id="modalBody" class="modal-body">
+            </div>
+            <div id="modalSubmit" class="modal-submit center">
+                <button id="closeButton" class="button" style="width: 10em" onclick="closeOutModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-background"></div>
+</div>
+
+<script>
+    let councilModalValues;
+    let councilModalCallback;
+
+    function openCouncilModal( currentPlayer, callback ) {
+        councilModalValues = currentPlayer;
+        councilModalCallback = callback;
+
+        //todo 6
+
+        id("councilModal").style.display = "block";
+        setCloseHandlersJS( "councilModal" );
+        blurBackground();
+    }
+
+    function closeOutModal() {
+        closeModalJS( "councilModal" );
+        marketModalCallback( marketModalValues );
+    }
+</script>
