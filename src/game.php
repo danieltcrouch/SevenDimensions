@@ -70,5 +70,7 @@
     generateMapSVG( tileClickCallback );
 </script>
 <?php include("html/market-modal.html"); ?>
+<?php include("html/council-modal.html"); ?>
+<?php include("html/event-modal.html"); ?>
 <?php includeModals(); ?>
 </html>
