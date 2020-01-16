@@ -8,6 +8,11 @@
                 <span id="close" class="close">&times;</span>
             </div>
             <div id="modalBody" class="modal-body">
+                <div id="divEventElection">
+                    <div style="margin-bottom: .5em">Choose a player to elect as <span id="eventOfficeValue"></span></div>
+                    <div style="margin-bottom: .5em"><select id="eventPlayerSelect" class="select" style="width: 13em; margin: .1em; padding: .1em"></select></div>
+                    <div style="margin-bottom: .5em"><button id="eventPlayerSubmit" class="button" style="margin-top: .4em; padding: .1em .5em" onclick="playerSubmit()">Submit</button></div>
+                </div>
             </div>
             <div id="modalSubmit" class="modal-submit center">
                 <button id="closeButton" class="button" style="width: 10em" onclick="closeOutEventModal()">Close</button>
@@ -19,19 +24,52 @@
 
 <script>
     let eventModalEvent;
+    let eventModalEventData;
     let eventModalPlayers;
     let eventModalCallback;
 
-    function openEventModal( event, players, callback ) {
+    function openEventModal( event, eventData, players, callback ) {
         eventModalEvent = event;
+        eventModalEventData = eventData;
         eventModalPlayers = players;
         eventModalCallback = callback;
 
-        //todo 6
+        hideAllDivs();
+        if ( event === EVENT_ELECTION ) {
+            id('divEventElection').style.display = "";
+            id('eventOfficeValue').innerText = eventData.office;
+            addAllToSelect( 'eventPlayerSelect', ["Abstain"].concat( eventModalPlayers.map( p => { return {text: p.username, value: p.id}; } ) ) );
+        }
+        else if ( event === EVENT_GAMBIT ) {
+            //
+        }
+        else if ( event === EVENT_FESTIVAL ) {
+            //
+        }
+        else if ( event === EVENT_DISASTER ) {
+            //
+        }
+        else if ( event === EVENT_MIDTERM ) {
+            //
+        }
+        else if ( event === EVENT_RESTOCK ) {
+            //
+        }
+        else if ( event === EVENT_MARS ) {
+            //
+        }
 
         id("eventModal").style.display = "block";
         setCloseHandlersJS( "eventModal" );
         blurBackground();
+    }
+
+    function hideAllDivs() {
+        document.querySelectorAll( '*[id^="divEvent"]' ).forEach( d => d.style.display = "none" );
+    }
+
+    function playerSubmit() {
+        closeOutEventModal();
     }
 
     function closeOutEventModal() {

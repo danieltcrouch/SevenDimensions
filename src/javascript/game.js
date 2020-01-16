@@ -1,5 +1,3 @@
-const PHASES = [ "Market", "Expansion", "Harvest", "Council" ];
-const EVENTS = [ "Continental Elections", "Gambler’s Gambit", "Festival of Fairies", "Global Disasters", "Midterm Elections", "Annual Restock", "Mars Attack!" ];
 const NO_TILE_DETAILS = "No Tile Selected";
 
 let game;
@@ -478,7 +476,12 @@ function showActions() {
         showHarvestActions();
     }
     else if ( isCouncilPhase() ) {
-        showCouncilActions();
+        if ( !isDoomsdayClockPhase() ) {
+            showCouncilActions();
+        }
+        else {
+            showDoomsdayActions();
+        }
     }
 }
 
@@ -597,24 +600,24 @@ function calculateResourceHarvestReward() {
 
 
 function showCouncilActions() {
-    if ( game.state.subPhase === 0 ) {
-        openCouncilModal(
-            currentPlayer,
-            function( response ) {
-                currentPlayer = response;
-            }
-        );
-    }
-    else {
-        openEventModal(
-            currentPlayer,
-            game.state.event,
-            game.state.events,
-            function( response ) {
-                //
-            }
-        );
-    }
+    openCouncilModal(
+        currentPlayer,
+        function( response ) {
+            currentPlayer = response;
+        }
+    );
+}
+
+function showDoomsdayActions() {
+    game.state.events.office = OFFICES[Math.floor(Math.random() * OFFICES.length)].id;
+    openEventModal(
+        currentPlayer,
+        game.state.event,
+        game.state.events,
+        function( response ) {
+            //
+        }
+    );
 }
 
 
@@ -682,11 +685,12 @@ function getPhase( index ) {
     return PHASES[ Math.floor( index ) ];
 }
 
-function isMarketAuctionPhase() { return game.state.phase === 0 && game.state.subPhase === 0; }
-function isMarketPhase() { return game.state.phase === 0 && game.state.subPhase === 1; }
-function isExpansionPhase() { return game.state.phase === 1; }
-function isHarvestPhase() { return game.state.phase === 2; }
-function isCouncilPhase() { return game.state.phase === 3; }
+function isMarketPhase() { return game.state.phase === PHASE_MARKET; }
+function isMarketAuctionPhase() { return game.state.phase === PHASE_MARKET && game.state.subPhase === SUBPHASE_MARKET_AUCTION; }
+function isExpansionPhase() { return game.state.phase === PHASE_EXPANSION; }
+function isHarvestPhase() { return game.state.phase === PHASE_HARVEST; }
+function isCouncilPhase() { return game.state.phase === PHASE_COUNCIL; }
+function isDoomsdayClockPhase() { return game.state.phase === PHASE_COUNCIL && game.state.subPhase === SUBPHASE_COUNCIL_DOOMSDAY; }
 
 function getTurn( index ) {
     let result;
