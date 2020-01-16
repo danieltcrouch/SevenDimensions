@@ -562,7 +562,7 @@ function showHarvestActions() {
         } );
     }
     else {
-        showMessage( "Harvest", "You have already reaped your rewards this phase." );
+        showMessage( "Harvest", "You have already reaped your harvest this phase." );
     }
 }
 
@@ -609,6 +609,7 @@ function showCouncilActions() {
         openEventModal(
             currentPlayer,
             game.state.event,
+            game.state.events,
             function( response ) {
                 //
             }
@@ -649,10 +650,10 @@ function calculateVP( player ) {
 
 function getInsurrectionVictim() {
     let result = null;
-    if ( game.state.disaster === 5 ) {
-        game.state.disaster = null;
+    if ( game.state.events.disaster === 5 ) {
+        game.state.events.disaster = null;
         result = game.players.reduce( (prev, current) => ( calculateVP(prev) > calculateVP(current) ) ? prev : current ).id;
-        game.state.disaster = 5;
+        game.state.events.disaster = 5;
     }
     return result;
 }
@@ -770,7 +771,10 @@ function getLoadedGame() {
             subPhase: 0,
             turn: 0,
             event: 0,
-            disaster: null
+            events: {
+                office: null,
+                disaster: null
+            }
         },
         map: generateNewMap( 3 ),
         players: [

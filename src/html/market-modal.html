@@ -130,12 +130,15 @@
     }
 
     function populateData() {
-        id('resourceAMax').max = marketModalValues.resources.aether;
-        id('resourceAMax').innerText = marketModalValues.resources.aether + "";
-        id('resourceCMax').max = marketModalValues.resources.chronotine;
-        id('resourceCMax').innerText = marketModalValues.resources.chronotine + "";
-        id('resourceUMax').max = marketModalValues.resources.unobtanium;
-        id('resourceUMax').innerText = marketModalValues.resources.unobtanium + "";
+        const aetherCount     = getAetherCount(     marketModalValues.resources );
+        const chronotineCount = getChronotineCount( marketModalValues.resources );
+        const unobtaniumCount = getUnobtaniumCount( marketModalValues.resources );
+        id('resourceAMax').max       = aetherCount;
+        id('resourceAMax').innerText = aetherCount + "";
+        id('resourceCMax').max       = chronotineCount;
+        id('resourceCMax').innerText = chronotineCount + "";
+        id('resourceUMax').max       = unobtaniumCount;
+        id('resourceUMax').innerText = unobtaniumCount + "";
     }
 
     function unitChange() {

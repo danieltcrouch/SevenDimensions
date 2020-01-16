@@ -8,6 +8,11 @@
                 <span id="close" class="close">&times;</span>
             </div>
             <div id="modalBody" class="modal-body">
+                <div id="dimensions" style="margin-bottom: .5em"></div>
+                <div>
+                    <div><span style="font-weight: bold">Total: </span><span id="totalDimensionCost">0</span>WB</div>
+                    <button id="purchase" class="button" style="margin-top: .4em; padding: .1em .5em" onclick="purchaseDimensions()">Purchase</button>
+                </div>
             </div>
             <div id="modalSubmit" class="modal-submit center">
                 <button id="closeButton" class="button" style="width: 10em" onclick="closeOutModal()">Close</button>
@@ -25,11 +30,55 @@
         councilModalValues = currentPlayer;
         councilModalCallback = callback;
 
-        //todo 6
+        populateDimensionCheckboxes();
 
         id("councilModal").style.display = "block";
         setCloseHandlersJS( "councilModal" );
         blurBackground();
+    }
+
+    function populateDimensionCheckboxes() {
+        let wrapper = id( 'dimensions' );
+        wrapper.innerHTML = "";
+        for ( let i = 0; i < DIMENSIONS.length; i++ ) {
+            const dimension = DIMENSIONS[i];
+            const id = "dimension" + i;
+            let div = document.createElement( "DIV" );
+            let input = document.createElement( "INPUT" );
+            input.id = id;
+            input.name = "dimensions";
+            input.type = "checkbox";
+            input.onchange = dimensionChange;
+            let label = document.createElement( "LABEL" );
+            let cost = dimension.costFunction();
+            label.for = id;
+            label.innerHTML = dimension.name + " (" + cost + ") ";
+            div.appendChild( input );
+            div.appendChild( label );
+            wrapper.appendChild( div );
+        }
+    }
+
+    function dimensionChange() {
+        let total = 0;
+        let dimensionChecks = nm('dimensions');
+        for ( let i = 0; i < dimensionChecks.length; i++ ) {
+            if ( dimensionChecks[i].checked ) {
+                total += Dimension.getCost();
+            }
+        }
+        id('totalDimensionCost').innerText = total + "";
+    }
+
+    function purchaseDimensions() {
+        const councilTotal = parseInt( id('totalDimensionCost').innerText );
+        if ( councilTotal > councilModalValues.warBucks ) {
+            showToaster( "Cannot afford purchase" );
+        }
+        else {
+            councilModalValues.warBucks -= councilTotal;
+            closeOutModal();
+        }
     }
 
     function closeOutModal() {

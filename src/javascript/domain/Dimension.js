@@ -1,9 +1,11 @@
 class Dimension extends Entity {
-    constructor( id, name, wonderIndex, description ) {
-        super( id, "DIMENSION", name, function() { return null; } );
+    constructor( id, name, wonderIndex, cost, description ) {
+        super( id, "DIMENSION", name, Dimension.getCost );
         this.wonderIndex = wonderIndex;
         this.description = description;
     }
+
+    static getCost() { return 20; }
 }
 
 function getDimension( id ) { return getEntity( id, DIMENSIONS ); }
