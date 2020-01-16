@@ -43,7 +43,7 @@
                 </div>
             </div>
             <div id="modalSubmit" class="modal-submit center">
-                <button id="closeButton" class="button" style="width: 10em" onclick="closeOutModal()">Close</button>
+                <button id="closeButton" class="button" style="width: 10em" onclick="closeOutMarketModal()">Close</button>
             </div>
         </div>
     </div>
@@ -122,7 +122,7 @@
             let label = document.createElement( "LABEL" );
             let cost = costFunction( data[i] );
             label.for = id;
-            label.innerHTML = data[i].name + " (" + cost + ") ";
+            label.innerHTML = data[i].name + " (" + cost + "WB) ";
             div.appendChild( input );
             div.appendChild( label );
             wrapper.appendChild( div );
@@ -222,13 +222,13 @@
 
                 if ( isValid ) {
                     marketModalValues.warBucks -= marketTotal;
-                    closeOutModal();
+                    closeOutMarketModal();
                 }
             }
         }
     }
 
-    function closeOutModal() {
+    function closeOutMarketModal() {
         closeModalJS( "marketModal" );
         marketModalCallback( marketModalValues );
     }

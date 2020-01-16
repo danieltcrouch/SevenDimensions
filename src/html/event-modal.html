@@ -10,7 +10,7 @@
             <div id="modalBody" class="modal-body">
             </div>
             <div id="modalSubmit" class="modal-submit center">
-                <button id="closeButton" class="button" style="width: 10em" onclick="closeOutModal()">Close</button>
+                <button id="closeButton" class="button" style="width: 10em" onclick="closeOutEventModal()">Close</button>
             </div>
         </div>
     </div>
@@ -34,7 +34,7 @@
         blurBackground();
     }
 
-    function closeOutModal() {
+    function closeOutEventModal() {
         closeModalJS( "eventModal" );
         eventModalCallback( null );
     }

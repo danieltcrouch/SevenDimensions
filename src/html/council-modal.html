@@ -15,7 +15,7 @@
                 </div>
             </div>
             <div id="modalSubmit" class="modal-submit center">
-                <button id="closeButton" class="button" style="width: 10em" onclick="closeOutModal()">Close</button>
+                <button id="closeButton" class="button" style="width: 10em" onclick="closeOutCouncilModal()">Close</button>
             </div>
         </div>
     </div>
@@ -77,11 +77,11 @@
         }
         else {
             councilModalValues.warBucks -= councilTotal;
-            closeOutModal();
+            closeOutCouncilModal();
         }
     }
 
-    function closeOutModal() {
+    function closeOutCouncilModal() {
         closeModalJS( "councilModal" );
         councilModalCallback( councilModalValues );
     }
