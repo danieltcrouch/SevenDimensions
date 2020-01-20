@@ -1,3 +1,11 @@
+//todo 1 - Make it where I can start a game from scratch (skip lobby/game setup at this point)
+//todo 2 - Make it where all of the game images/icons show up correctly for new game
+//todo 3 - Make it where I can switch between players / take turns within a phase
+//  Will require a "test-mode" mechanism since I don't have 3 Google accounts
+//  Will require web-hooks and/or DB setup
+//todo 4 - Make it where I can complete a round moving through phases
+//todo 5 - Do code-cleanup, abstracting to service files
+
 const NO_TILE_DETAILS = "No Tile Selected";
 
 let game;
@@ -16,7 +24,7 @@ function loadGame() {
         //    },
         //    loadGameCallback
         //);
-        loadGameCallback( JSON.stringify( getLoadedGame() ) );
+        loadGameCallback( JSON.stringify( getInProgressGame() ) );
     }
 }
 
@@ -102,7 +110,7 @@ function popModals() {
 /****** HANDLERS ******/
 
 
-//todo 9 - divide functions into smaller service classes (display-game.js, etc.)
+//todo 5 - divide functions into smaller service classes (display-game.js, etc.)
 function selectUnits( e ) {
     const spanId = e.target.id;
     const tileId = selectedTile.id;
@@ -536,7 +544,7 @@ function showExpansionActions() {
 
 
 function showHarvestActions() {
-    if ( !currentPlayer.hasReaped ) {
+    if ( !currentPlayer.turn.hasReaped ) {
         const warBuckReward = calculateWarBuckHarvestReward();
         const resourceReward = calculateResourceHarvestReward();
         const resourceDisplay = resourceReward.map( r => r.count + " " + getResource(r.id).name + (r.count > 1 ? "s" : "") ).join(", ");
@@ -609,11 +617,11 @@ function showCouncilActions() {
 }
 
 function showDoomsdayActions() {
-    game.state.events.office = OFFICES[Math.floor(Math.random() * OFFICES.length)].id;
+    game.events.office = OFFICES[Math.floor(Math.random() * OFFICES.length)].id;
     openEventModal(
         currentPlayer,
         game.state.event,
-        game.state.events,
+        game.events,
         function( response ) {
             //
         }
@@ -653,10 +661,10 @@ function calculateVP( player ) {
 
 function getInsurrectionVictim() {
     let result = null;
-    if ( game.state.events.disaster === 5 ) {
-        game.state.events.disaster = null;
+    if ( game.events.disaster === INSURRECTION ) {
+        game.events.disaster = null;
         result = game.players.reduce( (prev, current) => ( calculateVP(prev) > calculateVP(current) ) ? prev : current ).id;
-        game.state.events.disaster = 5;
+        game.events.disaster = INSURRECTION;
     }
     return result;
 }
@@ -682,7 +690,7 @@ function getPlayer( id ) {
 }
 
 function getPhase( index ) {
-    return PHASES[ Math.floor( index ) ];
+    return PHASES[index].name;
 }
 
 function isMarketPhase() { return game.state.phase === PHASE_MARKET; }
@@ -707,7 +715,7 @@ function getTurn( index ) {
 }
 
 function getEvent( index ) {
-    return EVENTS[index];
+    return EVENTS[index].name;
 }
 
 function isImageTile( tileId ) {
@@ -760,155 +768,4 @@ function getArrayItemsFromString( array, value ) {
 
 function hasHero( units ) {
     return units.some( u => getUnitType( u.id ) === UNIT_TYPES[HERO] );
-}
-
-
-/****** TO-DELETE ******/
-
-
-function getLoadedGame() {
-    return {
-        state: {
-            ambassador: 0,
-            round: 0,
-            phase: 3,
-            subPhase: 0,
-            turn: 0,
-            event: 0,
-            events: {
-                office: null,
-                disaster: null
-            }
-        },
-        map: generateNewMap( 3 ),
-        players: [
-            {
-                id: "113295997427531114332",
-                username: "daniel",
-                hasReaped: false,
-                factionId: "1",
-                warBucks: 12,
-                resources: [ {id: "0", count: 1} ],
-                advancements: {
-                    technologies: ["0", "1"], //todo 9 - for most arrays, use String of Bits in DB
-                    doctrines: ["0"],
-                    gardens: [],
-                    auctions: [],
-                    auctionWins: [],
-                    auctionBid: null,
-                    purchasedCount: 0
-                },
-                initiatives: {
-                    politicalTokens: 5,
-                    culturalTokens: 0,
-                    politicalActive: [ { tile: "1-2", count: 3 } ],
-                    culturalActive: [],
-                },
-                cards: {
-                    chaos: ["0", "1"],
-                    offices: [],
-                    purchasedCount: 0
-                },
-                units: [
-                    { id: "1", tile: "1-2", count: 3 },
-                    { id: "1", tile: "2-3", count: 1 },
-                    { id: "7", tile: "1-2", count: 1 }
-                ],
-                districts: {
-                    capital: "1-2",
-                    tiles: ["1-2", "2-3"]
-                },
-                dimensions: [ { id: 0, wonderTile: "1-2" } ],
-                religion: {
-                    id: 0,
-                    tiles: ["1-2"]
-                },
-                selects: {
-                    highPriestVictim: null
-                }
-
-            },
-            {
-                id: "2",
-                username: "michael",
-                hasOpened: false,
-                factionId: "6",
-                warBucks: 12,
-                resources: [],
-                advancements: {
-                    technologies: ["0"],
-                    doctrines: ["0", "1"],
-                    gardens: [],
-                    auctions: [],
-                    auctionWins: [],
-                    auctionBid: null,
-                    purchasedCount: 0
-                },
-                initiatives: {
-                    politicalTokens: 0,
-                    culturalTokens: 5,
-                    politicalActive: [],
-                    culturalActive: [],
-                },
-                cards: {
-                    chaos: ["1", "48"],
-                    offices: [],
-                    purchasedCount: 0
-                },
-                units: [
-                    { id: "0", tile: "7-2", count: 1 },
-                    { id: "0", tile: "1-2", count: 1 },
-                    { id: "1", tile: "7-2", count: 1 },
-                    { id: "7", tile: "7-2", count: 1 }
-                ],
-                districts: {
-                    capital: "7-2",
-                    tiles: ["7-2"]
-                },
-                dimensions: [],
-                religion: {},
-                selects: {
-                    highPriestVictim: null
-                }
-            },
-            {
-                id: "3",
-                username: "stephen",
-                hasOpened: false,
-                factionId: "8",
-                warBucks: 10,
-                resources: [],
-                advancements: {
-                    technologies: ["0"],
-                    doctrines: ["0"],
-                    gardens: ["1"],
-                    auctions: [],
-                    auctionWins: [],
-                    auctionBid: null,
-                    purchasedCount: 0
-                },
-                initiatives: {
-                    politicalTokens: 0,
-                    culturalTokens: 0,
-                    politicalActive: [],
-                    culturalActive: [],
-                },
-                cards: {
-                    chaos: ["2"],
-                    offices: [],
-                    purchasedCount: 0
-                },
-                units: [],
-                districts: {
-                    capital: "4-7",
-                    tiles: ["4-7"]
-                },
-                dimensions: [],
-                religion: {},
-                selects: {
-                    highPriestVictim: null
-                }
-            }
-        ]
-    };
 }

@@ -3,6 +3,15 @@ class Deck {
         this.cards = cards || [];
     }
 
+    static getRandomCards( cards, count ) {
+        let deck = ( cards instanceof Deck ) ? cards : new Deck( cards );
+        let result = [];
+        for ( let i = 0; i < count; i++ ) {
+            result.push( deck.removeCardIndex( Math.floor(Math.random() * deck.length) ) );
+        }
+        return result;
+    }
+
     removeCard( card ) {
         const index = this.cards.map( c => c.id ).indexOf( card.id );
         return !!this.removeCardIndex( index );
