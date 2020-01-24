@@ -35,11 +35,22 @@ function loadGame() {
 
 function loadGameCallback( response ) {
     game = jsonParse( response );
+    game.map = parseMap( game.map );
+
     loadGameState();
     loadMap();
     loadUser();
 
     popModals();
+}
+
+function parseMap( map ) {
+    //Will change when you actually use DB
+    return map.map( t => new Tile(
+        t.id,
+        getTileType( t.tileType.id ),
+        t.resources ? t.resources.map( r => getResource( r.id ) ) : null
+    ) );
 }
 
 function loadGameState() {
@@ -97,7 +108,7 @@ function loadMap() {
     for ( let i = 0; i < game.players.length; i++ ) {
         let player = game.players[i];
         const color = getColorFromIndex( i );
-        player.districts.tiles.forEach( function( tileId ) {
+        player.districts.tileIds.forEach( function( tileId ) {
             id( tileId + "-background" ).classList.add( color + (isImageTile( tileId ) ? "Image" : "") );
         } );
     }
@@ -259,14 +270,14 @@ function moveUnits( tileId ) {
         let unitDisambiguous = currentPlayer.unitsDisambiguous.find( u => u.id === su.id );
         unitDisambiguous.movesRemaining -= suggestedPath.length;
         unitDisambiguous.tileId = destinationTileId;
-        currentPlayer.units.find( u => u.id === su.unitType.id && u.tile === rootTileId ).count--;
+        currentPlayer.units.find( u => u.id === su.unitType.id && u.tileId === rootTileId ).count--;
         currentPlayer.units = currentPlayer.units.filter( u => u.count > 0 );
-        let unit = currentPlayer.units.find( u => u.id === su.unitType.id && u.tile === destinationTileId );
+        let unit = currentPlayer.units.find( u => u.id === su.unitType.id && u.tileId === destinationTileId );
         if ( unit ) {
             unit.count++;
         }
         else {
-            currentPlayer.units.push( { id: su.unitType.id, tile: destinationTileId, count: 1} );
+            currentPlayer.units.push( { id: su.unitType.id, tileId: destinationTileId, count: 1} );
         }
     } );
 
@@ -322,12 +333,12 @@ function selectTile( tileId ) {
 
 function getTileDetails( id ) {
     let tile = game.map.find( t => t.id === id );
-    const districtPlayer = game.players.find( p => p.districts.tiles.includes( id ) );
-    const wonderIds = districtPlayer.dimensions.filter( d => d.wonder && d.wonder === id ).map( d => WONDERS[d.wonderIndex].id );
-    const religionIds = game.players.map( p => p.religion ).filter( r => r.tiles.includes( id ) ).map( r => r.id );
+    const districtPlayer = game.players.find( p => p.districts.tileIds.includes( id ) );
+    const wonderIds = districtPlayer ? districtPlayer.dimensions.filter( d => d.wonderTileId && d.wonderTileId === id ).map( d => WONDERS[d.wonderIndex].id ) : null;
+    const religionIds = game.players.map( p => p.religion ).filter( r => r && r.tileIds.includes( id ) ).map( r => r.id );
     let unitSets = [];
     game.players.forEach( p => {
-        let units = p.units.filter( u => u.tile === id );
+        let units = p.units.filter( u => u.tileId === id );
         if ( units.length > 0 ) {
             unitSets.push( { id: p.id, combat: !units.every( u => u.id === UNIT_TYPES[APOSTLE].id ), units: units } );
         }
@@ -361,7 +372,7 @@ function consolidateActiveUnits( units ) {
             consolidatedUnit.count++;
         }
         else {
-            result.push( {id: activeUnit.unitType.id, tile: activeUnit.tileId, movesRemaining: activeUnit.movesRemaining, count: 1 } );
+            result.push( {id: activeUnit.unitType.id, tileId: activeUnit.tileId, movesRemaining: activeUnit.movesRemaining, count: 1 } );
         }
     }
     return result;
@@ -381,7 +392,7 @@ function viewVP() {
     const isHighPriestActive = currentPlayer.cards.offices.includes( "0" ) || currentPlayer.selects.highPriestVictim;
     let message =
         `<span style='font-weight: bold'>Victory Points Total:</span> ${id('victoryPointsValue').innerText}<br/>
-        Districts: ${currentPlayer.districts.tiles.length}<br/>
+        Districts: ${currentPlayer.districts.tileIds.length}<br/>
         Dimensions: ${currentPlayer.dimensions.length}<br/
         Wonders: ${(currentPlayer.dimensions.filter( d => !!d.wonderTile ).length * 2)}<br/>
         Hero: ${(hasHero( currentPlayer.units ) ? "1" : "0")}<br/>
@@ -427,7 +438,7 @@ function viewGardens() {
     let message = getAdvancementTable(
         GARDENS,
         currentPlayer.advancements.gardens,
-        function( item ) { return item.costFunction( currentPlayer.districts.tiles.length ) + "WB"; }
+        function( item ) { return item.costFunction( currentPlayer.districts.tileIds.length ) + "WB"; }
     );
     message += "<div style='margin-top: .5em'>(Cost calculated by 7WB times the number of districts; must have at least 2 districts.)</div>";
     showMessage( "Gardens", message, {padding: ".5em 20%"} );
@@ -478,7 +489,7 @@ function submit() {
             showAuctionActions();
         }
         else {
-            if ( currentPlayer.units.some( u => u.tile === "unassigned" ) ) {
+            if ( currentPlayer.units.some( u => u.tileId === "unassigned" ) ) {
                 showToaster( "Must assign purchased units" );
             }
         }
@@ -604,7 +615,7 @@ function showHarvestActions() {
 }
 
 function calculateWarBuckHarvestReward() {
-    const districts = currentPlayer.districts.tiles.reduce( function( total, tileId ){
+    const districts = currentPlayer.districts.tileIds.reduce( function( total, tileId ){
         return total + game.map.find( t => t.id === tileId ).tileType.value;
     }, 0 );
     const religion = 0;
@@ -612,7 +623,7 @@ function calculateWarBuckHarvestReward() {
 }
 
 function calculateResourceHarvestReward() {
-    return currentPlayer.districts.tiles.reduce( function( result, tileId ) {
+    return currentPlayer.districts.tileIds.reduce( function( result, tileId ) {
         const tileResources = game.map.find( t => t.id === tileId ).resources;
         if ( tileResources ) {
             tileResources.forEach( r => {
@@ -643,11 +654,11 @@ function showCouncilActions() {
 }
 
 function showDoomsdayActions() {
-    game.events.office = OFFICES[Math.floor(Math.random() * OFFICES.length)].id;
+    game.state.events.office = OFFICES[Math.floor(Math.random() * OFFICES.length)].id;
     openEventModal(
         currentPlayer,
         game.state.event,
-        game.events,
+        game.state.events,
         function( response ) {
             //
         }
@@ -663,10 +674,10 @@ function showDoomsdayActions() {
 function disambiguateUnits( units ) {
     let result = [];
     for ( let i = 0; i < units.length; i++ ) {
-       const unitTileType = units[i];
-       for ( let j = 0; j < unitTileType.count; j++ ) {
+       const unitStack = units[i];
+       for ( let j = 0; j < unitStack.count; j++ ) {
            const id = ( Math.floor( Math.random() * 10000 ) + "" ).padStart( 4, '0' );
-           result.push( new Unit( id, getUnitType( unitTileType.id ), unitTileType.tile ) );
+           result.push( new Unit( id, getUnitType( unitStack.id ), unitStack.tileId ) );
        }
     }
     return result;
@@ -674,7 +685,7 @@ function disambiguateUnits( units ) {
 
 function calculateVP( player ) {
     let result = 0;
-    result += player.districts.tiles.length;
+    result += player.districts.tileIds.length;
     result += player.dimensions.length;
     result += player.dimensions.filter( d => !!d.wonderTile ).length * 2;
     result += hasHero( player.units ) ? 1 : 0;
@@ -687,10 +698,10 @@ function calculateVP( player ) {
 
 function getInsurrectionVictim() {
     let result = null;
-    if ( game.events.disaster === INSURRECTION ) {
-        game.events.disaster = null;
+    if ( game.state.events.disaster === INSURRECTION ) {
+        game.state.events.disaster = null;
         result = game.players.reduce( (prev, current) => ( calculateVP(prev) > calculateVP(current) ) ? prev : current ).id;
-        game.events.disaster = INSURRECTION;
+        game.state.events.disaster = INSURRECTION;
     }
     return result;
 }

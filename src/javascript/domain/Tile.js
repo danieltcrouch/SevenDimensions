@@ -48,7 +48,7 @@ class Tile extends Entity {
 
     static getRandomTile( id, tileType, index ) {
         const resourceIndex = Math.floor( index / 2 );
-        const resources = (tileType.resourceCount > 0 && resourceIndex < RESOURCES.length) ? RESOURCES[resourceIndex].id : null;
+        const resources = (tileType.resourceCount > 0 && resourceIndex < RESOURCES.length) ? RESOURCES[resourceIndex] : null;
         return new Tile( id, tileType, resources );
     }
 
@@ -57,7 +57,7 @@ class Tile extends Entity {
     }
 
     static getAtlantisTile( id ) {
-        return new Tile( id, TILE_TYPES[ATLANTIS], RESOURCES.map( r => r.id ) );
+        return new Tile( id, TILE_TYPES[ATLANTIS], RESOURCES );
     }
 }
 

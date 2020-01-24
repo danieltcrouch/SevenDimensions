@@ -155,7 +155,7 @@ function generateMapSVG( callbackFunction ) {
                iconUnit.setAttributeNS(null, "id", hex.id + "-unit" );
                iconUnit.setAttributeNS(null, "cx", hex.midPoint.x - X_OFFSET );
                iconUnit.setAttributeNS(null, "cy", hex.midPoint.y + Y_OFFSET );
-               iconUnit.setAttributeNS(null, "fill", "url(#unit)");
+               iconUnit.setAttributeNS(null, "fill", "url(#unit0)");
                iconUnit.classList.add( "tileIcon" );
                iconUnit.style.display = "none";
                tile.appendChild( iconUnit );

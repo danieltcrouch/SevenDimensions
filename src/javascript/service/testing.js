@@ -14,11 +14,11 @@ function getNewGame( testPlayers = TEST_PLAYERS ) {
             phase: 0,
             subPhase: 0,
             turn: 0,
-            event: 0
-        },
-        events: {
-            office: null,
-            disaster: null
+            event: 0,
+            events: {
+                office: null,
+                disaster: null
+            }
         },
         map: newMap,
         players: newPlayers
@@ -73,10 +73,10 @@ function generateNewPlayers( testPlayers ) {
                     offices: [],
                     purchasedCount: 0
                 },
-                units: faction.startingSupplies.units.slice().map( u => ({ ...u, tile: p.tileId }) ).concat( [{ id: UNIT_TYPES[HERO].id, count: 1, tile: p.tileId}] ),
+                units: faction.startingSupplies.units.slice().map( u => ({ ...u, tileId: p.tileId }) ).concat( [{ id: UNIT_TYPES[HERO].id, count: 1, tileId: p.tileId}] ),
                 districts: {
                     capital: p.tileId,
-                    tiles: [p.tileId]
+                    tileIds: [p.tileId]
                 },
                 dimensions: [],
                 religion: null,
