@@ -10,7 +10,7 @@ function generateNewMap( factionCount ) {
     let natureDeck = new Deck();
     TILE_TYPES.filter( t => t.isNatureTile( true ) ).forEach( function( tileType ) {
         for ( let i = 0; i < tileType.count; i++ ) {
-            natureDeck.insertCard( Tile.getNewTile( null, tileType, i ), true );
+            natureDeck.insertCard( Tile.getRandomTile( null, tileType, i ), true );
         }
     } );
 

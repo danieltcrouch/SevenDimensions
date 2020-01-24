@@ -73,7 +73,7 @@ function generateNewPlayers( testPlayers ) {
                     offices: [],
                     purchasedCount: 0
                 },
-                units: faction.startingSupplies.units.slice().map( u => u.tile = p.tileId ),
+                units: faction.startingSupplies.units.slice().map( u => ({ ...u, tile: p.tileId }) ).concat( [{ id: UNIT_TYPES[HERO].id, count: 1, tile: p.tileId}] ),
                 districts: {
                     capital: p.tileId,
                     tiles: [p.tileId]

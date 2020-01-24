@@ -1,10 +1,14 @@
-//todo 1 - Make it where I can start a game from scratch (skip lobby/game setup at this point)
+//todo 1 - Finish making images
+//todo 1 - Organize all files
+//todo 1 - Finish GameCrafter / Kickstarter portion
 //todo 2 - Make it where all of the game images/icons show up correctly for new game
+//  Units displays highest power unit, and plus sign in corner if multiple
 //todo 3 - Make it where I can switch between players / take turns within a phase
 //  Will require a "test-mode" mechanism since I don't have 3 Google accounts
 //  Will require web-hooks and/or DB setup
 //todo 4 - Make it where I can complete a round moving through phases
 //todo 5 - Do code-cleanup, abstracting to service files
+//todo 6 - Click on Capital and have link to pop modal with player/faction info
 
 const NO_TILE_DETAILS = "No Tile Selected";
 
@@ -24,6 +28,7 @@ function loadGame() {
         //    },
         //    loadGameCallback
         //);
+        userId = "001";
         loadGameCallback( JSON.stringify( getInProgressGame() ) );
     }
 }
@@ -53,26 +58,41 @@ function loadMap() {
         if ( tile.tileType.id === TILE_TYPES[ATLANTIS].id ) {
             hideById(tile.id + "-text");
             id(tile.id + "-background").setAttributeNS(null, "fill", "url(#atlantis)");
-            //id(tile.id + "-polygon-s").setAttributeNS(null, "fill", "transparent");
-        }
-        else if ( tile.tileType.id === TILE_TYPES[CAPITAL].id ) {
-            hideById(tile.id + "-text");
-            id(tile.id + "-background").setAttributeNS(null, "fill", "url(#heroTile0)");
         }
         else if ( tile.tileType.id === TILE_TYPES[VOLCANO].id ) {
             hideById(tile.id + "-text");
             id(tile.id + "-background").setAttributeNS(null, "fill", "url(#volcano)");
         }
+        else if ( tile.tileType.id === TILE_TYPES[CAPITAL].id ) {
+            hideById(tile.id + "-text");
+            const factionId = game.players.find( p => p.districts.capital === tile.id ).factionId;
+            id(tile.id + "-background").setAttributeNS(null, "fill", `url(#faction${factionId})`);
+        }
+
+        if ( tile.resources ) {
+            id(tile.id + "-resource").style.display = "";
+            const resourceId = tile.resources.length > 1 ? tile.resources[0] : tile.resources[0]; //todo 2 - multiple resources
+            id(tile.id + "-resource").setAttributeNS(null, "fill", `url(#res${resourceId})`);
+        }
 
         const tileDetails = getTileDetails( tile.id );
         if ( tileDetails.unitSets.length > 0 ) {
             id(tile.id + "-unit").style.display = "";
+            //const strongestUnitId = tile.resources.length > 1 ? tile.resources[0] : tile.resources[0]; //todo 2 - strongestUnitId
+            //id(tile.id + "-resource").setAttributeNS(null, "fill", `url(#res${resourceId})`);
+            //todo 2 - also display hero
+        }
+        if ( tileDetails.wonderId ) {
+            id(tile.id + "-wonder").style.display = "";
+            id(tile.id + "-resource").setAttributeNS(null, "fill", `url(#res${tileDetails.wonderId})`);
+        }
+        if ( tileDetails.religionIds ) {
+            //id(tile.id + "-wonder").style.display = "";
+            //id(tile.id + "-resource").setAttributeNS(null, "fill", `url(#res${tileDetails.wonderId})`);
         }
 
         id(tile.id).onmouseover = tileHoverCallback;
     }
-
-    id('tileDetailsDiv').innerText = NO_TILE_DETAILS;
 
     for ( let i = 0; i < game.players.length; i++ ) {
         let player = game.players[i];
@@ -81,6 +101,8 @@ function loadMap() {
             id( tileId + "-background" ).classList.add( color + (isImageTile( tileId ) ? "Image" : "") );
         } );
     }
+
+    id('tileDetailsDiv').innerText = NO_TILE_DETAILS;
 }
 
 function loadUser() {
@@ -88,14 +110,14 @@ function loadUser() {
     id('playerName').innerText = currentPlayer.username;
     id('factionName').innerText = getFaction( currentPlayer.factionId ).name;
 
-    id('victoryPointsValue').innerText = calculateVP( currentPlayer ) + "";
-    id('warBucksValue').innerText = currentPlayer.warBucks + "";
-    id('technologiesValue').innerText = getStringBooleanCount( currentPlayer.advancements.technologies ) + "/" + TECHNOLOGIES.length;
-    id('doctrinesValue').innerText = getStringBooleanCount( currentPlayer.advancements.doctrines ) + "/" + DOCTRINES.length;
-    id('gardensValue').innerText = getStringBooleanCount( currentPlayer.advancements.gardens ) + "/" + GARDENS.length;
-    id('auctionLotsValue').innerText = getStringBooleanCount( currentPlayer.advancements.auctions ) + "/" + AUCTIONS.length;
-    id('initiativeTokensValue').innerText = ( currentPlayer.initiatives.politicalTokens + currentPlayer.initiatives.culturalTokens ) + "";
-    id('chaosCardsValue').innerText = getStringBooleanCount( currentPlayer.cards.chaos ) + "";
+    id('victoryPointsValue').innerText      = calculateVP( currentPlayer ) + "";
+    id('warBucksValue').innerText           = currentPlayer.warBucks + "";
+    id('technologiesValue').innerText       = currentPlayer.advancements.technologies.length + "/" + TECHNOLOGIES.length;
+    id('doctrinesValue').innerText          = currentPlayer.advancements.doctrines.length    + "/" + DOCTRINES.length;
+    id('gardensValue').innerText            = currentPlayer.advancements.gardens.length      + "/" + GARDENS.length;
+    id('auctionLotsValue').innerText        = currentPlayer.advancements.auctions.length     + "/" + AUCTIONS.length;
+    id('initiativeTokensValue').innerText   = ( currentPlayer.initiatives.politicalTokens + currentPlayer.initiatives.culturalTokens ) + "";
+    id('chaosCardsValue').innerText         = currentPlayer.cards.chaos.length + "";
 
     currentPlayer.unitsDisambiguous = disambiguateUnits( currentPlayer.units );
 }
@@ -301,6 +323,8 @@ function selectTile( tileId ) {
 function getTileDetails( id ) {
     let tile = game.map.find( t => t.id === id );
     const districtPlayer = game.players.find( p => p.districts.tiles.includes( id ) );
+    const wonderIds = districtPlayer.dimensions.filter( d => d.wonder && d.wonder === id ).map( d => WONDERS[d.wonderIndex].id );
+    const religionIds = game.players.map( p => p.religion ).filter( r => r.tiles.includes( id ) ).map( r => r.id );
     let unitSets = [];
     game.players.forEach( p => {
         let units = p.units.filter( u => u.tile === id );
@@ -310,9 +334,11 @@ function getTileDetails( id ) {
     } );
     return {
         id: id,
-        type: tile.tileType.name.replace(/[0-9]/g, ""),
+        type: TileType.getDisplayName( tile.tileType ),
         population: tile.tileType.value,
         districtPlayerId: districtPlayer ? districtPlayer.id : null,
+        wonderId: wonderIds ? wonderIds[0] : null,
+        religionIds: religionIds,
         unitSets: unitSets
     };
 }
