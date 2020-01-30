@@ -2,7 +2,8 @@
 //todo 1 - Organize all files
 //todo 1 - Finish GameCrafter / Kickstarter portion
 //todo 2 - Make it where all of the game images/icons show up correctly for new game
-//  Units displays highest power unit, and plus sign in corner if multiple
+//  Units displays highest power unit
+//  Plus sign in corner if multiple
 //todo 3 - Make it where I can switch between players / take turns within a phase
 //  Will require a "test-mode" mechanism since I don't have 3 Google accounts
 //  Will require web-hooks and/or DB setup
