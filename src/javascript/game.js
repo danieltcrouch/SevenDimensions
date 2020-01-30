@@ -1,11 +1,7 @@
 //todo 1 - Finish making images
-//  camelot
-//  initToken
 //  logos (real game) -> faction sheets, box, stickers
 //todo 1 - Finish GameCrafter / Kickstarter portion
 //todo 2 - Make it where all of the game images/icons show up correctly for new game
-//  Units displays highest power unit
-//  Plus sign in corner if multiple
 //todo 3 - Make it where I can switch between players / take turns within a phase
 //  Will require a "test-mode" mechanism since I don't have 3 Google accounts
 //  Will require web-hooks and/or DB setup
@@ -90,19 +86,15 @@ function loadMap() {
         }
 
         const tileDetails = getTileDetails( tile.id );
-        if ( tileDetails.unitSets.length > 0 ) {
-            id(tile.id + "-unit").style.display = "";
-            //const strongestUnitId = tile.resources.length > 1 ? tile.resources[0] : tile.resources[0]; //todo 2 - strongestUnitId
-            //id(tile.id + "-resource").setAttributeNS(null, "fill", `url(#res${resourceId})`);
-            //todo 2 - also display hero
-        }
+        updateUnitIcons( tileDetails );
         if ( tileDetails.wonderId ) {
             id(tile.id + "-wonder").style.display = "";
-            id(tile.id + "-resource").setAttributeNS(null, "fill", `url(#res${tileDetails.wonderId})`);
+            id(tile.id + "-wonder").setAttributeNS(null, "fill", `url(#won${tileDetails.wonderId})`);
         }
-        if ( tileDetails.religionIds ) {
-            //id(tile.id + "-wonder").style.display = "";
-            //id(tile.id + "-resource").setAttributeNS(null, "fill", `url(#res${tileDetails.wonderId})`);
+        if ( tileDetails.religionIds.length ) {
+            let religionId = tileDetails.religionIds[0]; //todo 2 - find player's religion
+            id(tile.id + "-religion").style.display = "";
+            id(tile.id + "-religion").setAttributeNS(null, "fill", `url(#rel${religionId})`);
         }
 
         id(tile.id).onmouseover = tileHoverCallback;
@@ -284,14 +276,43 @@ function moveUnits( tileId ) {
         }
     } );
 
-    id(destinationTileId + "-unit").style.display = "";
-    if ( getTileDetails( rootTileId ).unitSets.length === 0 ) {
-        id(rootTileId + "-unit").style.display = "none";
-    }
+    updateUnitIconsFromId( rootTileId );
+    updateUnitIconsFromId( destinationTileId );
 
     unselectUnits();
     selectTile( rootTileId );
     suggestedPath = [];
+}
+
+function updateUnitIconsFromId( tileId ) {
+    updateUnitIcons( getTileDetails( tileId ) );
+}
+
+function updateUnitIcons( tileDetails ) {
+    const tileId = tileDetails.id;
+    if ( tileDetails.unitSets.length > 0 ) {
+        const HERO_TYPE_ID = UNIT_TYPES[HERO].id;
+        const allUnitIds = tileDetails.unitSets.reduce( ( units, unitSet ) => units.concat( unitSet.units ), [] ).map( u => u.id );
+        const unitIds = allUnitIds.filter( u => u !== HERO_TYPE_ID );
+        const heroIds = allUnitIds.filter( u => u === HERO_TYPE_ID );
+        const strongestUnitId = unitIds.length ? Math.max( ...unitIds, "0" ) : HERO_TYPE_ID;
+        id(tileId + "-unit").setAttributeNS(null, "fill", `url(#unit${strongestUnitId})`);
+        id(tileId + "-unit").style.display = "";
+        id(tileId + "-unit-plus").style.display = allUnitIds.length > 1 ? "" : "none";
+        if ( heroIds.length ) {
+            const heroId = Faction.getHero( getPlayer( tileDetails.unitSets.find( us => us.units.some( u => u.id === HERO_TYPE_ID ) ).id ).factionId ).id;
+            id(tileId + "-hero").setAttributeNS(null, "fill", `url(#hero${heroId})`);
+            id(tileId + "-hero").style.display = "";
+        }
+        else {
+            id(tileId + "-hero").style.display = "none";
+        }
+    }
+    else {
+        id(tileId + "-unit").style.display = "none";
+        id(tileId + "-hero").style.display = "none";
+        id(tileId + "-unit-plus").style.display = "none";
+    }
 }
 
 function selectTile( tileId ) {
@@ -337,7 +358,7 @@ function selectTile( tileId ) {
 function getTileDetails( id ) {
     let tile = game.map.find( t => t.id === id );
     const districtPlayer = game.players.find( p => p.districts.tileIds.includes( id ) );
-    const wonderIds = districtPlayer ? districtPlayer.dimensions.filter( d => d.wonderTileId && d.wonderTileId === id ).map( d => WONDERS[d.wonderIndex].id ) : null;
+    const wonderIds = districtPlayer ? districtPlayer.dimensions.filter( d => d.wonderTileId && d.wonderTileId === id ).map( d => WONDERS[getDimension(d.id).wonderIndex].id ) : null;
     const religionIds = game.players.map( p => p.religion ).filter( r => r && r.tileIds.includes( id ) ).map( r => r.id );
     let unitSets = [];
     game.players.forEach( p => {
@@ -346,6 +367,7 @@ function getTileDetails( id ) {
             unitSets.push( { id: p.id, combat: !units.every( u => u.id === UNIT_TYPES[APOSTLE].id ), units: units } );
         }
     } );
+
     return {
         id: id,
         type: TileType.getDisplayName( tile.tileType ),
@@ -396,8 +418,8 @@ function viewVP() {
     let message =
         `<span style='font-weight: bold'>Victory Points Total:</span> ${id('victoryPointsValue').innerText}<br/>
         Districts: ${currentPlayer.districts.tileIds.length}<br/>
-        Dimensions: ${currentPlayer.dimensions.length}<br/
-        Wonders: ${(currentPlayer.dimensions.filter( d => !!d.wonderTile ).length * 2)}<br/>
+        Dimensions: ${currentPlayer.dimensions.length}<br/>
+        Wonders: ${(currentPlayer.dimensions.filter( d => !!d.wonderTileId ).length * 2)}<br/>
         Hero: ${(hasHero( currentPlayer.units ) ? "1" : "0")}<br/>
         Chaos Cards: ${(currentPlayer.cards.chaos.filter( c => isHeavensGate( c ) ).length)}<br/>`;
     if ( isHighPriestActive ) {
@@ -690,7 +712,7 @@ function calculateVP( player ) {
     let result = 0;
     result += player.districts.tileIds.length;
     result += player.dimensions.length;
-    result += player.dimensions.filter( d => !!d.wonderTile ).length * 2;
+    result += player.dimensions.filter( d => !!d.wonderTileId ).length * 2;
     result += hasHero( player.units ) ? 1 : 0;
     result += player.cards.offices.includes( "0" ) ? 1 : 0; //High Priest
     result -= player.selects.highPriestVictim ? 1 : 0;

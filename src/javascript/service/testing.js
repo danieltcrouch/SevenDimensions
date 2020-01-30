@@ -30,6 +30,7 @@ function getInProgressGame( testPlayers = TEST_PLAYERS ) {
 
     game.state.phase = 1;
     game.state.turn = 1;
+    game.players[0].dimensions.push( {id: DIMENSIONS[CULTURE].id, wonderTileId: game.players[0].districts.capital} );
 
     return game;
 }

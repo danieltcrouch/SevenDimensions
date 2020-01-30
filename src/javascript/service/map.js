@@ -169,7 +169,6 @@ function generateMapSVG( callbackFunction ) {
                iconHero.classList.add( "tileIcon" );
                iconHero.style.display = "none";
                tile.appendChild( iconHero );
-               addPlusSymbol( tile, iconHero );
 
                let iconReligion = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
                iconReligion.setAttributeNS(null, "id", hex.id + "-religion" );
