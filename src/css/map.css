@@ -31,6 +31,11 @@
     stroke: none;
 }
 
+.tileIconPlus {
+    r: 1;
+    stroke: none;
+}
+
 /*** TEAM CSS ***/
 
 .red {

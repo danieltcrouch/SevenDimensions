@@ -159,6 +159,7 @@ function generateMapSVG( callbackFunction ) {
                iconUnit.classList.add( "tileIcon" );
                iconUnit.style.display = "none";
                tile.appendChild( iconUnit );
+               addPlusSymbol( tile, iconUnit );
 
                let iconHero = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
                iconHero.setAttributeNS(null, "id", hex.id + "-hero" );
@@ -168,6 +169,7 @@ function generateMapSVG( callbackFunction ) {
                iconHero.classList.add( "tileIcon" );
                iconHero.style.display = "none";
                tile.appendChild( iconHero );
+               addPlusSymbol( tile, iconHero );
 
                let iconReligion = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
                iconReligion.setAttributeNS(null, "id", hex.id + "-religion" );
@@ -177,6 +179,7 @@ function generateMapSVG( callbackFunction ) {
                iconReligion.classList.add( "tileIcon" );
                iconReligion.style.display = "none";
                tile.appendChild( iconReligion );
+               addPlusSymbol( tile, iconReligion );
 
                const belowHexes = getAllAdjacentHexes( hex ).filter( h => h.calculateDistance( centerHex ) < MAP_TILE_RADIUS ).filter( h => h.x < hex.x );
                belowHexes.forEach( function( bHex ) {
@@ -214,6 +217,17 @@ function generateMapSVG( callbackFunction ) {
     selectedShape.style.stroke = "gold";
     selectedShape.style.fill = "none";
     svg.appendChild( selectedShape );
+}
+
+function addPlusSymbol( tile, icon ) {
+    let plus = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
+    plus.setAttributeNS(null, "id", icon.getAttributeNS( null, "id" ) + "-plus" );
+    plus.setAttributeNS(null, "cx", parseFloat(icon.getAttributeNS( null, "cx" )) + 1.5 );
+    plus.setAttributeNS(null, "cy", parseFloat(icon.getAttributeNS( null, "cy" )) - 0.5 );
+    plus.setAttributeNS(null, "fill", "url(#plus)");
+    plus.classList.add( "tileIconPlus" );
+    plus.style.display = "none";
+    tile.appendChild( plus );
 }
 
 

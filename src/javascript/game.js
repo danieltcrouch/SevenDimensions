@@ -1,5 +1,7 @@
 //todo 1 - Finish making images
-//todo 1 - Organize all files
+//  camelot
+//  initToken
+//  logos (real game) -> faction sheets, box, stickers
 //todo 1 - Finish GameCrafter / Kickstarter portion
 //todo 2 - Make it where all of the game images/icons show up correctly for new game
 //  Units displays highest power unit
@@ -83,7 +85,7 @@ function loadMap() {
 
         if ( tile.resources ) {
             id(tile.id + "-resource").style.display = "";
-            const resourceId = tile.resources.length > 1 ? tile.resources[0] : tile.resources[0]; //todo 2 - multiple resources
+            const resourceId = tile.resources.length > 1 ? "All" : tile.resources[0].id;
             id(tile.id + "-resource").setAttributeNS(null, "fill", `url(#res${resourceId})`);
         }
 
