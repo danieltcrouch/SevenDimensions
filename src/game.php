@@ -62,6 +62,7 @@
 
 <script>
     const gameId = "<?php echo $_GET['id']; ?>";
+    const testUserId = "<?php echo $_GET['testUserId']; ?>";
 
     setLoginCallback( function() {
         loadGame();

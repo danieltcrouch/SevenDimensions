@@ -1,3 +1,6 @@
+const NEW_GAME_ID = "0";
+const OLD_GAME_ID = "1";
+
 const TEST_PLAYERS = [
     { id: "001", username: "daniel" },
     { id: "002", username: "michael" },
@@ -30,7 +33,13 @@ function getInProgressGame( testPlayers = TEST_PLAYERS ) {
 
     game.state.phase = 1;
     game.state.turn = 1;
-    game.players[0].dimensions.push( {id: DIMENSIONS[CULTURE].id, wonderTileId: game.players[0].districts.capital} );
+
+    const player = game.players[0];
+    const capitalTileId = game.players[0].districts.capital;
+    const adjacentTileId = getRelevantAdjacentHexes( getHexFromId( capitalTileId ) )[0].id;
+    player.dimensions.push( {id: DIMENSIONS[CULTURE].id, wonderTileId: game.players[0].districts.capital} );
+    player.initiatives.politicalActive.push( {from: capitalTileId, to: adjacentTileId} );
+    player.initiatives.culturalActive.push( {tileId: capitalTileId, reaperCount: 5} ); //todo - default reaper count should be a constant somewhere
 
     return game;
 }

@@ -54,7 +54,7 @@ function getCapitalHexes( factionCount ) {
         for ( let j = 0; j < maxTileDepth; j++ ) {
             const hex = new Hex( i, j );
             if ( hex.calculateDistance( centerHex ) === MAP_TILE_RADIUS - 1 ) {
-                if ( getAllAdjacentHexes( hex ).filter( h => h.calculateDistance( centerHex ) < MAP_TILE_RADIUS ).length <= 3 ) { //Corner hex
+                if ( getRelevantAdjacentHexes( hex ).length <= 3 ) { //Corner hex
                     const isVerticalTop      = hex.y < MAP_TILE_RADIUS;
                     const isHorizontalLeft   = hex.x < MAP_TILE_RADIUS;
                     const isHorizontalRight  = hex.x > MAP_TILE_RADIUS;
@@ -100,7 +100,7 @@ function generateMapSVG( callbackFunction ) {
                tile.setAttributeNS(null, "onclick", callbackFunction.name + "('" + hex.id + "')" );
                tile.classList.add( "tile" );
 
-               //todo 8 - image not working on phone
+               //todo 8 - image not working on phone - svg filter is the problem
                let background = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
                background.setAttributeNS(null, "id", hex.id + "-background" );
                background.setAttributeNS(null, "points", hex.vertices.map( p => (p.x + "," + p.y) ).join(" ") );
@@ -180,13 +180,13 @@ function generateMapSVG( callbackFunction ) {
                tile.appendChild( iconReligion );
                addPlusSymbol( tile, iconReligion );
 
-               const belowHexes = getAllAdjacentHexes( hex ).filter( h => h.calculateDistance( centerHex ) < MAP_TILE_RADIUS ).filter( h => h.x < hex.x );
-               belowHexes.forEach( function( bHex ) {
-                   let bHexSide = new Hex( bHex.x, bHex.y, TILE_SIDE_LENGTH );
+               const toHexes = getRelevantAdjacentHexes( hex ).filter( h => isInitTokenMasterHex( hex, h ) );
+               toHexes.forEach( function( toHex ) {
+                   let toHexSide = new Hex( toHex.x, toHex.y, TILE_SIDE_LENGTH );
                    let initiativeToken = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
-                   initiativeToken.setAttributeNS(null, "id", hex.id + "-" + bHexSide.id + "-token" );
-                   initiativeToken.setAttributeNS(null, "cx", (hex.midPoint.x + bHexSide.midPoint.x) / 2 );
-                   initiativeToken.setAttributeNS(null, "cy", (hex.midPoint.y + bHexSide.midPoint.y) / 2 );
+                   initiativeToken.setAttributeNS(null, "id", hex.id + "-" + toHexSide.id + "-token" );
+                   initiativeToken.setAttributeNS(null, "cx", (hex.midPoint.x + toHexSide.midPoint.x) / 2 );
+                   initiativeToken.setAttributeNS(null, "cy", (hex.midPoint.y + toHexSide.midPoint.y) / 2 );
                    initiativeToken.setAttributeNS(null, "fill", "url(#init)");
                    initiativeToken.classList.add( "tileIcon" );
                    initiativeToken.style.display = "none";
@@ -344,6 +344,10 @@ function getHexFromId( id ) {
     return new Hex( parseInt( indexes[0] ), parseInt( indexes[1] ) );
 }
 
+function getRelevantAdjacentHexes( hex ) {
+    return getAllAdjacentHexes( hex ).filter( h => h.calculateDistance( new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS ) ) < MAP_TILE_RADIUS );
+}
+
 function getAllAdjacentHexes( hex ) {
     const shiftValue = (hex.x % 2 === 0) ? -1 : 0;
     return [
@@ -354,4 +358,15 @@ function getAllAdjacentHexes( hex ) {
         new Hex( hex.x, hex.y+1 ),
         new Hex( hex.x+1, hex.y+1+shiftValue )
     ];
+}
+
+function getInitTokenIconId( initToken ) {
+    let hexes = [ getHexFromId(initToken.from), getHexFromId(initToken.to) ];
+    const fromTileId = hexes.reduce( (f,t) => isInitTokenMasterHex( f, t ) ? f : t ).id;
+    const toTileId = hexes.find( h => h.id !== fromTileId ).id;
+    return fromTileId + "-" + toTileId + "-token";
+}
+
+function isInitTokenMasterHex( fromHex, toHex ) {
+    return fromHex.x > toHex.x || ( fromHex.x === toHex.x && fromHex.y > toHex.y );
 }

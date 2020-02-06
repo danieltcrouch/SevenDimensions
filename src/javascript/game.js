@@ -1,9 +1,5 @@
-//todo 1 - Finish making images
-//  logos (real game) -> faction sheets, box, stickers
-//todo 1 - Finish GameCrafter / Kickstarter portion
-//todo 2 - Make it where all of the game images/icons show up correctly for new game
+//todo 2 - Make it where all of the game images/icons show up correctly
 //todo 3 - Make it where I can switch between players / take turns within a phase
-//  Will require a "test-mode" mechanism since I don't have 3 Google accounts
 //  Will require web-hooks and/or DB setup
 //todo 4 - Make it where I can complete a round moving through phases
 //todo 5 - Do code-cleanup, abstracting to service files
@@ -18,7 +14,18 @@ let currentPlayer;
 /****** LOAD ******/
 
 function loadGame() {
-    if ( gameId ) {
+    if ( testUserId ||
+        gameId === NEW_GAME_ID ||
+        gameId === OLD_GAME_ID ) {
+        userId = testUserId || TEST_PLAYERS[0].id;
+        if ( gameId === NEW_GAME_ID ) {
+            loadGameCallback( JSON.stringify( getNewGame() ) );
+        }
+        else {
+            loadGameCallback( JSON.stringify( getInProgressGame() ) );
+        }
+    }
+    else if ( gameId ) {
         //$.post(
         //    "php/controller.php",
         //    {
@@ -27,8 +34,6 @@ function loadGame() {
         //    },
         //    loadGameCallback
         //);
-        userId = "001";
-        loadGameCallback( JSON.stringify( getInProgressGame() ) );
     }
 }
 
@@ -96,13 +101,17 @@ function loadMap() {
             id(tile.id + "-religion").style.display = "";
             id(tile.id + "-religion").setAttributeNS(null, "fill", `url(#rel${religionId})`);
         }
+        if ( tileDetails.politicalInitiatives.length ) {
+            tileDetails.politicalInitiatives.forEach( token => id( getInitTokenIconId( token ) ).style.display = "" );
+        }
+        //todo 2 - figure out how I will display culturalInitiatives
 
         id(tile.id).onmouseover = tileHoverCallback;
     }
 
     for ( let i = 0; i < game.players.length; i++ ) {
         let player = game.players[i];
-        const color = getColorFromIndex( i );
+        const color = getColorFromPlayerId( player.id );
         player.districts.tileIds.forEach( function( tileId ) {
             id( tileId + "-background" ).classList.add( color + (isImageTile( tileId ) ? "Image" : "") );
         } );
@@ -294,15 +303,27 @@ function updateUnitIcons( tileDetails ) {
         const HERO_TYPE_ID = UNIT_TYPES[HERO].id;
         const allUnitIds = tileDetails.unitSets.reduce( ( units, unitSet ) => units.concat( unitSet.units ), [] ).map( u => u.id );
         const unitIds = allUnitIds.filter( u => u !== HERO_TYPE_ID );
-        const heroIds = allUnitIds.filter( u => u === HERO_TYPE_ID );
         const strongestUnitId = unitIds.length ? Math.max( ...unitIds, "0" ) : HERO_TYPE_ID;
         id(tileId + "-unit").setAttributeNS(null, "fill", `url(#unit${strongestUnitId})`);
         id(tileId + "-unit").style.display = "";
         id(tileId + "-unit-plus").style.display = allUnitIds.length > 1 ? "" : "none";
-        if ( heroIds.length ) {
-            const heroId = Faction.getHero( getPlayer( tileDetails.unitSets.find( us => us.units.some( u => u.id === HERO_TYPE_ID ) ).id ).factionId ).id;
+        if ( !tileDetails.districtPlayerId )
+        {
+            const color = getColorFromPlayerId( tileDetails.controlPlayerId );
+            id(tileId + "-unit").classList.add( `${color}Image` );
+        }
+
+        const heroPlayerIds = tileDetails.unitSets.filter( us => us.units.some( u => u.id === HERO_TYPE_ID ) ).map( us => us.id );
+        if ( heroPlayerIds.length ) {
+            const heroPlayer = getPlayer( heroPlayerIds[0] );
+            const heroId = Faction.getHero( heroPlayer.factionId ).id;
             id(tileId + "-hero").setAttributeNS(null, "fill", `url(#hero${heroId})`);
             id(tileId + "-hero").style.display = "";
+            if ( !tileDetails.districtPlayerId )
+            {
+                const color = getColorFromPlayerId( heroPlayer.id );
+                id(tileId + "-hero").classList.add( `${color}Image` );
+            }
         }
         else {
             id(tileId + "-hero").style.display = "none";
@@ -357,9 +378,7 @@ function selectTile( tileId ) {
 
 function getTileDetails( id ) {
     let tile = game.map.find( t => t.id === id );
-    const districtPlayer = game.players.find( p => p.districts.tileIds.includes( id ) );
-    const wonderIds = districtPlayer ? districtPlayer.dimensions.filter( d => d.wonderTileId && d.wonderTileId === id ).map( d => WONDERS[getDimension(d.id).wonderIndex].id ) : null;
-    const religionIds = game.players.map( p => p.religion ).filter( r => r && r.tileIds.includes( id ) ).map( r => r.id );
+
     let unitSets = [];
     game.players.forEach( p => {
         let units = p.units.filter( u => u.tileId === id );
@@ -368,13 +387,24 @@ function getTileDetails( id ) {
         }
     } );
 
+    const districtPlayer = game.players.find( p => p.districts.tileIds.includes( id ) );
+    const districtPlayerId = districtPlayer ? districtPlayer.id : null;
+    const controlPlayerId = districtPlayerId || unitSets.reduce( (id, set) => set.combat ? set.id : ( id || set.id ), null ); //district > combat > any unit > null
+    const wonderIds = districtPlayer ? districtPlayer.dimensions.filter( d => d.wonderTileId && d.wonderTileId === id ).map( d => WONDERS[getDimension(d.id).wonderIndex].id ) : null;
+    const religionIds = game.players.map( p => p.religion ).filter( r => r && r.tileIds.includes( id ) ).map( r => r.id );
+    const culturalInitiatives = game.players.map( p => p.initiatives.culturalActive ).flat().filter( i => i.tileId === id ).map( i => i.reaperCount );
+    const politicalInitiatives = game.players.map( p => p.initiatives.politicalActive ).flat().filter( i => i.from === id ).map( i => ({ from: i.from, to: i.to }) );
+
     return {
         id: id,
         type: TileType.getDisplayName( tile.tileType ),
         population: tile.tileType.value,
-        districtPlayerId: districtPlayer ? districtPlayer.id : null,
+        districtPlayerId: districtPlayerId,
+        controlPlayerId: controlPlayerId,
         wonderId: wonderIds ? wonderIds[0] : null,
         religionIds: religionIds,
+        culturalInitiatives: culturalInitiatives,
+        politicalInitiatives: politicalInitiatives,
         unitSets: unitSets
     };
 }
@@ -784,7 +814,8 @@ function isImageTile( tileId ) {
     return id(tileId + "-text").style.display === "none";
 }
 
-function getColorFromIndex( index ) {
+function getColorFromPlayerId( playerId ) {
+    const index = game.players.findIndex( p => p.id === playerId );
     let result = "";
     switch ( index ) {
         case 0:
