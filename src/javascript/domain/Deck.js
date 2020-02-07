@@ -7,7 +7,8 @@ class Deck {
         let deck = ( cards instanceof Deck ) ? cards : new Deck( cards );
         let result = [];
         for ( let i = 0; i < count; i++ ) {
-            result.push( deck.removeCardIndex( Math.floor(Math.random() * deck.length) ) );
+            const card = deck.removeCardIndex( Math.floor(Math.random() * deck.length) );
+            card ? result.push( card ) : null;
         }
         return result;
     }
@@ -19,7 +20,7 @@ class Deck {
 
     removeCardIndex( cardIndex ) {
         const card = this.cards[cardIndex];
-        if ( typeof card === "undefined" ) {
+        if ( typeof card !== "undefined" ) {
             card.splice( cardIndex, 1 );
         }
         return card;

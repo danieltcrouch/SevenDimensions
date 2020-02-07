@@ -46,7 +46,7 @@ function getInProgressGame( testPlayers = TEST_PLAYERS ) {
 
 function generateNewPlayers( testPlayers ) {
     if ( !testPlayers[0].factionId ) {
-        const randomFactionIds = Array( testPlayers.length ).fill().map( (n, index) => FACTIONS[index].id ).sort( () => 0.5 - Math.random() ).slice( 0, testPlayers.length );
+        const randomFactionIds = FACTIONS.map( f => f.id ).sort( () => 0.5 - Math.random() );
         testPlayers.forEach( (p,index) => p.factionId = randomFactionIds[index] );
     }
     if ( !testPlayers[0].tileId ) {
