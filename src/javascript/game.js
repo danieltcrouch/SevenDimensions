@@ -218,7 +218,7 @@ function performUnitAbilities() {
         if ( selectedUnit.unitType === UNIT_TYPES[APOSTLE] ) {
             showBinaryChoice(
                 "Apostle",
-                "Choose an ability:",
+                "Choose an ability or cancel to move:",
                 "Found District",
                 "Evangelize",
                 function( response ) {
