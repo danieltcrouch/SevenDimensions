@@ -89,7 +89,7 @@ function generateNewPlayers( testPlayers ) {
                     tileIds: [p.tileId]
                 },
                 dimensions: [],
-                religion: null,
+                religion: null, //{id: RELIGIONS[0].id, tileIds: []}
                 turn: {
                     hasReaped: false
                 },

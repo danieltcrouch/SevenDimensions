@@ -1,7 +1,5 @@
-//todo 2 - Make it where all of the game images/icons show up correctly
-//todo 3 - Make it where I can switch between players / take turns within a phase
+//todo 4 - Make it where I can complete a round moving through players/phases
 //  Will require web-hooks and/or DB setup
-//todo 4 - Make it where I can complete a round moving through phases
 //todo 5 - Do code-cleanup, abstracting to service files
 //todo 6 - Click on Capital and have link to pop modal with player/faction info
 
@@ -97,14 +95,15 @@ function loadMap() {
             id(tile.id + "-wonder").setAttributeNS(null, "fill", `url(#won${tileDetails.wonderId})`);
         }
         if ( tileDetails.religionIds.length ) {
-            let religionId = tileDetails.religionIds[0]; //todo 2 - find player's religion
+            const playerReligion = tileDetails.districtPlayerId ? getPlayer( tileDetails.districtPlayerId ).religion : null;
+            const playerReligionId = playerReligion ? playerReligion.id : null;
+            const religionId = tileDetails.religionIds.includes( playerReligionId ) ? playerReligionId : tileDetails.religionIds[0];
             id(tile.id + "-religion").style.display = "";
             id(tile.id + "-religion").setAttributeNS(null, "fill", `url(#rel${religionId})`);
         }
         if ( tileDetails.politicalInitiatives.length ) {
             tileDetails.politicalInitiatives.forEach( token => id( getInitTokenIconId( token ) ).style.display = "" );
         }
-        //todo 2 - figure out how I will display culturalInitiatives
 
         id(tile.id).onmouseover = tileHoverCallback;
     }
@@ -350,6 +349,9 @@ function selectTile( tileId ) {
     if ( tileDetails.districtPlayerId ) {
         tileDetailsHTML += "District: " + getPlayer( tileDetails.districtPlayerId ).username + "<br/>";
     }
+    if ( tileDetails.culturalInitiatives ) {
+        tileDetailsHTML += "Civil Resistance: " + tileDetails.culturalInitiatives + " Reaper(s)<br/>";
+    }
     if ( tileDetails.unitSets.length ) {
         tileDetailsHTML += "<br/>";
     }
@@ -392,7 +394,7 @@ function getTileDetails( id ) {
     const controlPlayerId = districtPlayerId || unitSets.reduce( (id, set) => set.combat ? set.id : ( id || set.id ), null ); //district > combat > any unit > null
     const wonderIds = districtPlayer ? districtPlayer.dimensions.filter( d => d.wonderTileId && d.wonderTileId === id ).map( d => WONDERS[getDimension(d.id).wonderIndex].id ) : null;
     const religionIds = game.players.map( p => p.religion ).filter( r => r && r.tileIds.includes( id ) ).map( r => r.id );
-    const culturalInitiatives = game.players.map( p => p.initiatives.culturalActive ).flat().filter( i => i.tileId === id ).map( i => i.reaperCount );
+    const culturalInitiatives = game.players.map( p => p.initiatives.culturalActive ).flat().filter( i => i.tileId === id ).reduce( (total, i) => total + i.reaperCount, 0 );
     const politicalInitiatives = game.players.map( p => p.initiatives.politicalActive ).flat().filter( i => i.from === id ).map( i => ({ from: i.from, to: i.to }) );
 
     return {
