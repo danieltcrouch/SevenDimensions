@@ -33,7 +33,7 @@
     }
 </style>
 <script>
-    setSignInPage( true );
+    setLoginAttributes( function() { window.location = "https://seven.religionandstory.com/lobby.php"; } );
 </script>
 <?php includeModals(); ?>
 </html>

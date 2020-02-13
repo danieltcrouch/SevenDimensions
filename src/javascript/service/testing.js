@@ -39,7 +39,7 @@ function getInProgressGame( testPlayers = TEST_PLAYERS ) {
     const adjacentTileId = getRelevantAdjacentHexes( getHexFromId( capitalTileId ) )[0].id;
     player.dimensions.push( {id: DIMENSIONS[CULTURE].id, wonderTileId: game.players[0].districts.capital} );
     player.initiatives.politicalActive.push( {from: capitalTileId, to: adjacentTileId} );
-    player.initiatives.culturalActive.push( {tileId: capitalTileId, reaperCount: 5} ); //todo - default reaper count should be a constant somewhere
+    player.initiatives.culturalActive.push( {tileId: capitalTileId, reaperCount: 5} ); //todo 5 - default reaper count should be a constant somewhere
 
     return game;
 }
@@ -62,41 +62,40 @@ function generateNewPlayers( testPlayers ) {
                 username: p.username,
                 factionId: faction.id,
                 warBucks: faction.startingSupplies.warBucks,
-                resources: [],
+                resources: [], //[{id: "1", count: 2}]
                 advancements: {
                     technologies: faction.startingSupplies.advancements.technologies.slice(),
                     doctrines: faction.startingSupplies.advancements.doctrines.slice(),
                     gardens: faction.startingSupplies.advancements.gardens.slice(),
                     auctions: faction.startingSupplies.advancements.auctions.slice(),
-                    auctionWins: [],
-                    auctionBid: null,
-                    purchasedCount: 0
+                    auctionWins: [], //["1","2"]
                 },
                 initiatives: {
                     politicalTokens: faction.startingSupplies.politicalTokens,
                     culturalTokens: faction.startingSupplies.culturalTokens,
-                    politicalActive: [],
-                    culturalActive: [],
+                    politicalActive: [], //see getInProgressGame
+                    culturalActive: [], //see getInProgressGame
                 },
                 cards: {
                     chaos: Deck.getRandomCards( CHAOS, faction.startingSupplies.cards ).map( c => c.id ),
-                    offices: [],
-                    purchasedCount: 0
+                    offices: [], //["1"
                 },
                 units: faction.startingSupplies.units.slice().map( u => ({ ...u, tileId: p.tileId }) ).concat( [{ id: UNIT_TYPES[HERO].id, count: 1, tileId: p.tileId}] ),
                 districts: {
                     capital: p.tileId,
                     tileIds: [p.tileId]
                 },
-                dimensions: [],
+                dimensions: [], //see getInProgressGame
                 religion: null, //{id: RELIGIONS[0].id, tileIds: []}
                 turn: {
+                    purchasedAdvancementCount: 0,
+                    purchasedCardCount: 0,
+                    auctionBid: null, //WB value (0 if passed)
                     hasReaped: false
                 },
                 selects: {
-                    highPriestVictim: null
+                    highPriestVictim: null //playerId
                 }
-
             };
         }
     );
