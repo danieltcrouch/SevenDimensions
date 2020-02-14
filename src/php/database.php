@@ -157,6 +157,34 @@ function createGame( $game )
 //    return $surveyId;
 }
 
+function getUser( $email )
+{
+    $query = "SELECT id FROM user WHERE email = :email ";
+    $connection = getConnection();
+    $statement = $connection->prepare( $query );
+    $statement->bindParam(':email', $email);
+    $statement->execute();
+
+    $result = $statement->fetch();
+
+    $connection = null;
+    return $result;
+}
+
+function saveUser( $userId, $email )
+{
+    $query = "INSERT INTO user ( id, email, active )
+              VALUES ( :userId, :email, 1 ) ";
+    $connection = getConnection();
+    $statement = $connection->prepare( $query );
+    $statement->bindParam(':userId', $userId);
+    $statement->bindParam(':email',  $email);
+    $statement->execute();
+
+    $connection = null;
+    return true;
+}
+
 function getConnection()
 {
     $servername = "localhost";

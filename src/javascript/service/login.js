@@ -1,15 +1,12 @@
 //https://developers.google.com/identity/sign-in/web/sign-in
-//todo 2 - do this correctly with sessions and auth_tokens and whatever else
 //todo 10 - move Google Sign-In to Common
 //  Will require moving PHP backend code as well
 //todo 11 - do a major code clean-up across Common and all projects [Seven, Bracket, Reviews, Overflow (except Poker), Turing, Football]
 let loginCallback = function() {};
-let appName = "";
 let userId = "";
 
-function setLoginAttributes( loginCallbackFunction, appValue ) {
+function setLoginAttributes( loginCallbackFunction ) {
     loginCallback = loginCallbackFunction;
-    appName = appValue;
 }
 
 function onSignIn( googleUser, createNew = true ) {
@@ -25,22 +22,22 @@ function onSignIn( googleUser, createNew = true ) {
 function initializeUser() {
     gapi.load( 'auth2', function() {
         gapi.auth2.init().then( function( auth2 ){
-            onSignIn( auth2.isSignedIn.get(), false );
+            onSignIn( auth2.currentUser.get(), false );
         } );
     } );
 }
 
 function validateUser( authToken, createNew = false ) {
-    $.post(
+    $.post( //todo 11 - get rid of jQuery completely?
         "php/controller.php",
         {
             action:    "validateUser",
-            app:       appName,
+            appName:   location.hostname.split(".")[0], //todo 10 - possibly use global variables from startup.php
             authToken: authToken,
             createNew: createNew
         },
         function( response ) {
-            userId = response;
+            userId = jsonParse(response);
             if ( userId ) {
                 loginCallback();
             }
