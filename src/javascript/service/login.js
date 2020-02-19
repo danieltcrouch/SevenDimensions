@@ -37,8 +37,7 @@ function validateUser( authToken, createNew = false ) {
             createNew: createNew
         },
         function( response ) {
-            response = jsonParse(response);
-            userId = response ? response.id : null;
+            userId = jsonParse(response);
             if ( userId ) {
                 loginCallback();
             }
