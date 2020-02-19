@@ -15,18 +15,23 @@ function readTestFile( callbackFunction ) {
         "php/controller.php",
         {
             action:   "readLocalFile",
-            fileName: "../resources/test-game.php"
+            fileName: "../resources/test-game.txt"
         },
         function ( response ) {
-            //if file is blank, then create new test game
-            //if file has contents, then create scenario game
+            response = jsonParse( response );
+            if ( !response || response.length === 0 ) {
+                callbackFunction( JSON.stringify( getNewGame() ) );
+            }
+            else {
+                //if file has contents, then create scenario game
+            }
         }
     );
 }
 
 function getNewGame( testPlayers = TEST_USERS ) {
     const newMap = generateNewMap( testPlayers.length );
-    const newPlayers = generateNewPlayers( testPlayers,  );
+    const newPlayers = generateNewPlayers( testPlayers );
     return {
         state: {
             ambassador: 0,
