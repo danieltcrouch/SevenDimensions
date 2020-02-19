@@ -5,9 +5,13 @@ function setUserType( userType ) {
     else {
         //showToaster( "Multi-Player is not currently supported." );
     }
+
+    id('start').style.display = "";
+    //todo 11 - add to Common show and hide functions (allow show to pass in parameter to set specific kind of display (e.g. block))
 }
 
 function startGame() {
-    const gameId = "PREVIEW";
-    window.location = "https://seven.religionandstory.com/game.php?id=" + gameId;
+    //const gameId = "";
+    //window.location = "https://seven.religionandstory.com/game.php?id=" + TEST_GAME_ID;
+    window.location = "https://seven.religionandstory.com/game.php?id=" + TEST_GAME_ID + "&testUserId=" + TEST_USERS[0].id;
 }

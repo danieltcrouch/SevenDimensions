@@ -10,10 +10,17 @@ function validateUser( $app, $authToken, $createNew )
         $result = getUser( $response->email );
         if ( !$result && $createNew ) {
             $result = getGUID();
-            saveUser( $result, $response->email );
+            createUser( $result, $response->email );
         }
+
+        $_SESSION['userId'] = $result;
     }
     return $result;
+}
+
+function getCurrentUser()
+{
+    return $_SESSION['userId'];
 }
 
 /*** HTTP CALL ***/
@@ -41,8 +48,8 @@ function sendEmail( $addressList, $subject, $message )
     $message = wordwrap($message, 70);
     $headers = "MIME-Version: 1.0\r\n";
     $headers .= "Content-type:text/html;charset=UTF-8\r\n";
-    $headers .= "From: ReligionAndStory<noreply@religionandstory.com>\r\n" . //todo 11 - possibly use global variables from startup.php
-                "Bcc: " . implode( ',', $addressList );
+    $headers .= "From: ReligionAndStory<noreply@religionandstory.com>\r\n" .
+                "Bcc: " . implode( ',', $addressList ); //todo 11 - possibly use global variables from startup.php
     return mail($to, $subject, $message, $headers);
 }
 

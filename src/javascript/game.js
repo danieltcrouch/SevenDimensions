@@ -1,6 +1,6 @@
 //todo 4 - Make it where I can complete a round moving through players/phases
 //  Will require web-hooks and/or DB setup
-//todo 5 - Do code-cleanup, abstracting to service files
+//todo 5 - Do internal code-cleanup, abstracting to service files
 //todo 6 - Click on Capital and have link to pop modal with player/faction info
 
 const NO_TILE_DETAILS = "No Tile Selected";
@@ -12,26 +12,22 @@ let currentPlayer;
 /****** LOAD ******/
 
 function loadGame() {
-    if ( testUserId ||
-        gameId === NEW_GAME_ID ||
-        gameId === OLD_GAME_ID ) {
-        userId = testUserId || TEST_PLAYERS[0].id;
-        if ( gameId === NEW_GAME_ID ) {
-            loadGameCallback( JSON.stringify( getNewGame() ) );
+    if ( gameId ) {
+        if ( gameId === TEST_GAME_ID && newGame ) {
+            //read file (this logic should be in testing.js)
+            //if file is blank, then create new test game
+            //if file has contents, then create scenario game
         }
         else {
-            loadGameCallback( JSON.stringify( getInProgressGame() ) );
+            postCall(
+               "php/controller.php",
+               {
+                   action: "loadGame",
+                   id:     gameId
+               },
+               loadGameCallback
+            );
         }
-    }
-    else if ( gameId ) {
-        //$.post(
-        //    "php/controller.php",
-        //    {
-        //        action: "loadGame",
-        //        id:     gameId
-        //    },
-        //    loadGameCallback
-        //);
     }
 }
 
@@ -120,7 +116,20 @@ function loadMap() {
 }
 
 function loadUser() {
-    currentPlayer = getPlayer( userId );
+    postCall(
+        "php/controller.php",
+        {
+            action: "getPlayer",
+            gameId: gameId,
+            userId: userId || testUserId,
+        },
+        loadUserCallback,
+        function() { showToaster( "User not found." ); }
+    );
+}
+
+function loadUserCallback( playerId ) {
+    currentPlayer = getPlayer( playerId );
     id('playerName').innerText = currentPlayer.username;
     id('factionName').innerText = getFaction( currentPlayer.factionId ).name;
 
@@ -779,8 +788,8 @@ function getNextAuction( players ) {
 /****** HELPER ******/
 
 
-function getPlayer( id ) {
-    return game.players.find( p => p.id === id );
+function getPlayer( playerId ) {
+    return game.players.find( p => p.id === playerId );
 }
 
 function getPhase( index ) {

@@ -17,7 +17,7 @@
     <div class="col-10 main">
         <div class="col-2">
             <div class="subtitle">
-                <span class="clickable">Seven Dimensions</span>
+                <span>Seven Dimensions</span>
             </div>
             <div id="roundDetailsDiv" style="margin-bottom: 2em">
                 <div><span style="font-weight: bold">Round: </span><span id="roundValue">0</span></div>
@@ -61,8 +61,9 @@
 </body>
 
 <script>
-    const gameId = "<?php echo $_GET['id']; ?>";
+    const gameId     = "<?php echo $_GET['id']; ?>";
     const testUserId = "<?php echo $_GET['testUserId']; ?>";
+    const newGame    = "<?php echo $_GET['newGame']; ?>";
 
     setLoginAttributes( loadGame );
 

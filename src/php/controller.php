@@ -7,12 +7,20 @@ if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
     $result = null;
 
     try {
+        //todo 10 - Google Sign-In - move to Common
         if ( isset($_POST['appName']) && isset($_POST['authToken']) && isset($_POST['createNew']) ) {
             $result = $action( $_POST['appName'], $_POST['authToken'], $_POST['createNew'] );
         }
+
         //getGame
-        else if ( isset($_POST['id']) ) {
+        if ( isset($_POST['id']) ) {
             $result = $action( $_POST['id'] );
+        }
+        elseif ( isset($_POST['gameId']) && isset($_POST['userId']) ) {
+            $result = $action( $_POST['gameId'], $_POST['userId'] );
+        }
+
+        if ( isset($_POST['userId']) && $_POST['userId'] === getCurrentUser() ) {
         }
 
         ////getGame

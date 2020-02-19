@@ -1,13 +1,15 @@
-const NEW_GAME_ID = "0";
-const OLD_GAME_ID = "1";
+const TEST_GAME_ID = "00000000000000000000000000000000";
 
-const TEST_PLAYERS = [
-    { id: "001", username: "daniel" },
-    { id: "002", username: "michael" },
-    { id: "003", username: "stephen" }
+const TEST_USERS = [
+    { id: "00000000000000000000000000000001", username: "daniel" },
+    { id: "00000000000000000000000000000002", username: "michael" },
+    { id: "00000000000000000000000000000003", username: "stephen" },
+    { id: "00000000000000000000000000000004", username: "lauren" },
+    { id: "00000000000000000000000000000005", username: "tina" },
+    { id: "00000000000000000000000000000006", username: "jimmy" }
 ];
 
-function getNewGame( testPlayers = TEST_PLAYERS ) {
+function getNewGame( testPlayers = TEST_USERS ) {
     const newMap = generateNewMap( testPlayers.length );
     const newPlayers = generateNewPlayers( testPlayers,  );
     return {
@@ -28,7 +30,7 @@ function getNewGame( testPlayers = TEST_PLAYERS ) {
     };
 }
 
-function getInProgressGame( testPlayers = TEST_PLAYERS ) {
+function getScenarioGame( testPlayers = TEST_USERS ) {
     let game = getNewGame( testPlayers );
 
     game.state.phase = 1;
@@ -73,8 +75,8 @@ function generateNewPlayers( testPlayers ) {
                 initiatives: {
                     politicalTokens: faction.startingSupplies.politicalTokens,
                     culturalTokens: faction.startingSupplies.culturalTokens,
-                    politicalActive: [], //see getInProgressGame
-                    culturalActive: [], //see getInProgressGame
+                    politicalActive: [], //see getScenarioGame
+                    culturalActive: [], //see getScenarioGame
                 },
                 cards: {
                     chaos: Deck.getRandomCards( CHAOS, faction.startingSupplies.cards ).map( c => c.id ),
@@ -85,7 +87,7 @@ function generateNewPlayers( testPlayers ) {
                     capital: p.tileId,
                     tileIds: [p.tileId]
                 },
-                dimensions: [], //see getInProgressGame
+                dimensions: [], //see getScenarioGame
                 religion: null, //{id: RELIGIONS[0].id, tileIds: []}
                 turn: {
                     purchasedAdvancementCount: 0,
@@ -99,4 +101,17 @@ function generateNewPlayers( testPlayers ) {
             };
         }
     );
+}
+
+function initializeTestGame( gameData ) {
+    postCall(
+        "php/controller.php",
+        {
+            action:    "updateGame",
+            userId:    testUserId,
+            gameId:    gameId,
+            game:      gameData
+        },
+        function( response ) {},
+        function( error ) {} );
 }

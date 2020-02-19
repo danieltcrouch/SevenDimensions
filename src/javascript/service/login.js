@@ -28,7 +28,7 @@ function initializeUser() {
 }
 
 function validateUser( authToken, createNew = false ) {
-    $.post( //todo 11 - get rid of jQuery completely?
+    postCall(
         "php/controller.php",
         {
             action:    "validateUser",
@@ -37,17 +37,19 @@ function validateUser( authToken, createNew = false ) {
             createNew: createNew
         },
         function( response ) {
-            userId = jsonParse(response);
+            response = jsonParse(response);
+            userId = response ? response.id : null;
             if ( userId ) {
                 loginCallback();
             }
             else {
                 failCallback();
             }
+        },
+        function( error ) {
+            failCallback();
         }
-    ).fail( function( error ) {
-        failCallback();
-    });
+    );
 }
 
 function failCallback() {
@@ -62,4 +64,23 @@ function signOut() {
         console.log( "User signed out." );
         failCallback();
     } );
+}
+
+//********************
+
+function postCall( endPoint, data, successCallback, failureCallback = function(){}, asynchronous = true ) {
+    //todo 11 - get rid of jQuery completely
+    let httpRequest = new XMLHttpRequest();
+    httpRequest.setRequestHeader( "Content-Type", "application/json" );
+    httpRequest.onload = function() {
+        if ( this.status === 200 ) {
+            successCallback( jsonParse( this.responseText ) );
+        }
+        else {
+            console.log( this.responseText );
+            failCallback();
+        }
+    };
+    httpRequest.open( "POST", endPoint, asynchronous );
+    httpRequest.send( JSON.stringify( data ) );
 }

@@ -1,6 +1,6 @@
 <?php
 
-function getGame( $gameId )
+function loadGame( $gameId )
 {
 //    $query = "SELECT
 //                  m.id, m.state, m.title, m.image, m.help, m.type, m.mode,
@@ -157,21 +157,12 @@ function createGame( $game )
 //    return $surveyId;
 }
 
-function getUser( $email )
+function updateGame( $game )
 {
-    $query = "SELECT id FROM user WHERE email = :email ";
-    $connection = getConnection();
-    $statement = $connection->prepare( $query );
-    $statement->bindParam(':email', $email);
-    $statement->execute();
-
-    $result = $statement->fetch();
-
-    $connection = null;
-    return $result;
+    //
 }
 
-function saveUser( $userId, $email )
+function createUser( $userId, $email )
 {
     $query = "INSERT INTO user ( id, email, active )
               VALUES ( :userId, :email, 1 ) ";
@@ -183,6 +174,21 @@ function saveUser( $userId, $email )
 
     $connection = null;
     return true;
+}
+
+function getPlayer( $gameId, $userId )
+{
+    $query = "SELECT id FROM player WHERE gameId = :gameId AND userId = :userId";
+    $connection = getConnection();
+    $statement = $connection->prepare( $query );
+    $statement->bindParam(':gameId', $gameId);
+    $statement->bindParam(':userId', $userId);
+    $statement->execute();
+
+    $result = $statement->fetch();
+
+    $connection = null;
+    return $result;
 }
 
 function getConnection()

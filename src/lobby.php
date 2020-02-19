@@ -34,7 +34,9 @@
 </body>
 
 <script>
-    //
+    setRadioCallback( "userType", function( userType ) {
+        setUserType( userType );
+    });
 </script>
 <?php includeModals(); ?>
 </html>
