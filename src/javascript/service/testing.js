@@ -9,6 +9,21 @@ const TEST_USERS = [
     { id: "00000000000000000000000000000006", username: "jimmy" }
 ];
 
+function readTestFile( callbackFunction ) {
+    //todo 11 - move this functionality (js and php) to Common
+    postCallEncoded(
+        "php/controller.php",
+        {
+            action:   "readLocalFile",
+            fileName: "../resources/test-game.php"
+        },
+        function ( response ) {
+            //if file is blank, then create new test game
+            //if file has contents, then create scenario game
+        }
+    );
+}
+
 function getNewGame( testPlayers = TEST_USERS ) {
     const newMap = generateNewMap( testPlayers.length );
     const newPlayers = generateNewPlayers( testPlayers,  );
@@ -104,7 +119,7 @@ function generateNewPlayers( testPlayers ) {
 }
 
 function initializeTestGame( gameData ) {
-    postCall(
+    postCallEncoded(
         "php/controller.php",
         {
             action:    "updateGame",

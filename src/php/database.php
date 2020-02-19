@@ -176,6 +176,20 @@ function createUser( $userId, $email )
     return true;
 }
 
+function getUser( $email )
+{
+    $query = "SELECT id FROM user WHERE email = :email";
+    $connection = getConnection();
+    $statement = $connection->prepare( $query );
+    $statement->bindParam(':email', $email);
+    $statement->execute();
+
+    $result = $statement->fetchColumn();
+
+    $connection = null;
+    return $result;
+}
+
 function getPlayer( $gameId, $userId )
 {
     $query = "SELECT id FROM player WHERE gameId = :gameId AND userId = :userId";

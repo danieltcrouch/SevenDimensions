@@ -11,6 +11,9 @@ if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
         if ( isset($_POST['appName']) && isset($_POST['authToken']) && isset($_POST['createNew']) ) {
             $result = $action( $_POST['appName'], $_POST['authToken'], $_POST['createNew'] );
         }
+        if ( isset($_POST['fileName']) ) {
+            $result = $action( $_POST['fileName'] );
+        }
 
         //getGame
         if ( isset($_POST['id']) ) {

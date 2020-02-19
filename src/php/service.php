@@ -53,7 +53,18 @@ function sendEmail( $addressList, $subject, $message )
     return mail($to, $subject, $message, $headers);
 }
 
+/*** FILE I/O ***/
+function readLocalFile( $fileName )
+{
+    return file( $fileName );
+}
+
 /*** OTHER ***/
+function getJsonRequest()
+{
+	return json_decode( file_get_contents("php://input") );
+}
+
 function getGUID()
 {
 	mt_srand((double)microtime()*10000);

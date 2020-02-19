@@ -28,7 +28,7 @@ function initializeUser() {
 }
 
 function validateUser( authToken, createNew = false ) {
-    postCall(
+    postCallEncoded(
         "php/controller.php",
         {
             action:    "validateUser",
@@ -53,8 +53,11 @@ function validateUser( authToken, createNew = false ) {
 }
 
 function failCallback() {
-    if ( window.location.replace( /\/index.php.*/gi, "" ) !== location.hostname ) {
-        window.location = location.hostname;
+    let currentLocation = location.href;
+    currentLocation = currentLocation.replace( /www|\/index.php.*/gi, "" );
+    let homePage = location.origin
+    if ( !( currentLocation === homePage || currentLocation === (homePage + "/") ) ) {
+        location.replace( homePage );
     }
 }
 
@@ -68,19 +71,35 @@ function signOut() {
 
 //********************
 
-function postCall( endPoint, data, successCallback, failureCallback = function(){}, asynchronous = true ) {
+function postCallEncoded( endPoint, data, successCallback, failureCallback = function(){}, asynchronous = true ) {
+    return postCall( endPoint, data, successCallback, failureCallback, asynchronous, false );
+}
+
+function postCall( endPoint, data, successCallback, failureCallback = function(){}, asynchronous = true, contentTypeJson = true ) { //todo 10 - use this one for this project (removes the need for $_POST all over the place)
+    let contentType = contentTypeJson ? "application/json" : "application/x-www-form-urlencoded; charset=UTF-8";
+    data = contentTypeJson ? JSON.stringify( data ) : urlEncodeJson( data );
+
     //todo 11 - get rid of jQuery completely
     let httpRequest = new XMLHttpRequest();
-    httpRequest.setRequestHeader( "Content-Type", "application/json" );
+    httpRequest.open( "POST", endPoint, asynchronous );
+    httpRequest.setRequestHeader( "Content-Type", contentType );
     httpRequest.onload = function() {
         if ( this.status === 200 ) {
-            successCallback( jsonParse( this.responseText ) );
+            //successCallback( jsonParse( this.responseText ) ); //todo 11 - make it where you parse JSON in this function
+            successCallback( this.responseText );
         }
         else {
             console.log( this.responseText );
             failCallback();
         }
     };
-    httpRequest.open( "POST", endPoint, asynchronous );
-    httpRequest.send( JSON.stringify( data ) );
+    httpRequest.send( data );
+}
+
+function urlEncodeJson( data ) {
+    let result = [];
+    for ( let key in data ) {
+        result.push( encodeURIComponent( key ) + "=" + encodeURIComponent( data[key] ) );
+    }
+    return result.join("&");
 }

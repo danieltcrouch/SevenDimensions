@@ -33,7 +33,7 @@
     }
 </style>
 <script>
-    setLoginAttributes( function() { window.location = "https://seven.religionandstory.com/lobby.php"; } );
+    setLoginAttributes( function() { location.href = "https://seven.religionandstory.com/lobby.php"; } ); //location.assign()
 </script>
 <?php includeModals(); ?>
 </html>

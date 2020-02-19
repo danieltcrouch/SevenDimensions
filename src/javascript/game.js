@@ -14,12 +14,10 @@ let currentPlayer;
 function loadGame() {
     if ( gameId ) {
         if ( gameId === TEST_GAME_ID && newGame ) {
-            //read file (this logic should be in testing.js)
-            //if file is blank, then create new test game
-            //if file has contents, then create scenario game
+            readTestFile( loadGameCallback );
         }
         else {
-            postCall(
+            postCallEncoded(
                "php/controller.php",
                {
                    action: "loadGame",
@@ -116,7 +114,7 @@ function loadMap() {
 }
 
 function loadUser() {
-    postCall(
+    postCallEncoded(
         "php/controller.php",
         {
             action: "getPlayer",
