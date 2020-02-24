@@ -1,165 +1,147 @@
 <?php
 
+//todo - &useSSL=false (in DB properties)
+
 function loadGame( $gameId )
 {
-//    $query = "SELECT
-//                  m.id, m.state, m.title, m.image, m.help, m.type, m.mode,
-//                  t.frequency, t.frequency_point, t.scheduled_close, t.active_id,
-//                  r.winners
-//              FROM meta m
-//                  JOIN timing t ON m.id = t.meta_id
-//                  LEFT OUTER JOIN results r ON m.id = r.meta_id
-//              WHERE m.id = :surveyId ";
-//    $connection = getConnection();
-//    $statement = $connection->prepare( $query );
-//    $statement->bindParam(':surveyId', $surveyId);
-//    $statement->execute();
-//
-//    $result = $statement->fetch();
-//    $choices = getChoices( $surveyId );
-//    $currentVotes = getCurrentVotes( $surveyId );
-//
-//    $surveyInfo = [
-//        'state'   => $result['state'],
-//        'title'   => $result['title'],
-//        'image'   => $result['image'],
-//        'help'    => $result['help'],
-//        'type'    => $result['type'],
-//        'mode'    => $result['mode'],
-//        'winners' => $result['winners'],
-//        'timing'  => [
-//            'frequency'      => $result['frequency'],
-//            'frequencyPoint' => $result['frequency_point'],
-//            'scheduledClose' => $result['scheduled_close'],
-//            'activeId'       => $result['active_id']
-//        ],
-//        'currentVotes' => $currentVotes,
-//        'choices'      => $choices
-//    ];
-//
-//    $connection = null;
-//    return $surveyInfo;
-}
+    $query =
+   "SELECT m.id, m.playerCount, s.stateJson, mp.mapJson, p.playerJson
+    FROM meta m
+    	JOIN state s  ON s.gameId = m.id
+        JOIN map mp   ON mp.gameId = m.id
+        JOIN player p ON p.gameId = m.id
+    WHERE m.id = :gameId ";
 
-//user
-    //id
-    //creation
-    //email
-    //active
-//meta [game]
-    //id
-    //playerCount
-    //ambassador
-    //round
-    //phase
-    //subPhase
-    //turn
-    //event
-    //office
-    //disaster
-//map
-    //gameId
-    //tileId
-    //tileType
-    //value
-    //resources
-//player
-    //id
-    //userId
-    //gameId
-    //factionId
-    //warBucks
-    //resource1
-    //resource2
-    //resource3
-    //politicalTokens
-    //culturalTokens
-    //purchasedAdvancement
-    //purchasedCard
-    //auctionBid
-    //hasReaped
-    //highPriestVictim
-//playerEnums [bits]
-    //playerId
-    //technologies
-    //doctrines
-    //gardens
-    //auctions
-    //auctionWins
-    //chaos
-    //offices
-    //dimensions
-    //wonders
-//playerMap
-    //playerId
-    //tileId
-    //district
-    //politicalActive [list of other tiles; no need to store count ("stored" by subtracting from tokens on player table)]
-    //culturalActive [reaper count]
-    //religion
-    //apostle
-    //reaper
-    //boomer
-    //speedster
-    //juggernaut
-    //robot
-    //godhand
-    //hero
+    $connection = getConnection();
+    $statement = $connection->prepare( $query );
+    $statement->bindParam(':gameId', $gameId);
+    $statement->execute();
+
+    $results = $statement->fetchAll();
+
+    $result = $results[0];
+    $game = [
+        'id'      => $result['id'],
+        'state'   => json_decode( $result['stateJson'] ),
+        'map'     => json_decode( $result['mapJson'] ),
+        'players' => []
+    ];
+    for ( $i = 0; $i < count( $result['playerCount'] ); $i++ )
+    {
+        array_push( $game['players'], json_decode( $results[0]->playerJson ) );
+    }
+
+    $connection = null;
+    return $game;
+}
 
 function createGame( $game )
 {
-//    $surveyId = getGUID();
-//    $survey = json_decode( $survey );
-//    $choices = $survey->choices;
-//    $state = "ready";
-//    $activeId = null;
-//    $closeTime = getNullValue($survey->timing->scheduledClose);
-//
-//    $choiceValues = "";
-//    for ( $i = 0; $i < sizeof( $choices ); $i++ )
-//    {
-//        $choiceValues .= ( $i != 0 ) ? ", " : "";
-//        $choiceValues .= "(:surveyId, :choiceId$i, :choiceName$i, :choiceImage$i, :choiceLink$i)";
-//    }
-//    $insertMeta = "INSERT INTO meta (id, state, title, image, help, type, mode) VALUES (:surveyId, :state, :title, :image, :help, :type, :mode)";
-//    $insertTiming = "INSERT INTO timing (meta_id, frequency, frequency_point, scheduled_close, active_id) VALUES (:surveyId, :frequency, :frequencyPoint, :scheduledClose, :activeId)";
-//    $insertChoices = "INSERT INTO choices (meta_id, id, name, image, link) VALUES $choiceValues";
-//
-//    $query =
-//        "$insertMeta;\n
-//         $insertTiming;\n
-//         $insertChoices";
-//
-//    $connection = getConnection();
-//    $statement = $connection->prepare( $query );
-//    $statement->bindParam(':surveyId',       $surveyId);
-//    $statement->bindParam(':state',          $state);
-//    $statement->bindParam(':title',          $survey->title);
-//    $statement->bindParam(':image',          $survey->image);
-//    $statement->bindParam(':help',           $survey->help);
-//    $statement->bindParam(':type',           $survey->type);
-//    $statement->bindParam(':mode',           $survey->mode);
-//    $statement->bindParam(':frequency',      $survey->timing->frequency);
-//    $statement->bindParam(':frequencyPoint', $survey->timing->frequencyPoint);
-//    $statement->bindParam(':scheduledClose', $closeTime);
-//    $statement->bindParam(':activeId',       $activeId);
-//    for ( $i = 0; $i < sizeof( $choices ); $i++ )
-//    {
-//        $choice = $choices[$i];
-//        $statement->bindParam(":choiceId$i",    $choice->id);
-//        $statement->bindParam(":choiceName$i",  $choice->name);
-//        $statement->bindParam(":choiceImage$i", $choice->image);
-//        $statement->bindParam(":choiceLink$i",  $choice->link);
-//    }
-//    $statement->execute();
-//
-//    $connection = null;
-//    return $surveyId;
+    $gameId = getGUID();
+    $game = json_decode( $game );
+    $state    = $game->state;
+    $mapTiles = $game->map;
+    $players  = $game->players; //should work as empty if no players are sent in
+
+    $playerValues = "";
+    for ( $i = 0; $i < count( $players ); $i++ )
+    {
+        $playerValues  .= ( $i != 0 ) ? ", " : "";
+        $playerValues  .= "(:playerId$i, :userId$i, :gameId, :factionId$i, :playerJson$i)";
+    }
+    $insertMeta     = "INSERT INTO meta   (id, playerCount, round, phase, subPhase, turn) VALUES (:gameId, :playerCount, :round, :phase, :subPhase, :turn)";
+    $insertState    = "INSERT INTO state  (gameId, stateJson) VALUES (:gameId, :stateJson)";
+    $insertMap      = "INSERT INTO map    (gameId, mapJson)   VALUES (:gameId, :mapJson)";
+    $insertPlayers  = "INSERT INTO player (id, userId, gameId, factionId, playerJson) VALUES $playerValues";
+
+    $query =
+        "$insertMeta;\n
+         $insertState;\n
+         $insertMap;\n
+         $insertPlayers";
+
+    $connection = getConnection();
+    $statement = $connection->prepare( $query );
+    $statement->bindParam(':gameId',      $gameId);
+    $statement->bindParam(':playerCount', count($game->players));
+    $statement->bindParam(':round',       $game->state->round);
+    $statement->bindParam(':phase',       $game->state->phase);
+    $statement->bindParam(':subPhase',    $game->state->subPhase);
+    $statement->bindParam(':turn',        $game->state->turn);
+    $statement->bindParam(':stateJson',   json_encode($state));
+    $statement->bindParam(':mapJson',     json_encode($mapTiles));
+    for ( $i = 0; $i < count( $players ); $i++ )
+    {
+        $player = $players[$i];
+        $statement->bindParam(":playerId$i",   $player->id);
+        $statement->bindParam(":userId$i",     $player->userId);
+        $statement->bindParam(":factionId$i",  $player->factionId);
+        $statement->bindParam(":playerJson$i", json_encode($player));
+    }
+    $statement->execute();
+
+    $connection = null;
+    return $gameId;
 }
 
 function updateGame( $game )
 {
-    //
+    $game = json_decode( $game );
+    $gameId = $game->id;
+    $state    = $game->state;
+    $mapTiles = $game->map;
+    $players  = $game->players; //should work as empty if no players are sent in
+
+    $updateMeta     = "UPDATE meta   SET round = :round, phase = :phase, subPhase = :subPhase, turn = :turn WHERE id = :gameId";
+    $updateState    = "UPDATE state  SET stateJson = :stateJson WHERE gameId = :gameId";
+    $updateMap      = "UPDATE map    SET mapJson = :mapJson     WHERE gameId = :gameId";
+
+    $query =
+        "$updateMeta;\n
+         $updateState;\n
+         $updateMap";
+
+    $connection = getConnection();
+    $statement = $connection->prepare( $query );
+    $statement->bindParam(':gameId',      $gameId);
+    $statement->bindParam(':round',       $game->state->round);
+    $statement->bindParam(':phase',       $game->state->phase);
+    $statement->bindParam(':subPhase',    $game->state->subPhase);
+    $statement->bindParam(':turn',        $game->state->turn);
+    $statement->bindParam(':stateJson',   json_encode($state));
+    $statement->bindParam(':mapJson',     json_encode($mapTiles));
+    $statement->execute();
+
+    updatePlayers( $gameId, $players );
+
+    $connection = null;
+    return $gameId;
+}
+
+function updatePlayers( $gameId, $players )
+{
+    $playerJsonCase  = "CASE ";
+    for ( $i = 0; $i < count( $players ); $i++ )
+    {
+        $playerJsonCase  .= "WHEN id = :playerId$i THEN :playerJson$i ";
+    }
+    $playerJsonCase  .= "END";
+
+    $query  = "UPDATE player SET playerJson = ($playerJsonCase) WHERE gameId = $gameId";
+
+    $connection = getConnection();
+    $statement = $connection->prepare( $query );
+    $statement->bindParam(':gameId', $gameId);
+    for ( $i = 0; $i < count( $players ); $i++ )
+    {
+        $player = $players[$i];
+        $statement->bindParam(":playerId$i",   $player->id);
+        $statement->bindParam(":playerJson$i", json_encode($player));
+    }
+    $statement->execute();
+
+    $connection = null;
+    return true;
 }
 
 function createUser( $userId, $email )

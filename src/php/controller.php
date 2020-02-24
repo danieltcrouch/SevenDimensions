@@ -15,12 +15,13 @@ if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
             $result = $action( $_POST['fileName'] );
         }
 
-        //getGame
-        if ( isset($_POST['id']) ) {
-            $result = $action( $_POST['id'] );
-        }
-        elseif ( isset($_POST['gameId']) && isset($_POST['userId']) ) {
+        //getPlayer
+        if ( isset($_POST['gameId']) && isset($_POST['userId']) ) {
             $result = $action( $_POST['gameId'], $_POST['userId'] );
+        }
+        //getGame
+        elseif ( isset($_POST['id']) ) {
+            $result = $action( $_POST['id'] );
         }
 
         if ( isset($_POST['userId']) && $_POST['userId'] === getCurrentUser() ) {

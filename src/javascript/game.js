@@ -1,5 +1,4 @@
 //todo 4 - Make it where I can complete a round moving through players/phases
-//  Will require web-hooks and/or DB setup
 //todo 5 - Do internal code-cleanup, abstracting to service files
 //todo 6 - Click on Capital and have link to pop modal with player/faction info
 
@@ -119,7 +118,7 @@ function loadUser() {
         {
             action: "getPlayer",
             gameId: gameId,
-            userId: userId || testUserId,
+            userId: testUserId || userId,
         },
         loadUserCallback,
         function() { showToaster( "User not found." ); }
@@ -550,7 +549,7 @@ function submit() {
     let isValidToSubmit = true;
     if ( isMarketPhase() ) {
         if ( isMarketAuctionPhase() ) {
-            showAuctionActions();
+            //
         }
         else {
             if ( currentPlayer.units.some( u => u.tileId === "unassigned" ) ) {
@@ -566,6 +565,11 @@ function submit() {
     }
     else if ( isCouncilPhase() ) {
         //
+    }
+
+    if ( isValidToSubmit ) {
+        incrementTurn();
+        updateGame();
     }
 }
 
@@ -645,6 +649,7 @@ function showExpansionActions() {
 
 
 function showHarvestActions() {
+    //todo 4 - change this to act like Auction of Council phase, where turns are taken at the same time and finishing your turn is havingReaped and clicking submit
     if ( !currentPlayer.turn.hasReaped ) {
         const warBuckReward = calculateWarBuckHarvestReward();
         const resourceReward = calculateResourceHarvestReward();
@@ -733,6 +738,64 @@ function showDoomsdayActions() {
 /****** UTILITY ******/
 
 
+function updateGame() {
+    postCallEncoded(
+        "php/controller.php",
+        {
+            action:    "updateGame",
+            userId:    userId,
+            gameId:    gameId,
+            game:      game
+        },
+        function( response ) {
+            loadGame();
+        },
+        function( error ) {
+            showToaster( "Unable to save game." );
+        } );
+}
+
+function incrementTurn() {
+    game.state.turn++;
+    if ( game.state.turn >= game.players.length ) {
+        game.state.turn = 0;
+        game.state.subPhase++;
+        if ( isExpansionPhase() || isHarvestPhase() || game.state.subPhase >= 2 ) { //todo 5 - make into Constant
+            game.state.subPhase = 0;
+            game.state.phase++;
+            if ( game.state.phase >= 4 ) { //todo 5 - make into Constant
+                game.state.phase = 0;
+                game.state.round++;
+                game.state.event++;
+                if ( game.state.event >= EVENTS.length ) {
+                    game.state.event = 0;
+                }
+
+                game.state.ambassador++;
+                if ( game.state.ambassador >= game.players.length ) {
+                   game.state.ambassador = 0;
+                }
+            }
+        }
+    }
+}
+
+// function isFinalAuctionBid() {
+//     return game.players.filter( p => p.turn.auctionBid ).length === game.players.length;
+// }
+//
+// function isFinalHarvestParticipant() {
+//     return game.players.filter( p => p.turn.hasReaped ).length === game.players.length;
+// }
+//
+// function isFinalCouncilParticipant() {
+//     return game.players.filter( p => p.turn.attendedCouncil ).length === game.players.length;
+// }
+//
+// function isFinalEventParticipant() {
+//     return game.players.filter( p => p.turn.attendedDoomsdayClock ).length === game.players.length;
+// }
+
 //todo 7 - make battles
 
 function disambiguateUnits( units ) {
@@ -796,15 +859,20 @@ function getPhase( index ) {
 
 function isMarketPhase() { return game.state.phase === PHASE_MARKET; }
 function isMarketAuctionPhase() { return game.state.phase === PHASE_MARKET && game.state.subPhase === SUBPHASE_MARKET_AUCTION; }
+function isMarketSubPhase() { return game.state.phase === PHASE_MARKET && game.state.subPhase === SUBPHASE_MARKET; }
 function isExpansionPhase() { return game.state.phase === PHASE_EXPANSION; }
 function isHarvestPhase() { return game.state.phase === PHASE_HARVEST; }
 function isCouncilPhase() { return game.state.phase === PHASE_COUNCIL; }
+function isCouncilSubPhase() { return game.state.phase === PHASE_COUNCIL && game.state.subPhase === SUBPHASE_COUNCIL; }
 function isDoomsdayClockPhase() { return game.state.phase === PHASE_COUNCIL && game.state.subPhase === SUBPHASE_COUNCIL_DOOMSDAY; }
 
 function getTurn( index ) {
     let result;
     if ( isMarketAuctionPhase() ) {
         result = "(Auction)";
+    }
+    else if ( isHarvestPhase() ) {
+        result = "All";
     }
     else if ( isCouncilPhase() ) {
         result = "All";
@@ -843,7 +911,7 @@ function getColorFromPlayerId( playerId ) {
             result = "orange";
             break;
         case 5:
-            result = "gray";
+            result = "teal";
             break;
         case 6:
             result = "gold";

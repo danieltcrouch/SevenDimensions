@@ -19,14 +19,28 @@ function readTestFile( callbackFunction ) {
         },
         function ( response ) {
             response = jsonParse( response );
-            if ( !response || response.length === 0 ) {
-                callbackFunction( JSON.stringify( getNewGame() ) );
-            }
-            else {
-                //if file has contents, then create scenario game
-            }
+            let game = ( !response || response.length === 0 ) ? getNewGame() : getScenarioGame( response );
+            initializeTestGame( game, callbackFunction );
         }
     );
+}
+
+function getScenarioGame( scenarios ) {
+    //todo 9 - parse scenario file
+
+    let game = getNewGame();
+
+    game.state.phase = 1;
+    game.state.turn = 1;
+
+    const player = game.players[0];
+    const capitalTileId = game.players[0].districts.capital;
+    const adjacentTileId = getRelevantAdjacentHexes( getHexFromId( capitalTileId ) )[0].id;
+    player.dimensions.push( {id: DIMENSIONS[CULTURE].id, wonderTileId: game.players[0].districts.capital} );
+    player.initiatives.politicalActive.push( {from: capitalTileId, to: adjacentTileId} );
+    player.initiatives.culturalActive.push( {tileId: capitalTileId, reaperCount: 5} ); //todo 5 - default reaper count should be a constant somewhere
+
+    return game;
 }
 
 function getNewGame( testPlayers = TEST_USERS ) {
@@ -48,22 +62,6 @@ function getNewGame( testPlayers = TEST_USERS ) {
         map: newMap,
         players: newPlayers
     };
-}
-
-function getScenarioGame( testPlayers = TEST_USERS ) {
-    let game = getNewGame( testPlayers );
-
-    game.state.phase = 1;
-    game.state.turn = 1;
-
-    const player = game.players[0];
-    const capitalTileId = game.players[0].districts.capital;
-    const adjacentTileId = getRelevantAdjacentHexes( getHexFromId( capitalTileId ) )[0].id;
-    player.dimensions.push( {id: DIMENSIONS[CULTURE].id, wonderTileId: game.players[0].districts.capital} );
-    player.initiatives.politicalActive.push( {from: capitalTileId, to: adjacentTileId} );
-    player.initiatives.culturalActive.push( {tileId: capitalTileId, reaperCount: 5} ); //todo 5 - default reaper count should be a constant somewhere
-
-    return game;
 }
 
 function generateNewPlayers( testPlayers ) {
@@ -113,7 +111,9 @@ function generateNewPlayers( testPlayers ) {
                     purchasedAdvancementCount: 0,
                     purchasedCardCount: 0,
                     auctionBid: null, //WB value (0 if passed)
-                    hasReaped: false
+                    hasReaped: false,
+                    attendedCouncil: false,
+                    attendedDoomsdayClock: false
                 },
                 selects: {
                     highPriestVictim: null //playerId
@@ -123,15 +123,17 @@ function generateNewPlayers( testPlayers ) {
     );
 }
 
-function initializeTestGame( gameData ) {
+function initializeTestGame( gameData, callbackFunction ) {
     postCallEncoded(
         "php/controller.php",
         {
             action:    "updateGame",
-            userId:    testUserId,
-            gameId:    gameId,
+            userId:    userId,
+            gameId:    TEST_GAME_ID,
             game:      gameData
         },
-        function( response ) {},
+        function( response ) {
+            callbackFunction( JSON.stringify( game ) );
+        },
         function( error ) {} );
 }

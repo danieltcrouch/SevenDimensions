@@ -78,6 +78,14 @@
     filter: url(#orange);
 }
 
+.teal {
+    fill: teal;
+}
+
+.tealImage {
+    filter: url(#teal);
+}
+
 .gray {
     fill: gray;
 }
