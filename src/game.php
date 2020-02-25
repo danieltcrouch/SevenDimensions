@@ -61,9 +61,9 @@
 </body>
 
 <script>
-    const gameId     = "<?php echo $_GET['id']; ?>";
-    const testUserId = "<?php echo $_GET['testUserId']; ?>"; //todo 4 - should this be player instead of user?
-    const newGame    = "<?php echo $_GET['newGame']; ?>";
+    const gameId       = "<?php echo $_GET['id']; ?>";
+    const testPlayerId = "<?php echo $_GET['testPlayerId']; ?>";
+    const newGame      = "<?php echo $_GET['newGame']; ?>";
 
     setLoginAttributes( loadGame );
 

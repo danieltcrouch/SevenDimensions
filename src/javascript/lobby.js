@@ -13,7 +13,7 @@ function setUserType( userType ) {
 function startGame() {
     //const gameId = "";
     //location.href = "https://seven.religionandstory.com/game.php?id=" + TEST_GAME_ID;
-    location.href = "https://seven.religionandstory.com/game.php?id=" + "00000000000000000000000000000000" + "&testUserId=" + "00000000000000000000000000000001"; //todo 10 - use .assign() everywhere instead of assigning to href
+    location.href = "https://seven.religionandstory.com/game.php?id=" + "00000000000000000000000000000000" + "&testPlayerId=" + "00000000000000000000000000000001"; //todo 10 - use .assign() everywhere instead of assigning to href
 }
 
 function initializeGame( gameData ) {

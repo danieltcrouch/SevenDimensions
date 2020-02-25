@@ -113,16 +113,21 @@ function loadMap() {
 }
 
 function loadUser() {
-    postCallEncoded(
-        "php/controller.php",
-        {
-            action: "getPlayer",
-            gameId: gameId,
-            userId: testUserId || userId,
-        },
-        loadUserCallback,
-        function() { showToaster( "User not found." ); }
-    );
+    if ( testPlayerId ) {
+        loadUserCallback( testPlayerId );
+    }
+    else {
+        postCallEncoded(
+            "php/controller.php",
+            {
+                action: "getPlayer",
+                gameId: gameId,
+                userId: userId,
+            },
+            loadUserCallback,
+            function() { showToaster( "User not found." ); }
+        );
+    }
 }
 
 function loadUserCallback( playerId ) {
