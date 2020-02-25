@@ -16,7 +16,7 @@ if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
         }
         else {
             //updateGame
-            if ( isset($_POST['gameId']) && isset($_POST['userId']) && isset($_POST['game']) ) {
+            if ( isset($_POST['userId']) && isset($_POST['gameId']) && isset($_POST['game']) ) {
                 $result = $action( $_POST['gameId'], $_POST['game'] );
             }
             //getPlayer

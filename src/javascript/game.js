@@ -753,10 +753,17 @@ function updateGame() {
             action:    "updateGame",
             userId:    userId,
             gameId:    gameId,
-            game:      game
+            game:      JSON.stringify( game )
         },
         function( response ) {
-            loadGame();
+            postCallEncoded(
+               "php/controller.php",
+               {
+                   action: "loadGame",
+                   id:     gameId
+               },
+               loadGameCallback
+            );
         },
         function( error ) {
             showToaster( "Unable to save game." );
