@@ -5,11 +5,11 @@
 function loadGame( $gameId )
 {
     $query =
-   "SELECT m.id, m.playerCount, s.stateJson, mp.mapJson, p.playerJson
+   "SELECT m.id, s.stateJson, mp.mapJson, p.playerJson
     FROM meta m
     	JOIN state s  ON s.gameId = m.id
         JOIN map mp   ON mp.gameId = m.id
-        JOIN player p ON p.gameId = m.id
+        JOIN player p ON p.gameId = m.id AND p.active = 1
     WHERE m.id = :gameId ";
 
     $connection = getConnection();
@@ -26,9 +26,9 @@ function loadGame( $gameId )
         'map'     => json_decode( $result['mapJson'] ),
         'players' => []
     ];
-    for ( $i = 0; $i < count( $result['playerCount'] ); $i++ )
+    for ( $i = 0; $i < count( $results ); $i++ )
     {
-        array_push( $game['players'], json_decode( $results[0]->playerJson ) );
+        array_push( $game['players'], json_decode( $results[$i]['playerJson'] ) );
     }
 
     $connection = null;
@@ -46,13 +46,13 @@ function createGame( $game )
     $playerValues = "";
     for ( $i = 0; $i < count( $players ); $i++ )
     {
-        $playerValues  .= ( $i != 0 ) ? ", " : "";
-        $playerValues  .= "(:playerId$i, :userId$i, :gameId, :factionId$i, :playerJson$i)";
+        $playerValues .= ( $i != 0 ) ? ", " : "";
+        $playerValues .= "(:playerId$i, :userId$i, :gameId, 1, :factionId$i, :playerJson$i)";
     }
-    $insertMeta     = "INSERT INTO meta   (id, playerCount, round, phase, subPhase, turn) VALUES (:gameId, :playerCount, :round, :phase, :subPhase, :turn)";
-    $insertState    = "INSERT INTO state  (gameId, stateJson) VALUES (:gameId, :stateJson)";
-    $insertMap      = "INSERT INTO map    (gameId, mapJson)   VALUES (:gameId, :mapJson)";
-    $insertPlayers  = "INSERT INTO player (id, userId, gameId, factionId, playerJson) VALUES $playerValues";
+    $insertMeta    = "INSERT INTO meta   (id, playerCount, round, phase, subPhase, turn) VALUES (:gameId, :playerCount, :round, :phase, :subPhase, :turn)";
+    $insertState   = "INSERT INTO state  (gameId, stateJson) VALUES (:gameId, :stateJson)";
+    $insertMap     = "INSERT INTO map    (gameId, mapJson)   VALUES (:gameId, :mapJson)";
+    $insertPlayers = "INSERT INTO player (id, userId, gameId, active, factionId, playerJson) VALUES $playerValues";
 
     $query =
         "$insertMeta;\n
@@ -84,10 +84,9 @@ function createGame( $game )
     return $gameId;
 }
 
-function updateGame( $game )
+function updateGame( $gameId, $game )
 {
     $game = json_decode( $game );
-    $gameId = $game->id;
     $state    = $game->state;
     $mapTiles = $game->map;
     $players  = $game->players; //should work as empty if no players are sent in
@@ -120,14 +119,18 @@ function updateGame( $game )
 
 function updatePlayers( $gameId, $players )
 {
-    $playerJsonCase  = "CASE ";
+    $playerActiveCase = "CASE WHEN id IN (";
+    $playerJsonCase = "CASE ";
     for ( $i = 0; $i < count( $players ); $i++ )
     {
-        $playerJsonCase  .= "WHEN id = :playerId$i THEN :playerJson$i ";
+        $playerActiveCase .= ( $i != 0 ) ? "," : "";
+        $playerActiveCase .= ":playerId$i";
+        $playerJsonCase .= "WHEN id = :playerId$i THEN :playerJson$i ";
     }
-    $playerJsonCase  .= "END";
+    $playerJsonCase .= "END";
+    $playerActiveCase .= ") THEN 1 ELSE 0 END";
 
-    $query  = "UPDATE player SET playerJson = ($playerJsonCase) WHERE gameId = $gameId";
+    $query  = "UPDATE player SET active = ($playerActiveCase), playerJson = ($playerJsonCase) WHERE gameId = :gameId";
 
     $connection = getConnection();
     $statement = $connection->prepare( $query );

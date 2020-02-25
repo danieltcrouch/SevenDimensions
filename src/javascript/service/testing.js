@@ -124,6 +124,7 @@ function generateNewPlayers( testPlayers ) {
 }
 
 function initializeTestGame( gameData, callbackFunction ) {
+    gameData = JSON.stringify( gameData );
     postCallEncoded(
         "php/controller.php",
         {
@@ -133,7 +134,7 @@ function initializeTestGame( gameData, callbackFunction ) {
             game:      gameData
         },
         function( response ) {
-            callbackFunction( JSON.stringify( game ) );
+            callbackFunction( gameData );
         },
         function( error ) {} );
 }

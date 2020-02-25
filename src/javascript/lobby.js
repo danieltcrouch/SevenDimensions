@@ -21,7 +21,7 @@ function initializeGame( gameData ) {
         "php/controller.php",
         {
             action:    "createGame",
-            game:      gameData
+            game:      JSON.stringify( gameData ) //todo 11 - can calling JSON.stringify be built into helper?
         },
         function( response ) {},
         function( error ) {} );

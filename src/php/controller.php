@@ -11,34 +11,34 @@ if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
         if ( isset($_POST['appName']) && isset($_POST['authToken']) && isset($_POST['createNew']) ) {
             $result = $action( $_POST['appName'], $_POST['authToken'], $_POST['createNew'] );
         }
-        if ( isset($_POST['fileName']) ) {
+        elseif ( isset($_POST['fileName']) ) {
             $result = $action( $_POST['fileName'] );
         }
-
-        //getPlayer
-        if ( isset($_POST['gameId']) && isset($_POST['userId']) ) {
-            $result = $action( $_POST['gameId'], $_POST['userId'] );
-        }
-        //getGame
-        elseif ( isset($_POST['id']) ) {
-            $result = $action( $_POST['id'] );
+        else {
+            //updateGame
+            if ( isset($_POST['gameId']) && isset($_POST['userId']) && isset($_POST['game']) ) {
+                $result = $action( $_POST['gameId'], $_POST['game'] );
+            }
+            //getPlayer
+            elseif ( isset($_POST['gameId']) && isset($_POST['userId']) ) {
+                $result = $action( $_POST['gameId'], $_POST['userId'] );
+            }
+            //createGame
+            elseif ( isset($_POST['game']) ) {
+                $result = $action( $_POST['game'] );
+            }
+            //loadGame
+            elseif ( isset($_POST['id']) ) {
+                $result = $action( $_POST['id'] );
+            }
+            else {
+                $result = $action();
+            }
         }
 
         if ( isset($_POST['userId']) && $_POST['userId'] === getCurrentUser() ) {
+            //todo 10 - apply this check where necessary
         }
-
-        ////getGame
-        //if ( isset($_POST['id']) && isset($_POST['state']) && isset($_POST['time']) && isset($_POST['activeId']) && isset($_POST['winners']) ) {
-        //    $result = $action( $_POST['id'], $_POST['state'], $_POST['time'], $_POST['activeId'], $_POST['winners'] );
-        //}
-        ////getGame
-        //elseif ( isset($_POST['id']) ) {
-        //    $result = $action( $_POST['id'] );
-        //}
-        ////method (SERVICE)
-        //else {
-        //    $result = $action();
-        //}
 
         echo json_encode($result);
     }
