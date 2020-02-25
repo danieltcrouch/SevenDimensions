@@ -618,16 +618,19 @@ function showHelp() {
 
 function showAuctionActions() {
     const auctionIndex = getNextAuction( game.players );
-    const minimum = Math.floor( AUCTIONS[auctionIndex].cost / 2 );
+    const minimum = Math.floor( AUCTIONS[auctionIndex].costFunction() / 2 );
     showPrompt( "Auction", "Enter an amount to bid on " + AUCTIONS[auctionIndex].name + " (minimum: " + minimum + "WB):", function( response ) {
         response = parseInt( response );
-        if ( Number.isInteger( response ) ) {
+        if ( Number.isInteger( response ) && response >= minimum ) {
             if ( response <= currentPlayer.warBucks ) {
                 currentPlayer.advancements.auctionBid = response;
             }
             else {
                 showToaster( "Bid too high." );
             }
+        }
+        else {
+            showToaster( "Invalid Bid." );
         }
     });
 }

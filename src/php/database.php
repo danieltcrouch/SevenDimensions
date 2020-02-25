@@ -26,7 +26,7 @@ function loadGame( $gameId )
         'map'     => json_decode( $result['mapJson'] ),
         'players' => []
     ];
-    for ( $i = 0; $i < count( $results ); $i++ )
+    for ( $i = 0; $i < sizeof( $results ); $i++ )
     {
         array_push( $game['players'], json_decode( $results[$i]['playerJson'] ) );
     }
@@ -39,12 +39,12 @@ function createGame( $game )
 {
     $gameId = getGUID();
     $game = json_decode( $game );
-    $state    = $game->state;
-    $mapTiles = $game->map;
+    $stateJson = json_encode( $game->state );
+    $mapJson   = json_encode( $game->map );
     $players  = $game->players; //should work as empty if no players are sent in
 
     $playerValues = "";
-    for ( $i = 0; $i < count( $players ); $i++ )
+    for ( $i = 0; $i < sizeof( $players ); $i++ )
     {
         $playerValues .= ( $i != 0 ) ? ", " : "";
         $playerValues .= "(:playerId$i, :userId$i, :gameId, 1, :factionId$i, :playerJson$i)";
@@ -68,9 +68,9 @@ function createGame( $game )
     $statement->bindParam(':phase',       $game->state->phase);
     $statement->bindParam(':subPhase',    $game->state->subPhase);
     $statement->bindParam(':turn',        $game->state->turn);
-    $statement->bindParam(':stateJson',   json_encode($state));
-    $statement->bindParam(':mapJson',     json_encode($mapTiles));
-    for ( $i = 0; $i < count( $players ); $i++ )
+    $statement->bindParam(':stateJson',   $stateJson);
+    $statement->bindParam(':mapJson',     $mapJson);
+    for ( $i = 0; $i < sizeof( $players ); $i++ )
     {
         $player = $players[$i];
         $statement->bindParam(":playerId$i",   $player->id);
@@ -87,8 +87,8 @@ function createGame( $game )
 function updateGame( $gameId, $game )
 {
     $game = json_decode( $game );
-    $state    = $game->state;
-    $mapTiles = $game->map;
+    $stateJson = json_encode( $game->state );
+    $mapJson   = json_encode( $game->map );
     $players  = $game->players; //should work as empty if no players are sent in
 
     $updateMeta     = "UPDATE meta   SET round = :round, phase = :phase, subPhase = :subPhase, turn = :turn WHERE id = :gameId";
@@ -107,8 +107,8 @@ function updateGame( $gameId, $game )
     $statement->bindParam(':phase',       $game->state->phase);
     $statement->bindParam(':subPhase',    $game->state->subPhase);
     $statement->bindParam(':turn',        $game->state->turn);
-    $statement->bindParam(':stateJson',   json_encode($state));
-    $statement->bindParam(':mapJson',     json_encode($mapTiles));
+    $statement->bindParam(':stateJson',   $stateJson);
+    $statement->bindParam(':mapJson',     $mapJson);
     $statement->execute();
 
     updatePlayers( $gameId, $players );
@@ -121,7 +121,7 @@ function updatePlayers( $gameId, $players )
 {
     $playerActiveCase = "CASE WHEN id IN (";
     $playerJsonCase = "CASE ";
-    for ( $i = 0; $i < count( $players ); $i++ )
+    for ( $i = 0; $i < sizeof( $players ); $i++ )
     {
         $playerActiveCase .= ( $i != 0 ) ? "," : "";
         $playerActiveCase .= ":playerId$i";
@@ -135,7 +135,7 @@ function updatePlayers( $gameId, $players )
     $connection = getConnection();
     $statement = $connection->prepare( $query );
     $statement->bindParam(':gameId', $gameId);
-    for ( $i = 0; $i < count( $players ); $i++ )
+    for ( $i = 0; $i < sizeof( $players ); $i++ )
     {
         $player = $players[$i];
         $statement->bindParam(":playerId$i",   $player->id);
