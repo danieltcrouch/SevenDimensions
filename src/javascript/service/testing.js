@@ -27,20 +27,8 @@ function readTestFile( callbackFunction ) {
 
 function getScenarioGame( scenarios ) {
     //todo 9 - parse scenario file which simply contains json object
-
-    let game = getNewGame();
-
-    game.state.phase = 1;
-    game.state.turn = 1;
-
-    const player = game.players[0];
-    const capitalTileId = game.players[0].districts.capital;
-    const adjacentTileId = getRelevantAdjacentHexes( getHexFromId( capitalTileId ) )[0].id;
-    player.dimensions.push( {id: DIMENSIONS[CULTURE].id, wonderTileId: game.players[0].districts.capital} );
-    player.initiatives.politicalActive.push( {from: capitalTileId, to: adjacentTileId} );
-    player.initiatives.culturalActive.push( {tileId: capitalTileId, reaperCount: 5} ); //todo 5 - default reaper count should be a constant somewhere
-
-    return game;
+    //todo 5 - default reaper count for civil resistance should be a constant somewhere
+    return getNewGame( TEST_USERS.slice( 0, 3 ) );
 }
 
 function getNewGame( testPlayers = TEST_USERS ) {
