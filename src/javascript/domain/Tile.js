@@ -40,24 +40,32 @@ const TILE_TYPES = [
 
 
 class Tile extends Entity {
-    constructor( id, tileType, resources ) {
-        super( id, "TILE", tileType.name, function() { return null; } );
-        this.tileType = tileType;
-        this.resources = resources ? ( Array.isArray( resources ) ? resources : [ resources ] ) : null;
+    constructor( id, tileTypeId, resourceIds ) {
+        super( id, "TILE", getTileType( tileTypeId ).name, function() { return null; } );
+        this.tileTypeId = tileTypeId;
+        this.resourceIds = resourceIds ? ( Array.isArray( resourceIds ) ? resourceIds : [ resourceIds ] ) : [];
     }
 
-    static getRandomTile( id, tileType, index ) {
+    static getRandomTile( id, tileTypeId, index ) {
         const resourceIndex = Math.floor( index / 2 );
-        const resources = (tileType.resourceCount > 0 && resourceIndex < RESOURCES.length) ? RESOURCES[resourceIndex] : null;
-        return new Tile( id, tileType, resources );
+        const resources = (getTileType(tileTypeId).resourceCount > 0 && resourceIndex < RESOURCES.length) ? RESOURCES[resourceIndex].id : null;
+        return new Tile( id, tileTypeId, resources );
     }
 
     static getCapitalTile( id ) {
-        return new Tile( id, TILE_TYPES[CAPITAL], null );
+        return new Tile( id, TILE_TYPES[CAPITAL].id, null );
     }
 
     static getAtlantisTile( id ) {
-        return new Tile( id, TILE_TYPES[ATLANTIS], RESOURCES );
+        return new Tile( id, TILE_TYPES[ATLANTIS].id, RESOURCES.map( r => r.id ) );
+    }
+
+    getTileType() {
+        return getTileType( this.tileTypeId );
+    }
+
+    getResources() {
+        return this.resourceIds.map( id => getResource( id ) );
     }
 }
 

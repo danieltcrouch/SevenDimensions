@@ -1,0 +1,509 @@
+{
+    "state": {
+        "ambassador": 0,
+        "round": 0,
+        "phase": 0,
+        "subPhase": 0,
+        "turn": 0,
+        "event": 0,
+        "events": {
+            "office": null,
+            "disaster": null
+        }
+    },
+    "map": [
+        {
+            "id": "1-2",
+            "type": "TILE",
+            "name": "Capital",
+            "tileTypeId": "6",
+            "resourceIds": []
+        },
+        {
+            "id": "1-3",
+            "type": "TILE",
+            "name": "Nature3",
+            "tileTypeId": "3",
+            "resourceIds": []
+        },
+        {
+            "id": "1-4",
+            "type": "TILE",
+            "name": "Nature3",
+            "tileTypeId": "3",
+            "resourceIds": []
+        },
+        {
+            "id": "1-5",
+            "type": "TILE",
+            "name": "Capital",
+            "tileTypeId": "6",
+            "resourceIds": []
+        },
+        {
+            "id": "2-2",
+            "type": "TILE",
+            "name": "Nature5",
+            "tileTypeId": "5",
+            "resourceIds": []
+        },
+        {
+            "id": "2-3",
+            "type": "TILE",
+            "name": "Nature1",
+            "tileTypeId": "1",
+            "resourceIds": []
+        },
+        {
+            "id": "2-4",
+            "type": "TILE",
+            "name": "Volcano",
+            "tileTypeId": "0",
+            "resourceIds": []
+        },
+        {
+            "id": "2-5",
+            "type": "TILE",
+            "name": "Nature1",
+            "tileTypeId": "1",
+            "resourceIds": []
+        },
+        {
+            "id": "2-6",
+            "type": "TILE",
+            "name": "Nature2",
+            "tileTypeId": "2",
+            "resourceIds": []
+        },
+        {
+            "id": "3-1",
+            "type": "TILE",
+            "name": "Nature2",
+            "tileTypeId": "2",
+            "resourceIds": []
+        },
+        {
+            "id": "3-2",
+            "type": "TILE",
+            "name": "Volcano",
+            "tileTypeId": "0",
+            "resourceIds": []
+        },
+        {
+            "id": "3-3",
+            "type": "TILE",
+            "name": "Nature4",
+            "tileTypeId": "4",
+            "resourceIds": [
+                "2"
+            ]
+        },
+        {
+            "id": "3-4",
+            "type": "TILE",
+            "name": "Nature3",
+            "tileTypeId": "3",
+            "resourceIds": []
+        },
+        {
+            "id": "3-5",
+            "type": "TILE",
+            "name": "Nature2",
+            "tileTypeId": "2",
+            "resourceIds": [
+                "1"
+            ]
+        },
+        {
+            "id": "3-6",
+            "type": "TILE",
+            "name": "Nature4",
+            "tileTypeId": "4",
+            "resourceIds": [
+                "2"
+            ]
+        },
+        {
+            "id": "4-1",
+            "type": "TILE",
+            "name": "Capital",
+            "tileTypeId": "6",
+            "resourceIds": []
+        },
+        {
+            "id": "4-2",
+            "type": "TILE",
+            "name": "Nature3",
+            "tileTypeId": "3",
+            "resourceIds": []
+        },
+        {
+            "id": "4-3",
+            "type": "TILE",
+            "name": "Nature2",
+            "tileTypeId": "2",
+            "resourceIds": [
+                "2"
+            ]
+        },
+        {
+            "id": "4-4",
+            "type": "TILE",
+            "name": "Atlantis",
+            "tileTypeId": "7",
+            "resourceIds": [
+                "0",
+                "1",
+                "2"
+            ]
+        },
+        {
+            "id": "4-5",
+            "type": "TILE",
+            "name": "Volcano",
+            "tileTypeId": "0",
+            "resourceIds": []
+        },
+        {
+            "id": "4-6",
+            "type": "TILE",
+            "name": "Nature3",
+            "tileTypeId": "3",
+            "resourceIds": []
+        },
+        {
+            "id": "4-7",
+            "type": "TILE",
+            "name": "Capital",
+            "tileTypeId": "6",
+            "resourceIds": []
+        },
+        {
+            "id": "5-1",
+            "type": "TILE",
+            "name": "Nature4",
+            "tileTypeId": "4",
+            "resourceIds": [
+                "0"
+            ]
+        },
+        {
+            "id": "5-2",
+            "type": "TILE",
+            "name": "Nature3",
+            "tileTypeId": "3",
+            "resourceIds": []
+        },
+        {
+            "id": "5-3",
+            "type": "TILE",
+            "name": "Nature2",
+            "tileTypeId": "2",
+            "resourceIds": [
+                "1"
+            ]
+        },
+        {
+            "id": "5-4",
+            "type": "TILE",
+            "name": "Nature4",
+            "tileTypeId": "4",
+            "resourceIds": [
+                "1"
+            ]
+        },
+        {
+            "id": "5-5",
+            "type": "TILE",
+            "name": "Nature3",
+            "tileTypeId": "3",
+            "resourceIds": []
+        },
+        {
+            "id": "5-6",
+            "type": "TILE",
+            "name": "Nature3",
+            "tileTypeId": "3",
+            "resourceIds": []
+        },
+        {
+            "id": "6-2",
+            "type": "TILE",
+            "name": "Nature2",
+            "tileTypeId": "2",
+            "resourceIds": [
+                "0"
+            ]
+        },
+        {
+            "id": "6-3",
+            "type": "TILE",
+            "name": "Nature2",
+            "tileTypeId": "2",
+            "resourceIds": [
+                "0"
+            ]
+        },
+        {
+            "id": "6-4",
+            "type": "TILE",
+            "name": "Nature5",
+            "tileTypeId": "5",
+            "resourceIds": []
+        },
+        {
+            "id": "6-5",
+            "type": "TILE",
+            "name": "Nature4",
+            "tileTypeId": "4",
+            "resourceIds": []
+        },
+        {
+            "id": "6-6",
+            "type": "TILE",
+            "name": "Nature1",
+            "tileTypeId": "1",
+            "resourceIds": []
+        },
+        {
+            "id": "7-2",
+            "type": "TILE",
+            "name": "Capital",
+            "tileTypeId": "6",
+            "resourceIds": []
+        },
+        {
+            "id": "7-3",
+            "type": "TILE",
+            "name": "Nature4",
+            "tileTypeId": "4",
+            "resourceIds": []
+        },
+        {
+            "id": "7-4",
+            "type": "TILE",
+            "name": "Nature3",
+            "tileTypeId": "3",
+            "resourceIds": []
+        },
+        {
+            "id": "7-5",
+            "type": "TILE",
+            "name": "Capital",
+            "tileTypeId": "6",
+            "resourceIds": []
+        }
+    ],
+    "players": [
+        {
+            "id": "00000000000000000000000000000001",
+            "username": "daniel",
+            "factionId": "7",
+            "warBucks": 8,
+            "resources": [],
+            "advancements": {
+                "technologies": [
+                    "0"
+                ],
+                "doctrines": [
+                    "0"
+                ],
+                "gardens": [],
+                "auctions": [],
+                "auctionWins": []
+            },
+            "initiatives": {
+                "politicalTokens": 0,
+                "culturalTokens": 0,
+                "politicalActive": [],
+                "culturalActive": []
+            },
+            "cards": {
+                "chaos": [],
+                "offices": []
+            },
+            "units": [
+                {
+                    "id": "1",
+                    "count": 2,
+                    "tileId": "1-2"
+                },
+                {
+                    "id": "2",
+                    "count": 3,
+                    "tileId": "1-2"
+                },
+                {
+                    "id": "7",
+                    "count": 1,
+                    "tileId": "1-2"
+                }
+            ],
+            "districts": {
+                "capital": "1-2",
+                "tileIds": [
+                    "1-2"
+                ]
+            },
+            "dimensions": [],
+            "religion": null,
+            "turn": {
+                "purchasedAdvancementCount": 0,
+                "purchasedCardCount": 0,
+                "auctionBid": null,
+                "hasReaped": false,
+                "attendedCouncil": false,
+                "attendedDoomsdayClock": false
+            },
+            "selects": {
+                "highPriestVictim": null
+            }
+        },
+        {
+            "id": "00000000000000000000000000000002",
+            "username": "michael",
+            "factionId": "8",
+            "warBucks": 8,
+            "resources": [],
+            "advancements": {
+                "technologies": [
+                    "0",
+                    "1"
+                ],
+                "doctrines": [],
+                "gardens": [],
+                "auctions": [],
+                "auctionWins": []
+            },
+            "initiatives": {
+                "politicalTokens": 0,
+                "culturalTokens": 0,
+                "politicalActive": [],
+                "culturalActive": []
+            },
+            "cards": {
+                "chaos": [],
+                "offices": []
+            },
+            "units": [
+                {
+                    "id": "1",
+                    "count": 1,
+                    "tileId": "1-5"
+                },
+                {
+                    "id": "2",
+                    "count": 1,
+                    "tileId": "1-5"
+                },
+                {
+                    "id": "3",
+                    "count": 1,
+                    "tileId": "1-5"
+                },
+                {
+                    "id": "6",
+                    "count": 1,
+                    "tileId": "1-5"
+                },
+                {
+                    "id": "7",
+                    "count": 1,
+                    "tileId": "1-5"
+                }
+            ],
+            "districts": {
+                "capital": "1-5",
+                "tileIds": [
+                    "1-5"
+                ]
+            },
+            "dimensions": [],
+            "religion": null,
+            "turn": {
+                "purchasedAdvancementCount": 0,
+                "purchasedCardCount": 0,
+                "auctionBid": null,
+                "hasReaped": false,
+                "attendedCouncil": false,
+                "attendedDoomsdayClock": false
+            },
+            "selects": {
+                "highPriestVictim": null
+            }
+        },
+        {
+            "id": "00000000000000000000000000000003",
+            "username": "stephen",
+            "factionId": "0",
+            "warBucks": 8,
+            "resources": [],
+            "advancements": {
+                "technologies": [
+                    "0",
+                    "2"
+                ],
+                "doctrines": [],
+                "gardens": [],
+                "auctions": [],
+                "auctionWins": []
+            },
+            "initiatives": {
+                "politicalTokens": 0,
+                "culturalTokens": 0,
+                "politicalActive": [],
+                "culturalActive": []
+            },
+            "cards": {
+                "chaos": [],
+                "offices": []
+            },
+            "units": [
+                {
+                    "id": "0",
+                    "count": 1,
+                    "tileId": "4-1"
+                },
+                {
+                    "id": "1",
+                    "count": 1,
+                    "tileId": "4-1"
+                },
+                {
+                    "id": "2",
+                    "count": 1,
+                    "tileId": "4-1"
+                },
+                {
+                    "id": "3",
+                    "count": 1,
+                    "tileId": "4-1"
+                },
+                {
+                    "id": "7",
+                    "count": 1,
+                    "tileId": "4-1"
+                }
+            ],
+            "districts": {
+                "capital": "4-1",
+                "tileIds": [
+                    "4-1"
+                ]
+            },
+            "dimensions": [],
+            "religion": null,
+            "turn": {
+                "purchasedAdvancementCount": 0,
+                "purchasedCardCount": 0,
+                "auctionBid": null,
+                "hasReaped": false,
+                "attendedCouncil": false,
+                "attendedDoomsdayClock": false
+            },
+            "selects": {
+                "highPriestVictim": null
+            }
+        }
+    ]
+}

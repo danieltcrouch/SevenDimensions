@@ -7,6 +7,7 @@ const NO_TILE_DETAILS = "No Tile Selected";
 let game;
 let selectedTile;
 let currentPlayer;
+let currentUnits;
 
 /****** LOAD ******/
 
@@ -40,12 +41,7 @@ function loadGameCallback( response ) {
 }
 
 function parseMap( map ) {
-    //Will change when you actually use DB
-    return map.map( t => new Tile(
-        t.id,
-        getTileType( t.tileType.id ),
-        t.resources ? t.resources.map( r => getResource( r.id ) ) : null
-    ) );
+    return map.map( t => new Tile( t.id, t.tileTypeId, t.resourceIds ) );
 }
 
 function loadGameState() {
@@ -59,25 +55,25 @@ function loadMap() {
     for ( let i = 0; i < game.map.length; i++ ) {
         const tile = game.map[i];
 
-        id(tile.id + "-text").innerHTML = tile.tileType.value + "";
+        id(tile.id + "-text").innerHTML = tile.getTileType().value + "";
 
-        if ( tile.tileType.id === TILE_TYPES[ATLANTIS].id ) {
+        if ( tile.tileTypeId === TILE_TYPES[ATLANTIS].id ) {
             hideById(tile.id + "-text");
             id(tile.id + "-background").setAttributeNS(null, "fill", "url(#atlantis)");
         }
-        else if ( tile.tileType.id === TILE_TYPES[VOLCANO].id ) {
+        else if ( tile.tileTypeId === TILE_TYPES[VOLCANO].id ) {
             hideById(tile.id + "-text");
             id(tile.id + "-background").setAttributeNS(null, "fill", "url(#volcano)");
         }
-        else if ( tile.tileType.id === TILE_TYPES[CAPITAL].id ) {
+        else if ( tile.tileTypeId === TILE_TYPES[CAPITAL].id ) {
             hideById(tile.id + "-text");
             const factionId = game.players.find( p => p.districts.capital === tile.id ).factionId;
             id(tile.id + "-background").setAttributeNS(null, "fill", `url(#faction${factionId})`);
         }
 
-        if ( tile.resources ) {
+        if ( tile.resourceIds ) {
             id(tile.id + "-resource").style.display = "";
-            const resourceId = tile.resources.length > 1 ? "All" : tile.resources[0].id;
+            const resourceId = tile.resourceIds.length > 1 ? "All" : tile.resourceIds[0];
             id(tile.id + "-resource").setAttributeNS(null, "fill", `url(#res${resourceId})`);
         }
 
@@ -144,11 +140,11 @@ function loadUserCallback( playerId ) {
     id('initiativeTokensValue').innerText   = ( currentPlayer.initiatives.politicalTokens + currentPlayer.initiatives.culturalTokens ) + "";
     id('chaosCardsValue').innerText         = currentPlayer.cards.chaos.length + "";
 
-    currentPlayer.unitsDisambiguous = disambiguateUnits( currentPlayer.units );
+    currentUnits = disambiguateUnits( currentPlayer.units );
 }
 
 function popModals() {
-    if ( isMarketAuctionPhase() && !currentPlayer.advancements.auctionBid ) {
+    if ( isMarketAuctionPhase() && !currentPlayer.turn.auctionBid ) {
         showAuctionActions();
     }
 }
@@ -183,7 +179,7 @@ function selectUnits( e ) {
         }
     }
     else {
-        const relevantUnits = currentPlayer.unitsDisambiguous.filter( u => u.tileId === tileId );
+        const relevantUnits = currentUnits.filter( u => u.tileId === tileId );
         id(spanId).style.background = "lightgray";
         if ( isAllUnits ) {
             document.querySelectorAll( '*[id^="unit-"]' ).forEach( s => s.style.background = "lightgray" );
@@ -281,7 +277,7 @@ function moveUnits( tileId ) {
     const rootTileId = selectedTile.id;
     const destinationTileId = tileId;
     selectedUnits.forEach( su => {
-        let unitDisambiguous = currentPlayer.unitsDisambiguous.find( u => u.id === su.id );
+        let unitDisambiguous = currentUnits.find( u => u.id === su.id );
         unitDisambiguous.movesRemaining -= suggestedPath.length;
         unitDisambiguous.tileId = destinationTileId;
         currentPlayer.units.find( u => u.id === su.unitType.id && u.tileId === rootTileId ).count--;
@@ -374,7 +370,7 @@ function selectTile( tileId ) {
         const isExpansionPlayer = isExpansionPhase() && us.id === currentPlayer.id;
         if ( isExpansionPlayer ) {
             titleSpan = "<span id='unit-all' class='link' onclick='selectUnits(event)'>";
-            let units = consolidateActiveUnits( currentPlayer.unitsDisambiguous.filter( u => u.tileId === tileId ) );
+            let units = consolidateActiveUnits( currentUnits.filter( u => u.tileId === tileId ) );
             unitDescriptions = units.map( u => getUnitDisplayName( u.id, u.count, us.id ) + " (" + u.movesRemaining + ")" );
             unitSpans = units.map( u => `<span id='unit-${u.id}#${u.movesRemaining}' class='link' style='margin-left: 1em' onclick='selectUnits(event)'>` );
         }
@@ -410,8 +406,8 @@ function getTileDetails( id ) {
 
     return {
         id: id,
-        type: TileType.getDisplayName( tile.tileType ),
-        population: tile.tileType.value,
+        type: TileType.getDisplayName( tile.getTileType() ),
+        population: tile.getTileType().value,
         districtPlayerId: districtPlayerId,
         controlPlayerId: controlPlayerId,
         wonderId: wonderIds ? wonderIds[0] : null,
@@ -574,7 +570,10 @@ function submit() {
 
     if ( isValidToSubmit ) {
         incrementTurn();
+        //todo - actions that need to be done at end of a phase/subphase (like divvy auction)
+        //  Or above incrementTurn? Or during?
         updateGame();
+        //todo - some sort of indicator that you successfully submitted
     }
 }
 
@@ -621,9 +620,9 @@ function showAuctionActions() {
     const minimum = Math.floor( AUCTIONS[auctionIndex].costFunction() / 2 );
     showPrompt( "Auction", "Enter an amount to bid on " + AUCTIONS[auctionIndex].name + " (minimum: " + minimum + "WB):", function( response ) {
         response = parseInt( response );
-        if ( Number.isInteger( response ) && response >= minimum ) {
+        if ( Number.isInteger( response ) && response >= minimum ) { //todo - accept 0 as pass?
             if ( response <= currentPlayer.warBucks ) {
-                currentPlayer.advancements.auctionBid = response;
+                currentPlayer.turn.auctionBid = response;
             }
             else {
                 showToaster( "Bid too high." );
@@ -693,7 +692,7 @@ function showHarvestActions() {
 
 function calculateWarBuckHarvestReward() {
     const districts = currentPlayer.districts.tileIds.reduce( function( total, tileId ){
-        return total + game.map.find( t => t.id === tileId ).tileType.value;
+        return total + game.map.find( t => t.id === tileId ).getTileType().value;
     }, 0 );
     const religion = 0;
     return districts + religion;
@@ -701,15 +700,15 @@ function calculateWarBuckHarvestReward() {
 
 function calculateResourceHarvestReward() {
     return currentPlayer.districts.tileIds.reduce( function( result, tileId ) {
-        const tileResources = game.map.find( t => t.id === tileId ).resources;
-        if ( tileResources ) {
-            tileResources.forEach( r => {
-                const currentResource = result.find( cr => cr.id === r.id );
+        const tileResourceIds = game.map.find( t => t.id === tileId ).resourceIds;
+        if ( tileResourceIds.length ) {
+            tileResourceIds.forEach( id => {
+                const currentResource = result.find( cr => cr.id === id );
                 if ( currentResource ) {
                     currentResource.count++;
                 }
                 else {
-                    result.push( {id: r.id, count: 1} );
+                    result.push( {id: id, count: 1} );
                 }
             } );
         }

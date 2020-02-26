@@ -26,7 +26,7 @@ function loadGame( $gameId )
         'map'     => json_decode( $result['mapJson'] ),
         'players' => []
     ];
-    for ( $i = 0; $i < sizeof( $results ); $i++ )
+    for ( $i = 0; $i < count( $results ); $i++ )
     {
         array_push( $game['players'], json_decode( $results[$i]['playerJson'] ) );
     }
@@ -44,7 +44,7 @@ function createGame( $game )
     $players  = $game->players; //should work as empty if no players are sent in
 
     $playerValues = "";
-    for ( $i = 0; $i < sizeof( $players ); $i++ )
+    for ( $i = 0; $i < count( $players ); $i++ )
     {
         $playerValues .= ( $i != 0 ) ? ", " : "";
         $playerValues .= "(:playerId$i, :userId$i, :gameId, 1, :factionId$i, :playerJson$i)";
@@ -70,7 +70,7 @@ function createGame( $game )
     $statement->bindParam(':turn',        $game->state->turn);
     $statement->bindParam(':stateJson',   $stateJson);
     $statement->bindParam(':mapJson',     $mapJson);
-    for ( $i = 0; $i < sizeof( $players ); $i++ )
+    for ( $i = 0; $i < count( $players ); $i++ )
     {
         $player = $players[$i];
         $statement->bindParam(":playerId$i",   $player->id);
@@ -121,7 +121,7 @@ function updatePlayers( $gameId, $players )
 {
     $playerActiveCase = "CASE WHEN id IN (";
     $playerJsonCase = "CASE ";
-    for ( $i = 0; $i < sizeof( $players ); $i++ )
+    for ( $i = 0; $i < count( $players ); $i++ )
     {
         $playerActiveCase .= ( $i != 0 ) ? "," : "";
         $playerActiveCase .= ":playerId$i";
@@ -135,7 +135,7 @@ function updatePlayers( $gameId, $players )
     $connection = getConnection();
     $statement = $connection->prepare( $query );
     $statement->bindParam(':gameId', $gameId);
-    for ( $i = 0; $i < sizeof( $players ); $i++ )
+    for ( $i = 0; $i < count( $players ); $i++ )
     {
         $player = $players[$i];
         $statement->bindParam(":playerId$i",   $player->id);

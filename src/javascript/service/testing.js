@@ -26,7 +26,7 @@ function readTestFile( callbackFunction ) {
 }
 
 function getScenarioGame( scenarios ) {
-    //todo 9 - parse scenario file
+    //todo 9 - parse scenario file which simply contains json object
 
     let game = getNewGame();
 

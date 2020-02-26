@@ -8,9 +8,9 @@ const TILE_SIDE_LENGTH = 10;
 
 function generateNewMap( factionCount ) {
     let natureDeck = new Deck();
-    TILE_TYPES.filter( t => t.isNatureTile( true ) ).forEach( function( tileType ) {
+    TILE_TYPES.filter( t => t.isNatureTile( true ) ).forEach( tileType => {
         for ( let i = 0; i < tileType.count; i++ ) {
-            natureDeck.insertCard( Tile.getRandomTile( null, tileType, i ), true );
+            natureDeck.insertCard( Tile.getRandomTile( null, tileType.id, i ), true );
         }
     } );
 
@@ -30,7 +30,7 @@ function generateNewMap( factionCount ) {
                     result.push( Tile.getCapitalTile( hex.id ) );
                 }
                 else if ( isAdjacentToCapitalHex( hex, capitalHexIds ) ) {
-                    let natureTile = natureTiles.splice( natureTiles.findIndex( t => t.tileType.isNatureTile() ), 1 )[0];
+                    let natureTile = natureTiles.splice( natureTiles.findIndex( t => t.getTileType().isNatureTile() ), 1 )[0];
                     natureTile.id = hex.id;
                     result.push( natureTile );
                 }
