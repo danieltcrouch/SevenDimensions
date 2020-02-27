@@ -147,6 +147,9 @@ function popModals() {
     if ( isMarketAuctionPhase() && !currentPlayer.turn.auctionBid ) {
         showAuctionActions();
     }
+    else if ( isHarvestPhase() && !currentPlayer.turn.hasReaped ) {
+        showHarvestActions();
+    }
 }
 
 
@@ -548,12 +551,20 @@ function viewCards() {
 
 function submit() {
     let isValidToSubmit = true;
-    if ( isMarketPhase() ) {
+    if ( currentPlayer.turn.hasSubmitted ) {
+        isValidToSubmit = false;
+        showToaster( "Player has already submitted" );
+    }
+    else if ( isMarketPhase() ) {
         if ( isMarketAuctionPhase() ) {
-            //
+            if ( Number.isNaN( currentPlayer.turn.auctionBid ) ) {
+                isValidToSubmit = false;
+                showToaster( "Must bid or pass for auction" );
+            }
         }
         else {
             if ( currentPlayer.units.some( u => u.tileId === "unassigned" ) ) {
+                isValidToSubmit = false;
                 showToaster( "Must assign purchased units" );
             }
         }
@@ -562,18 +573,23 @@ function submit() {
         //
     }
     else if ( isHarvestPhase() ) {
-        //
+        if ( !currentPlayer.turn.hasReaped ) {
+            isValidToSubmit = false;
+            showToaster( "Must reap harvest" );
+        }
     }
     else if ( isCouncilPhase() ) {
-        //
+        if ( !isDoomsdayClockPhase() ) {
+            //
+        }
+        else {
+            //
+        }
     }
 
     if ( isValidToSubmit ) {
         incrementTurn();
-        //todo - actions that need to be done at end of a phase/subphase (like divvy auction)
-        //  Or above incrementTurn? Or during?
         updateGame();
-        //todo - some sort of indicator that you successfully submitted
     }
 }
 
@@ -616,9 +632,9 @@ function showHelp() {
 
 
 function showAuctionActions() {
-    const auctionIndex = getNextAuction( game.players );
-    const minimum = Math.floor( AUCTIONS[auctionIndex].costFunction() / 2 );
-    showPrompt( "Auction", "Enter an amount to bid on " + AUCTIONS[auctionIndex].name + " (minimum: " + minimum + "WB):", function( response ) {
+    const auctionLot = AUCTIONS[getNextAuction( game.players )];
+    const minimum = Math.floor( auctionLot.costFunction() / 2 );
+    showPrompt( "Auction", "Enter an amount to bid on " + auctionLot.name + " (minimum: " + minimum + "WB):", function( response ) {
         response = parseInt( response );
         if ( Number.isInteger( response ) && response >= minimum ) { //todo - accept 0 as pass?
             if ( response <= currentPlayer.warBucks ) {
@@ -681,7 +697,7 @@ function showHarvestActions() {
                             currentPlayer.resources.push( {id: r.id, count: r.count} );
                         }
                     } );
-                    currentPlayer.hasReaped = true;
+                    currentPlayer.turn.hasReaped = true;
                 }
         } );
     }
@@ -691,7 +707,7 @@ function showHarvestActions() {
 }
 
 function calculateWarBuckHarvestReward() {
-    const districts = currentPlayer.districts.tileIds.reduce( function( total, tileId ){
+    const districts = currentPlayer.districts.tileIds.reduce( ( total, tileId ) => {
         return total + game.map.find( t => t.id === tileId ).getTileType().value;
     }, 0 );
     const religion = 0;
@@ -699,7 +715,7 @@ function calculateWarBuckHarvestReward() {
 }
 
 function calculateResourceHarvestReward() {
-    return currentPlayer.districts.tileIds.reduce( function( result, tileId ) {
+    return currentPlayer.districts.tileIds.reduce( ( result, tileId ) => {
         const tileResourceIds = game.map.find( t => t.id === tileId ).resourceIds;
         if ( tileResourceIds.length ) {
             tileResourceIds.forEach( id => {
@@ -755,6 +771,7 @@ function updateGame() {
             game:      JSON.stringify( game )
         },
         function( response ) {
+            showToaster("Turn successfully saved.");
             postCallEncoded(
                "php/controller.php",
                {
@@ -770,8 +787,11 @@ function updateGame() {
 }
 
 function incrementTurn() {
+    currentPlayer.turn.hasSubmitted = true;
+
     game.state.turn++;
     if ( game.state.turn >= game.players.length ) {
+        completeSubPhase();
         game.state.turn = 0;
         game.state.subPhase++;
         if ( isExpansionPhase() || isHarvestPhase() || game.state.subPhase >= 2 ) { //todo 5 - make into Constant
@@ -792,6 +812,49 @@ function incrementTurn() {
             }
         }
     }
+}
+
+function completeSubPhase() {
+    if ( isMarketPhase() ) {
+            if ( isMarketAuctionPhase() ) {
+                const auctionLotId = AUCTIONS[getNextAuction( game.players )].id;
+                const highestBidderId = game.players.reduce( (prev, current) => {
+                    return ( current.turn.auctionBid > prev.turn.auctionBid || (current.turn.auctionBid === prev.turn.auctionBid && getPlayerNumber(current.id) < getPlayerNumber(prev.id)) ) ? current : prev },
+                    game.players[game.state.ambassador]
+                ).id;
+                getPlayer( highestBidderId ).advancements.auctions.push( auctionLotId );
+                getPlayer( highestBidderId ).advancements.auctions.push( auctionLotId );
+                game.players.forEach( p => {
+                    p.turn.auctionBid = null;
+                })
+            }
+            else {
+                //
+            }
+        }
+        else if ( isExpansionPhase() ) {
+            //
+        }
+        else if ( isHarvestPhase() ) {
+            //
+        }
+        else if ( isCouncilPhase() ) {
+            if ( !isDoomsdayClockPhase() ) {
+                //
+            }
+            else {
+                //Doomsday stuff?
+                //check for winner
+            }
+        }
+}
+
+function getPlayerNumber( id ) {
+    let result = game.players.findIndex( p => p.id === id ) - game.state.ambassador;
+    if ( result < 0 ) {
+        result = game.players.length + result;
+    }
+    return result;
 }
 
 // function isFinalAuctionBid() {

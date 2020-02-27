@@ -96,12 +96,13 @@ function generateNewPlayers( testPlayers ) {
                 dimensions: [], //see getScenarioGame
                 religion: null, //{id: RELIGIONS[0].id, tileIds: []}
                 turn: {
+                    hasSubmitted: false,
                     purchasedAdvancementCount: 0,
                     purchasedCardCount: 0,
                     auctionBid: null, //WB value (0 if passed)
                     hasReaped: false,
-                    attendedCouncil: false,
-                    attendedDoomsdayClock: false
+                    attendedCouncil: false, //todo - may not be needed
+                    attendedDoomsdayClock: false //todo - may not be needed
                 },
                 selects: {
                     highPriestVictim: null //playerId
