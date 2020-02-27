@@ -102,9 +102,10 @@
     }
 
     function populateAdvancements() {
+        //todo - make it where you can't buy things you already have--all you need to do is send a slice of each of the advancement Enums
         addAllToSelect( 'technologySelect', ["None"].concat( TECHNOLOGIES.map( (t,index) => { return {text: t.name, value: index+""}; } ) ) );
         addAllToSelect( 'doctrineSelect',   ["None"].concat( DOCTRINES.map(    (d,index) => { return {text: d.name, value: index+""}; } ) ) );
-        populateAdvancementCheckboxes( GARDENS, "gardens", function( item ) { return item.costFunction( currentPlayer.districts.tiles.length ) + "WB"; } );
+        populateAdvancementCheckboxes( GARDENS, "gardens", function( item ) { return item.costFunction( currentPlayer.districts.tileIds.length ) + "WB"; } );
         populateAdvancementCheckboxes( AUCTIONS, "auctions", function( item ) { return item.getCostOrLocked( game.players ); } );
     }
 
@@ -121,8 +122,10 @@
             input.onchange = function() { advancementChange( data, costFunction, wrapperId ); };
             let label = document.createElement( "LABEL" );
             let cost = costFunction( data[i] );
+            let isLocked = Number.isNaN(parseInt(cost));
             label.for = id;
-            label.innerHTML = data[i].name + " (" + cost + "WB) ";
+            label.innerHTML = data[i].name + " (" + cost + ")";
+            input.disabled = isLocked;
             div.appendChild( input );
             div.appendChild( label );
             wrapper.appendChild( div );
@@ -152,13 +155,13 @@
     }
 
     function technologyChange() {
-        let total = ( parseInt( getSelectedOptionValue( 'technologySelect' ) ) + 1 ) * TECHNOLOGIES[0].cost;
+        let total = ( parseInt( getSelectedOptionValue( 'technologySelect' ) ) + 1 ) * TECHNOLOGIES[0].costFunction();
         id('technologyCost').innerText = total + "";
         updateTotal();
     }
 
     function doctrineChange() {
-        let total = ( parseInt( getSelectedOptionValue( 'doctrineSelect' ) ) + 1 ) * DOCTRINES[0].cost;
+        let total = ( parseInt( getSelectedOptionValue( 'doctrineSelect' ) ) + 1 ) * DOCTRINES[0].costFunction();
         id('doctrineCost').innerText = total + "";
         updateTotal();
     }
@@ -202,10 +205,10 @@
                 getSelectedOption( "doctrineSelect" ) +
                 nm('gardens').filter( c => c.checked ).length +
                 nm('auctions').filter( c => c.checked ).length;
-            if ( advancementsInCartCount + marketModalValues.advancements.purchasedCount > maxAdvancements ) {
+            if ( advancementsInCartCount + marketModalValues.turn.purchasedAdvancementCount > maxAdvancements ) {
                 showToaster( "Cannot purchase more than " + maxAdvancements + " advancements" );
             }
-            else if ( id('cardCount').value + marketModalValues.cards.purchasedCount > maxCards ) {
+            else if ( id('cardCount').value + marketModalValues.turn.purchasedCardCount > maxCards ) {
                 showToaster( "Cannot purchase more than " + maxCards + " cards" );
             }
             else {

@@ -135,7 +135,7 @@ class Auction extends Advancement {
     }
 
     isLocked( players ) {
-        return !players.some( p => p.advancements.auctionWins[ AUCTIONS.indexOf( this ) ] === "1" );
+        return !players.some( p => p.advancements.auctionWins.includes( this.id ) );
     }
 }
 

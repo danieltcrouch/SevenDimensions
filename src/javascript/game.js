@@ -144,7 +144,7 @@ function loadUserCallback( playerId ) {
 }
 
 function popModals() {
-    if ( isMarketAuctionPhase() && !currentPlayer.turn.auctionBid ) {
+    if ( isMarketAuctionPhase() && !Number.isInteger( currentPlayer.turn.auctionBid ) ) {
         showAuctionActions();
     }
     else if ( isHarvestPhase() && !currentPlayer.turn.hasReaped ) {
@@ -632,22 +632,30 @@ function showHelp() {
 
 
 function showAuctionActions() {
+    const hasBid = Number.isInteger( currentPlayer.turn.auctionBid );
     const auctionLot = AUCTIONS[getNextAuction( game.players )];
     const minimum = Math.floor( auctionLot.costFunction() / 2 );
-    showPrompt( "Auction", "Enter an amount to bid on " + auctionLot.name + " (minimum: " + minimum + "WB):", function( response ) {
-        response = parseInt( response );
-        if ( Number.isInteger( response ) && response >= minimum ) { //todo - accept 0 as pass?
-            if ( response <= currentPlayer.warBucks ) {
-                currentPlayer.turn.auctionBid = response;
+    showPrompt( "Auction",
+        "Enter an amount to bid on " + auctionLot.name + " (minimum: " + minimum + "WB):",
+        function( response ) {
+            const isCancel = response === undefined;
+            if ( !(isCancel && hasBid) ) {
+                const value = parseInt( response );
+                if ( Number.isInteger( value ) && ( value >= minimum || value === 0 ) ) {
+                    if ( value <= currentPlayer.warBucks ) {
+                        currentPlayer.turn.auctionBid = value;
+                    }
+                    else {
+                        showToaster( "Bid too high." );
+                    }
+                }
+                else {
+                    showToaster( "Invalid Bid." );
+                }
             }
-            else {
-                showToaster( "Bid too high." );
-            }
-        }
-        else {
-            showToaster( "Invalid Bid." );
-        }
-    });
+        },
+        hasBid ? currentPlayer.turn.auctionBid : ""
+    );
 }
 
 function showMarketActions() {
@@ -822,8 +830,12 @@ function completeSubPhase() {
                     return ( current.turn.auctionBid > prev.turn.auctionBid || (current.turn.auctionBid === prev.turn.auctionBid && getPlayerNumber(current.id) < getPlayerNumber(prev.id)) ) ? current : prev },
                     game.players[game.state.ambassador]
                 ).id;
-                getPlayer( highestBidderId ).advancements.auctions.push( auctionLotId );
-                getPlayer( highestBidderId ).advancements.auctions.push( auctionLotId );
+                const winner = getPlayer( highestBidderId );
+                if ( !winner.advancements.auctions.includes( auctionLotId ) ) {
+                    winner.advancements.auctions.push( auctionLotId );
+                }
+                winner.advancements.auctionWins.push( auctionLotId );
+                winner.warBucks -= winner.turn.auctionBid;
                 game.players.forEach( p => {
                     p.turn.auctionBid = null;
                 })
