@@ -240,12 +240,13 @@
     }
 
     function assignPurchases() {
-        let unitCounts = nm('unitCounts');
-        for ( let i = 0; i < unitCounts.length; i++ ) {
+        let unitInputs = nm('unitCounts');
+        for ( let i = 0; i < unitInputs.length; i++ ) {
+            const unitInput = unitInputs[i];
+            const unitCount = parseInt( unitInput.value ) || 0;
             const unitTypeId = i + "";
-            const unitInput = unitCounts[i];
-            if ( unitInput.value > 0 ) {
-                marketModalValues.units.concat( {id: unitTypeId, count: unitInput.value, tileId: DEFAULT_TILE} );
+            if ( unitCount > 0 ) {
+                marketModalValues.units.push( {id: unitTypeId, count: unitCount, tileId: DEFAULT_TILE} );
             }
         }
 
