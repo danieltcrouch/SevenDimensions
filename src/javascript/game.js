@@ -563,7 +563,7 @@ function submit() {
             }
         }
         else {
-            if ( currentPlayer.units.some( u => u.tileId === "unassigned" ) ) {
+            if ( currentPlayer.units.some( u => u.tileId === DEFAULT_TILE ) ) {
                 isValidToSubmit = false;
                 showToaster( "Must assign purchased units" );
             }
@@ -663,6 +663,8 @@ function showMarketActions() {
         currentPlayer,
         function( response ) {
             currentPlayer = response;
+            showToaster( "Purchase complete" );
+            reloadPage( true );
         }
     );
 }
@@ -780,18 +782,27 @@ function updateGame() {
         },
         function( response ) {
             showToaster("Turn successfully saved.");
-            postCallEncoded(
-               "php/controller.php",
-               {
-                   action: "loadGame",
-                   id:     gameId
-               },
-               loadGameCallback
-            );
+            reloadPage();
         },
         function( error ) {
             showToaster( "Unable to save game." );
         } );
+}
+
+function reloadPage( internal = false ) {
+    if ( internal ) {
+        loadGameCallback( JSON.stringify( game ) );
+    }
+    else {
+        postCallEncoded(
+           "php/controller.php",
+           {
+               action: "loadGame",
+               id:     gameId
+           },
+           loadGameCallback
+        );
+    }
 }
 
 function incrementTurn() {
@@ -824,41 +835,43 @@ function incrementTurn() {
 
 function completeSubPhase() {
     if ( isMarketPhase() ) {
-            if ( isMarketAuctionPhase() ) {
-                const auctionLotId = AUCTIONS[getNextAuction( game.players )].id;
-                const highestBidderId = game.players.reduce( (prev, current) => {
-                    return ( current.turn.auctionBid > prev.turn.auctionBid || (current.turn.auctionBid === prev.turn.auctionBid && getPlayerNumber(current.id) < getPlayerNumber(prev.id)) ) ? current : prev },
-                    game.players[game.state.ambassador]
-                ).id;
-                const winner = getPlayer( highestBidderId );
-                if ( !winner.advancements.auctions.includes( auctionLotId ) ) {
-                    winner.advancements.auctions.push( auctionLotId );
-                }
-                winner.advancements.auctionWins.push( auctionLotId );
-                winner.warBucks -= winner.turn.auctionBid;
-                game.players.forEach( p => {
-                    p.turn.auctionBid = null;
-                })
+        if ( isMarketAuctionPhase() ) {
+            const auctionLotId = AUCTIONS[getNextAuction( game.players )].id;
+            const highestBidderId = game.players.reduce( (prev, current) => {
+                return ( current.turn.auctionBid > prev.turn.auctionBid || (current.turn.auctionBid === prev.turn.auctionBid && getPlayerNumber(current.id) < getPlayerNumber(prev.id)) ) ? current : prev },
+                game.players[game.state.ambassador]
+            ).id;
+            const winner = getPlayer( highestBidderId );
+            if ( !winner.advancements.auctions.includes( auctionLotId ) ) {
+                winner.advancements.auctions.push( auctionLotId );
             }
-            else {
-                //
-            }
+            winner.advancements.auctionWins.push( auctionLotId );
+            winner.warBucks -= winner.turn.auctionBid;
+            game.players.forEach( p => {
+                p.turn.auctionBid = null;
+            })
         }
-        else if ( isExpansionPhase() ) {
+        else {
             //
         }
-        else if ( isHarvestPhase() ) {
+    }
+    else if ( isExpansionPhase() ) {
+        //
+    }
+    else if ( isHarvestPhase() ) {
+        //
+    }
+    else if ( isCouncilPhase() ) {
+        if ( !isDoomsdayClockPhase() ) {
             //
         }
-        else if ( isCouncilPhase() ) {
-            if ( !isDoomsdayClockPhase() ) {
-                //
-            }
-            else {
-                //Doomsday stuff?
-                //check for winner
-            }
+        else {
+            //Doomsday stuff?
+            //check for winner
         }
+    }
+
+    game.players.forEach( p => p.turn.hasSubmitted = false );
 }
 
 function getPlayerNumber( id ) {
@@ -974,6 +987,14 @@ function getTurn( index ) {
 
 function getEvent( index ) {
     return EVENTS[index].name;
+}
+
+function isCurrentPlayerTurn() {
+    return isPlayerTurn( currentPlayer.id );
+}
+
+function isPlayerTurn( id ) {
+    return game.players[game.state.turn].id === id;
 }
 
 function isImageTile( tileId ) {

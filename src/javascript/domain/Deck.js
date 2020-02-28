@@ -3,12 +3,17 @@ class Deck {
         this.cards = cards || [];
     }
 
-    static getRandomCards( cards, count ) {
-        let deck = ( cards instanceof Deck ) ? cards : new Deck( cards );
+    static getCurrentDeck( deck, playerHands ) {
+        return new Deck( deck.cards.filter( c => !playerHands.flat().includes( c.id ) ) );
+    }
+
+    getRandomCards( count ) {
         let result = [];
         for ( let i = 0; i < count; i++ ) {
-            const card = deck.removeCardIndex( Math.floor(Math.random() * deck.length) );
-            card ? result.push( card ) : null;
+            const card = this.removeCardIndex( Math.floor(Math.random() * this.cards.length) );
+            if ( card ) {
+                result.push( card );
+            }
         }
         return result;
     }

@@ -12,6 +12,8 @@ class UnitType {
 
 function getUnitType( id ) { return UNIT_TYPES.find( u => u.id === id ); }
 
+const DEFAULT_TILE = "unassigned";
+
 const APOSTLE      = 0;
 const REAPER       = 1;
 const BOOMER       = 2;

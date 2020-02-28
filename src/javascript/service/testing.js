@@ -62,6 +62,8 @@ function generateNewPlayers( testPlayers ) {
         testPlayers.forEach( (p,index) => p.tileId = tileIds[index] );
     }
 
+    const chaosDeck = new Deck( CHAOS );
+
     return testPlayers.map(
         p => {
             const faction = getFaction( p.factionId );
@@ -85,7 +87,7 @@ function generateNewPlayers( testPlayers ) {
                     culturalActive: [], //see getScenarioGame
                 },
                 cards: {
-                    chaos: Deck.getRandomCards( CHAOS, faction.startingSupplies.cards ).map( c => c.id ),
+                    chaos: chaosDeck.getRandomCards( faction.startingSupplies.cards ).map( c => c.id ),
                     offices: [], //["1"
                 },
                 units: faction.startingSupplies.units.slice().map( u => ({ ...u, tileId: p.tileId }) ).concat( [{ id: UNIT_TYPES[HERO].id, count: 1, tileId: p.tileId}] ),
