@@ -4,6 +4,7 @@ class Deck {
     }
 
     static getCurrentDeck( deck, playerHands ) {
+        deck = ( deck instanceof Deck ) ? deck : new Deck( deck );
         return new Deck( deck.cards.filter( c => !playerHands.flat().includes( c.id ) ) );
     }
 
