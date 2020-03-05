@@ -38,8 +38,21 @@
                 <div><span class="link" style="padding-left: 1em" onclick="viewAuctions()">Auction Lots:</span> <span id="auctionLotsValue">0/7</span></div>
                 <div><span class="link" onclick="viewInitiatives()">Initiative Tokens:</span> <span id="initiativeTokensValue">0</span></div>
                 <div><span class="link" onclick="viewCards()">Chaos Cards:</span> <span id="chaosCardsValue">0</span></div>
+                <div id="unassignedUnits" style="margin-top: .5em">
+                    <span style="font-weight: bold">Unassigned Units:</span>
+                    <div id="unassignedUnitsValue"></div>
+                </div>
             </div>
-            <div id="tileDetailsDiv" style="border: 2px solid black; border-radius: 1em; padding: 1em"></div>
+            <div id="tileDetailsDiv" style="border: 2px solid black; border-radius: 1em; padding: 1em">
+                <div id="tileDetailsNoContents">No Tile Selected</div>
+                <div id="tileDetailsContents" style="display: none">
+                    <div>Tile Type: <span id="tileTypeValue"></span></div>
+                    <div>Population: <span id="tilePopulationValue"></span></div>
+                    <div id="tileDistrict">District: <span id="tileDistrictValue"></span></div>
+                    <div id="tileCR">Civil Resistance: <span id="tileCRValue"></span></div>
+                    <div id="tileUnits" style="margin-top: 1em"></div>
+                </div>
+            </div>
         </div>
         <div class="col-6">
             <div id="mapDiv" class="center">

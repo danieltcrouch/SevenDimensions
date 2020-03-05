@@ -2,12 +2,10 @@
 //todo 5 - Do internal code-cleanup, abstracting to service files
 //todo 6 - Click on Capital and have link to pop modal with player/faction info
 
-const NO_TILE_DETAILS = "No Tile Selected";
-
 let game;
 let selectedTile;
 let currentPlayer;
-let currentUnits;
+let currentPlayerDisambiguousUnits;
 
 /****** LOAD ******/
 
@@ -105,7 +103,7 @@ function loadMap() {
         } );
     }
 
-    id('tileDetailsDiv').innerText = NO_TILE_DETAILS;
+    showTileDetails( false );
 }
 
 function loadUser() {
@@ -140,7 +138,9 @@ function loadUserCallback( playerId ) {
     id('initiativeTokensValue').innerText   = ( currentPlayer.initiatives.politicalTokens + currentPlayer.initiatives.culturalTokens ) + "";
     id('chaosCardsValue').innerText         = currentPlayer.cards.chaos.length + "";
 
-    currentUnits = disambiguateUnits( currentPlayer.units );
+    displayUnassignedUnits();
+
+    currentPlayerDisambiguousUnits = disambiguateUnits( currentPlayer.units );
 }
 
 function popModals() {
@@ -159,7 +159,7 @@ function popModals() {
 //todo 5 - divide functions into smaller service classes (display-game.js, etc.)
 function selectUnits( e ) {
     const spanId = e.target.id;
-    const tileId = selectedTile.id;
+    const tileId = selectedTile ? selectedTile.id : "unassigned";
     const selectionType = spanId.split('-')[1];
     const isAllUnits = selectionType === "all";
     const unitTypeId = !isAllUnits ? selectionType.split('#')[0] : null;
@@ -182,14 +182,14 @@ function selectUnits( e ) {
         }
     }
     else {
-        const relevantUnits = currentUnits.filter( u => u.tileId === tileId );
+        const relevantUnits = currentPlayerDisambiguousUnits.filter( u => u.tileId === tileId );
         id(spanId).style.background = "lightgray";
         if ( isAllUnits ) {
             document.querySelectorAll( '*[id^="unit-"]' ).forEach( s => s.style.background = "lightgray" );
             selectedUnits = relevantUnits;
         }
         else {
-            const units = relevantUnits.filter( u => u.unitType.id === unitTypeId && u.movesRemaining === movesRemaining );
+            const units = relevantUnits.filter( u => u.unitType.id === unitTypeId && (u.movesRemaining === movesRemaining || tileId === "unassigned") );
             if ( units.length > 1 ) {
                 selectUnitsByType( units );
             }
@@ -271,34 +271,44 @@ function tileClickCallback( tileId ) {
     if ( isExpansionPhase() && suggestedPath.includes( tileId ) ) {
         moveUnits( tileId );
     }
+    else if ( selectedUnits.length && selectedUnits.every( u => u.tileId === "unassigned" ) ) {
+        moveUnits( tileId );
+    }
     else {
         selectTile( tileId );
     }
 }
 
 function moveUnits( tileId ) {
-    const rootTileId = selectedTile.id;
+    const rootTileId = selectedTile ? selectedTile.id : "unassigned";
     const destinationTileId = tileId;
     selectedUnits.forEach( su => {
-        let unitDisambiguous = currentUnits.find( u => u.id === su.id );
-        unitDisambiguous.movesRemaining -= suggestedPath.length;
-        unitDisambiguous.tileId = destinationTileId;
+        let unitDisambiguous = currentPlayerDisambiguousUnits.find( u => u.id === su.id );
+        if ( unitDisambiguous ) {
+            unitDisambiguous.movesRemaining -= suggestedPath.length;
+            unitDisambiguous.tileId = destinationTileId;
+        }
         currentPlayer.units.find( u => u.id === su.unitType.id && u.tileId === rootTileId ).count--;
         currentPlayer.units = currentPlayer.units.filter( u => u.count > 0 );
-        let unit = currentPlayer.units.find( u => u.id === su.unitType.id && u.tileId === destinationTileId );
-        if ( unit ) {
-            unit.count++;
+        let unitStack = currentPlayer.units.find( u => u.id === su.unitType.id && u.tileId === destinationTileId );
+        if ( unitStack ) {
+            unitStack.count++;
         }
         else {
             currentPlayer.units.push( { id: su.unitType.id, tileId: destinationTileId, count: 1} );
         }
     } );
 
-    updateUnitIconsFromId( rootTileId );
     updateUnitIconsFromId( destinationTileId );
+    if ( rootTileId !== "unassigned" ) {
+        updateUnitIconsFromId( rootTileId );
+        selectTile( rootTileId );
+    }
+    else {
+        displayUnassignedUnits();
+    }
 
     unselectUnits();
-    selectTile( rootTileId );
     suggestedPath = [];
 }
 
@@ -353,79 +363,88 @@ function selectTile( tileId ) {
     id( "selected-polygon" ).setAttributeNS(null, "points", polygon.getAttributeNS(null, "points") );
 
     const tileDetails = getTileDetails( tileId );
-    let tileDetailsHTML =
-        "Tile Type: " + tileDetails.type + "<br/>" +
-        "Population: " + tileDetails.population + "<br/>";
-    if ( tileDetails.districtPlayerId ) {
-        tileDetailsHTML += "District: " + getPlayer( tileDetails.districtPlayerId ).username + "<br/>";
-    }
-    if ( tileDetails.culturalInitiatives ) {
-        tileDetailsHTML += "Civil Resistance: " + tileDetails.culturalInitiatives + " Reaper(s)<br/>";
-    }
-    if ( tileDetails.unitSets.length ) {
-        tileDetailsHTML += "<br/>";
-    }
+    showTileDetails();
+    id('tileTypeValue').innerText = tileDetails.type;
+    id('tilePopulationValue').innerText = tileDetails.population;
+    id('tileDistrict').style.display = tileDetails.districtPlayerId ? "" : "none";
+    id('tileDistrictValue').innerText = tileDetails.districtPlayerId ? getPlayer( tileDetails.districtPlayerId ).username : "";
+    id('tileCR').style.display = tileDetails.culturalInitiatives ? "" : "none";
+    id('tileCRValue').innerText = tileDetails.culturalInitiatives + " Reaper(s)";
+
+    let tileUnitsHTML = "";
+    id('tileUnits').style.display = tileDetails.unitSets.length ? "" : "none"; //todo 10 - show and hide function in Common displayElement( element, show, displayType = "" ) //element can accept DOM or string; if string, use id()
     tileDetails.unitSets.forEach( us => {
         const player = getPlayer( us.id );
-        let unitDescriptions = us.units.map( u => getUnitDisplayName( u.id, u.count, us.id ) );
-        let titleSpan = "<span>";
-        let unitSpans = Array(unitDescriptions.length).fill( "<span style='margin-left: 1em'>" );
         const isExpansionPlayer = isExpansionPhase() && us.id === currentPlayer.id;
-        if ( isExpansionPlayer ) {
-            titleSpan = "<span id='unit-all' class='link' onclick='selectUnits(event)'>";
-            let units = consolidateActiveUnits( currentUnits.filter( u => u.tileId === tileId ) );
-            unitDescriptions = units.map( u => getUnitDisplayName( u.id, u.count, us.id ) + " (" + u.movesRemaining + ")" );
-            unitSpans = units.map( u => `<span id='unit-${u.id}#${u.movesRemaining}' class='link' style='margin-left: 1em' onclick='selectUnits(event)'>` );
-        }
-        tileDetailsHTML += titleSpan + "Units (" + player.username + "):" + "</span><br/>";
-        tileDetailsHTML += unitDescriptions.map( (unit,index) => unitSpans[index] + unit + "</span><br/>" ).join("\n");
-        tileDetailsHTML += "<br/>";
+        const spanTitleAttributes = isExpansionPlayer ? " id='unit-all' class='link' onclick='selectUnits(event)'" : "";
+        const units = isExpansionPlayer ? consolidateActiveUnits( currentPlayerDisambiguousUnits.filter( u => u.tileId === tileId ) ) : us.units;
+        tileUnitsHTML += `<div><span${spanTitleAttributes}>Units (${player.username}): </span></div>`;
+        tileUnitsHTML += getUnitStackDisplay( us.id, units, isExpansionPlayer );
     } );
-    id('tileDetailsDiv').innerHTML = tileDetailsHTML;
+    id('tileUnits').innerHTML = tileUnitsHTML;
 
     if ( isExpansionPhase() && isTileChange ) {
         unselectUnits();
     }
 }
 
+function showTileDetails( show = true ) {
+    id('tileDetailsContents').style.display = show ? "" : "none";
+    id('tileDetailsNoContents').style.display = !show ? "" : "none";
+}
+
+function getUnitStackDisplay( playerId, units, selectable = false ) {
+    let result = "";
+    for ( let i = 0; i < units.length; i++ ) {
+        const unit = units[i];
+        const spanUnitAttributes = selectable ? ` id='unit-${unit.id}#${unit.movesRemaining||0}' class='link' onclick='selectUnits(event)'` : "";
+        const unitDisplay = getUnitDisplayName( unit.id, unit.count, playerId ) + ( unit.movesRemaining ? ` (${unit.movesRemaining})` : "" );
+        result += `<div style='padding-left: 1em'><span${spanUnitAttributes}>${unitDisplay}</span></div>\n`;
+    }
+    return result;
+}
+
 function getTileDetails( id ) {
+    let result = null;
     let tile = game.map.find( t => t.id === id );
+    if ( tile ) {
 
-    let unitSets = [];
-    game.players.forEach( p => {
-        let units = p.units.filter( u => u.tileId === id );
-        if ( units.length > 0 ) {
-            unitSets.push( { id: p.id, combat: !units.every( u => u.id === UNIT_TYPES[APOSTLE].id ), units: units } );
-        }
-    } );
+        let unitSets = [];
+        game.players.forEach( p => {
+            let units = p.units.filter( u => u.tileId === id );
+            if ( units.length > 0 ) {
+                unitSets.push( { id: p.id, combat: !units.every( u => u.id === UNIT_TYPES[APOSTLE].id ), units: units } );
+            }
+        } );
 
-    const districtPlayer = game.players.find( p => p.districts.tileIds.includes( id ) );
-    const districtPlayerId = districtPlayer ? districtPlayer.id : null;
-    const controlPlayerId = districtPlayerId || unitSets.reduce( (id, set) => set.combat ? set.id : ( id || set.id ), null ); //district > combat > any unit > null
-    const wonderIds = districtPlayer ? districtPlayer.dimensions.filter( d => d.wonderTileId && d.wonderTileId === id ).map( d => WONDERS[getDimension(d.id).wonderIndex].id ) : null;
-    const religionIds = game.players.map( p => p.religion ).filter( r => r && r.tileIds.includes( id ) ).map( r => r.id );
-    const culturalInitiatives = game.players.map( p => p.initiatives.culturalActive ).flat().filter( i => i.tileId === id ).reduce( (total, i) => total + i.reaperCount, 0 );
-    const politicalInitiatives = game.players.map( p => p.initiatives.politicalActive ).flat().filter( i => i.from === id ).map( i => ({ from: i.from, to: i.to }) );
+        const districtPlayer = game.players.find( p => p.districts.tileIds.includes( id ) );
+        const districtPlayerId = districtPlayer ? districtPlayer.id : null;
+        const controlPlayerId = districtPlayerId || unitSets.reduce( (id, set) => set.combat ? set.id : ( id || set.id ), null ); //district > combat > any unit > null
+        const wonderIds = districtPlayer ? districtPlayer.dimensions.filter( d => d.wonderTileId && d.wonderTileId === id ).map( d => WONDERS[getDimension(d.id).wonderIndex].id ) : null;
+        const religionIds = game.players.map( p => p.religion ).filter( r => r && r.tileIds.includes( id ) ).map( r => r.id );
+        const culturalInitiatives = game.players.map( p => p.initiatives.culturalActive ).flat().filter( i => i.tileId === id ).reduce( (total, i) => total + i.reaperCount, 0 );
+        const politicalInitiatives = game.players.map( p => p.initiatives.politicalActive ).flat().filter( i => i.from === id ).map( i => ({ from: i.from, to: i.to }) );
 
-    return {
-        id: id,
-        type: TileType.getDisplayName( tile.getTileType() ),
-        population: tile.getTileType().value,
-        districtPlayerId: districtPlayerId,
-        controlPlayerId: controlPlayerId,
-        wonderId: wonderIds ? wonderIds[0] : null,
-        religionIds: religionIds,
-        culturalInitiatives: culturalInitiatives,
-        politicalInitiatives: politicalInitiatives,
-        unitSets: unitSets
-    };
+        result = {
+            id: id,
+            type: TileType.getDisplayName( tile.getTileType() ),
+            population: tile.getTileType().value,
+            districtPlayerId: districtPlayerId,
+            controlPlayerId: controlPlayerId,
+            wonderId: wonderIds ? wonderIds[0] : null,
+            religionIds: religionIds,
+            culturalInitiatives: culturalInitiatives,
+            politicalInitiatives: politicalInitiatives,
+            unitSets: unitSets
+        };
+    }
+    return result;
 }
 
 function getUnitDisplayName( unitTypeId, unitCount, playerId ) {
     const isMultiple = unitCount > 1;
     const unitType = getUnitType( unitTypeId );
-    const heroName = playerId ? Faction.getHero( getPlayer( playerId ).factionId ).name : UNIT_TYPES[HERO].name;
-    let name = unitTypeId === UNIT_TYPES[HERO].id ? heroName : unitType.name;
+    let name = unitTypeId === UNIT_TYPES[HERO].id ? ( playerId ? Faction.getHero( getPlayer( playerId ).factionId ).name : UNIT_TYPES[HERO].name ) : unitType.name;
     name = isMultiple ? (unitCount + " " + name + "s") : name;
     return name;
 }
@@ -453,6 +472,17 @@ function unselectUnits() {
 
 /****** PLAYER ******/
 
+
+function displayUnassignedUnits() {
+    const unassignedUnits = currentPlayer.units.filter( u => u.tileId === "unassigned" );
+    if ( unassignedUnits.length ) {
+        id('unassignedUnits').style.display = "";
+        id('unassignedUnitsValue').innerHTML = getUnitStackDisplay( currentPlayer.id, unassignedUnits, true );
+    }
+    else {
+        id('unassignedUnits').style.display = "none";
+    }
+}
 
 function viewVP() {
     const insurrectionPlayerId = getInsurrectionVictim();

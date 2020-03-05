@@ -107,6 +107,7 @@
         const availableGardens = GARDENS.filter( g => !marketModalValues.advancements.gardens.includes( g.id ) );
         const availableAuctions = AUCTIONS.filter( a => !marketModalValues.advancements.auctions.includes( a.id ) );
         //todo 10 - Add "None" option to Common?
+        //todo - make Gardens act almost exactly like auctions because they too can be locked if there are fewer than 2 districts
         addAllToSelect( 'technologySelect', [{text: "None", value: null}].concat( availableTechnologies.map( (t) => { return {text: t.name, value: t.id}; } ) ) );
         addAllToSelect( 'doctrineSelect', [{text: "None", value: null}].concat( availableDoctrines.map( (d) => { return {text: d.name, value: d.id}; } ) ) );
         populateAdvancementCheckboxes( availableGardens, "gardens", function( item ) { return item.costFunction( currentPlayer.districts.tileIds.length ) + "WB"; } );
@@ -251,18 +252,18 @@
         }
 
         const newTechnologyCount = getSelectedOption( "technologySelect" ).index;
-        const newTechnologyIds = TECHNOLOGIES.filter( t => !marketModalValues.advancements.technologies.includes( t.id ) ).slice( 0, newTechnologyCount );
+        const newTechnologyIds = TECHNOLOGIES.filter( t => !marketModalValues.advancements.technologies.includes( t.id ) ).slice( 0, newTechnologyCount ).map( t => t.id );
         const newDoctrineCount = getSelectedOption( "doctrineSelect" ).index;
-        const newDoctrineIds = DOCTRINES.filter( d => !marketModalValues.advancements.doctrines.includes( d.id ) ).slice( 0, newDoctrineCount );
+        const newDoctrineIds = DOCTRINES.filter( d => !marketModalValues.advancements.doctrines.includes( d.id ) ).slice( 0, newDoctrineCount ).map( d => d.id );
         const newGardenIds = nm('gardens').filter( c => c.checked ).map( c => c.id.split('-')[1] );
         const newAuctionIds = nm('auctions').filter( c => c.checked ).map( c => c.id.split('-')[1] );
-        marketModalValues.advancements.technologies.push( newTechnologyIds );
-        marketModalValues.advancements.doctrines.push( newDoctrineIds );
-        marketModalValues.advancements.gardens.push( newGardenIds );
-        marketModalValues.advancements.auctions.push( newAuctionIds );
+        marketModalValues.advancements.technologies = marketModalValues.advancements.technologies.concat( newTechnologyIds );
+        marketModalValues.advancements.doctrines    = marketModalValues.advancements.doctrines.concat( newDoctrineIds );
+        marketModalValues.advancements.gardens      = marketModalValues.advancements.gardens.concat( newGardenIds );
+        marketModalValues.advancements.auctions     = marketModalValues.advancements.auctions.concat( newAuctionIds );
 
         const newCards = Deck.getCurrentDeck( CHAOS, game.players.map( p => p.cards.chaos.map( c => c.id ) ) ).getRandomCards( parseInt( id('cardCount').value ) ).map( c => c.id );
-        marketModalValues.cards.chaos.push( newCards );
+        marketModalValues.cards.chaos = marketModalValues.cards.chaos.concat( newCards );
     }
 
     function clearTotals() {
