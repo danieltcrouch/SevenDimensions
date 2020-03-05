@@ -1,4 +1,3 @@
-//todo 4 - Make it where I can complete a round moving through players/phases
 //todo 5 - Do internal code-cleanup, abstracting to service files
 //todo 6 - Click on Capital and have link to pop modal with player/faction info
 
@@ -103,7 +102,8 @@ function loadMap() {
         } );
     }
 
-    showTileDetails( false );
+    clearSelectedTile();
+    id('perform').style.display = isExpansionPhase() ? "" : "none";
 }
 
 function loadUser() {
@@ -150,6 +150,9 @@ function popModals() {
     else if ( isHarvestPhase() && !currentPlayer.turn.hasReaped ) {
         showHarvestActions();
     }
+    else if ( isDoomsdayClockPhase() ) {
+        showToaster("Time is slipping...");
+    }
 }
 
 
@@ -157,49 +160,48 @@ function popModals() {
 
 
 //todo 5 - divide functions into smaller service classes (display-game.js, etc.)
-function selectUnits( e ) {
-    const spanId = e.target.id;
-    const tileId = selectedTile ? selectedTile.id : "unassigned";
-    const selectionType = spanId.split('-')[1];
-    const isAllUnits = selectionType === "all";
-    const unitTypeId = !isAllUnits ? selectionType.split('#')[0] : null;
-    const movesRemaining = !isAllUnits ? parseInt( selectionType.split('#')[1] ) : null;
+function selectAllUnits( tileSelectType ) {
+    const spanId = `units-all-${tileSelectType}`;
+    const tileId = tileSelectType === "selected" ? selectedTile.id : "unassigned";
 
     const isAllCurrentlySelected = id(spanId).style.background === "lightgray";
-    const isUnitTypeCurrentlyIncluded = selectedUnits.some( u => u.unitType.id === unitTypeId );
-    if ( selectedUnits.length && ( ( isAllUnits && isAllCurrentlySelected ) || ( !isAllUnits && isUnitTypeCurrentlyIncluded ) ) ) {
+    if ( selectedUnits.length && isAllCurrentlySelected ) {
         id(spanId).style.background = "";
-        if ( isAllUnits ) {
-            document.querySelectorAll( '*[id^="unit-"]' ).forEach( s => s.style.background = "" );
+        document.querySelectorAll( '*[id^="units-"]' ).forEach( s => s.style.background = "" );
+        unselectUnits();
+    }
+    else {
+        const unitsInTile = currentPlayerDisambiguousUnits.filter( u => u.tileId === tileId );
+        id(spanId).style.background = "lightgray";
+        document.querySelectorAll( '*[id^="units-"]' ).forEach( s => s.style.background = "lightgray" );
+        selectedUnits = unitsInTile;
+    }
+}
+
+function selectUnits( tileSelectType, unitTypeId, movesRemaining ) {
+    const spanId = `units-${unitTypeId}-${movesRemaining}`;
+    const tileId = tileSelectType === "selected" ? selectedTile.id : "unassigned";
+
+    const isUnitTypeCurrentlyIncluded = selectedUnits.some( u => u.unitType.id === unitTypeId );
+    if ( selectedUnits.length && isUnitTypeCurrentlyIncluded ) {
+        id(spanId).style.background = "";
+        selectedUnits = selectedUnits.filter( u => !( u.unitType.id === unitTypeId && u.movesRemaining === movesRemaining ) );
+        if ( !selectedUnits.length ) {
+            id(`units-all-${tileSelectType}`).style.background = "";
             unselectUnits();
-        }
-        else {
-            selectedUnits = selectedUnits.filter( u => !( u.unitType.id === unitTypeId && u.movesRemaining === movesRemaining ) );
-            if ( !selectedUnits.length ) {
-                id("unit-all").style.background = "";
-                unselectUnits();
-            }
         }
     }
     else {
-        const relevantUnits = currentPlayerDisambiguousUnits.filter( u => u.tileId === tileId );
+        const unitsInTile = currentPlayerDisambiguousUnits.filter( u => u.tileId === tileId );
+        const units = unitsInTile.filter( u => u.unitType.id === unitTypeId && (u.movesRemaining === movesRemaining || tileId === "unassigned") );
         id(spanId).style.background = "lightgray";
-        if ( isAllUnits ) {
-            document.querySelectorAll( '*[id^="unit-"]' ).forEach( s => s.style.background = "lightgray" );
-            selectedUnits = relevantUnits;
+        if ( units.length > 1 ) {
+            selectUnitsByType( units );
         }
         else {
-            const units = relevantUnits.filter( u => u.unitType.id === unitTypeId && (u.movesRemaining === movesRemaining || tileId === "unassigned") );
-            if ( units.length > 1 ) {
-                selectUnitsByType( units );
-            }
-            else {
-                selectedUnits = selectedUnits.concat( units );
-            }
+            selectedUnits = selectedUnits.concat( units );
         }
     }
-
-    performUnitAbilities();
 }
 
 function selectUnitsByType( units ) {
@@ -235,6 +237,9 @@ function performUnitAbilities() {
                     performApostleAbility( response ? "0" : "1" );
             });
         }
+    }
+    else {
+        showToaster("Must have only 1 unit selected.");
     }
 }
 
@@ -376,10 +381,15 @@ function selectTile( tileId ) {
     tileDetails.unitSets.forEach( us => {
         const player = getPlayer( us.id );
         const isExpansionPlayer = isExpansionPhase() && us.id === currentPlayer.id;
-        const spanTitleAttributes = isExpansionPlayer ? " id='unit-all' class='link' onclick='selectUnits(event)'" : "";
+        const spanTitleAttributes = isExpansionPlayer ? " id='units-all-selected' class='link' onclick='selectAllUnits(\"selected\")'" : "";
         const units = isExpansionPlayer ? consolidateActiveUnits( currentPlayerDisambiguousUnits.filter( u => u.tileId === tileId ) ) : us.units;
         tileUnitsHTML += `<div><span${spanTitleAttributes}>Units (${player.username}): </span></div>`;
-        tileUnitsHTML += getUnitStackDisplay( us.id, units, isExpansionPlayer );
+        for ( let i = 0; i < units.length; i++ ) {
+            const unit = units[i];
+            const spanUnitAttributes = isExpansionPlayer ? ` id='units-${unit.id}-${unit.movesRemaining||0}' class='link' onclick='selectUnits("selected","${unit.id}",${unit.movesRemaining})'` : "";
+            const unitDisplay = getUnitDisplayName( unit.id, unit.count, us.id ) + ( unit.movesRemaining ? ` (${unit.movesRemaining})` : "" );
+            tileUnitsHTML += `<div style='padding-left: 1em'><span${spanUnitAttributes}>${unitDisplay}</span></div>\n`;
+        }
     } );
     id('tileUnits').innerHTML = tileUnitsHTML;
 
@@ -391,17 +401,6 @@ function selectTile( tileId ) {
 function showTileDetails( show = true ) {
     id('tileDetailsContents').style.display = show ? "" : "none";
     id('tileDetailsNoContents').style.display = !show ? "" : "none";
-}
-
-function getUnitStackDisplay( playerId, units, selectable = false ) {
-    let result = "";
-    for ( let i = 0; i < units.length; i++ ) {
-        const unit = units[i];
-        const spanUnitAttributes = selectable ? ` id='unit-${unit.id}#${unit.movesRemaining||0}' class='link' onclick='selectUnits(event)'` : "";
-        const unitDisplay = getUnitDisplayName( unit.id, unit.count, playerId ) + ( unit.movesRemaining ? ` (${unit.movesRemaining})` : "" );
-        result += `<div style='padding-left: 1em'><span${spanUnitAttributes}>${unitDisplay}</span></div>\n`;
-    }
-    return result;
 }
 
 function getTileDetails( id ) {
@@ -466,7 +465,15 @@ function consolidateActiveUnits( units ) {
 
 function unselectUnits() {
     selectedUnits = [];
+    suggestedPath = [];
     document.querySelectorAll( '*[id^="move-polygon-"]' ).forEach( m => m.style.display = "none" );
+}
+
+function clearSelectedTile() {
+    showTileDetails( false );
+    selectedTile = null;
+    id( "selected-polygon" ).setAttributeNS(null, "points", "" );
+    unselectUnits();
 }
 
 
@@ -477,7 +484,13 @@ function displayUnassignedUnits() {
     const unassignedUnits = currentPlayer.units.filter( u => u.tileId === "unassigned" );
     if ( unassignedUnits.length ) {
         id('unassignedUnits').style.display = "";
-        id('unassignedUnitsValue').innerHTML = getUnitStackDisplay( currentPlayer.id, unassignedUnits, true );
+        let unitsHTML = "";
+        for ( let i = 0; i < unassignedUnits.length; i++ ) {
+            const unit = unassignedUnits[i];
+            const unitDisplay = getUnitDisplayName( unit.id, unit.count, currentPlayer.id );
+            unitsHTML += `<div style='padding-left: 1em'><span id='units-${unit.id}-1' class='link' onclick='selectUnits("unassigned","${unit.id}",1)'>${unitDisplay}</span></div>\n`;
+        }
+        id('unassignedUnitsValue').innerHTML = unitsHTML;
     }
     else {
         id('unassignedUnits').style.display = "none";
@@ -585,6 +598,12 @@ function submit() {
         isValidToSubmit = false;
         showToaster( "Player has already submitted" );
     }
+    else if ( isMarketSubPhase() || isExpansionPhase() ) {
+        if ( !isCurrentPlayerTurn() ) {
+            isValidToSubmit = false;
+            showToaster( "It is not your turn." );
+        }
+    }
     else if ( isMarketPhase() ) {
         if ( isMarketAuctionPhase() ) {
             if ( Number.isNaN( currentPlayer.turn.auctionBid ) ) {
@@ -663,29 +682,31 @@ function showHelp() {
 
 function showAuctionActions() {
     const hasBid = Number.isInteger( currentPlayer.turn.auctionBid );
-    const auctionLot = AUCTIONS[getNextAuction( game.players )];
-    const minimum = Math.floor( auctionLot.costFunction() / 2 );
-    showPrompt( "Auction",
-        "Enter an amount to bid on " + auctionLot.name + " (minimum: " + minimum + "WB):",
-        function( response ) {
-            const isCancel = response === undefined;
-            if ( !(isCancel && hasBid) ) {
-                const value = parseInt( response );
-                if ( Number.isInteger( value ) && ( value >= minimum || value === 0 ) ) {
-                    if ( value <= currentPlayer.warBucks ) {
-                        currentPlayer.turn.auctionBid = value;
+    const auctionLot = getNextAuction( game.players );
+    if ( auctionLot ) {
+        const minimum = Math.floor( auctionLot.costFunction() / 2 );
+        showPrompt( "Auction",
+            "Enter an amount to bid on " + auctionLot.name + " (minimum: " + minimum + "WB):",
+            function( response ) {
+                const isCancel = response === undefined;
+                if ( !(isCancel && hasBid) ) {
+                    const value = parseInt( response );
+                    if ( Number.isInteger( value ) && ( value >= minimum || value === 0 ) ) {
+                        if ( value <= currentPlayer.warBucks ) {
+                            currentPlayer.turn.auctionBid = value;
+                        }
+                        else {
+                            showToaster( "Bid too high." );
+                        }
                     }
                     else {
-                        showToaster( "Bid too high." );
+                        showToaster( "Invalid Bid." );
                     }
                 }
-                else {
-                    showToaster( "Invalid Bid." );
-                }
-            }
-        },
-        hasBid ? currentPlayer.turn.auctionBid : ""
-    );
+            },
+            hasBid ? currentPlayer.turn.auctionBid : ""
+        );
+    }
 }
 
 function showMarketActions() {
@@ -712,7 +733,6 @@ function showExpansionActions() {
 
 
 function showHarvestActions() {
-    //todo 4 - change this to act like Auction of Council phase, where turns are taken at the same time and finishing your turn is havingReaped and clicking submit
     if ( !currentPlayer.turn.hasReaped ) {
         const warBuckReward = calculateWarBuckHarvestReward();
         const resourceReward = calculateResourceHarvestReward();
@@ -866,20 +886,22 @@ function incrementTurn() {
 function completeSubPhase() {
     if ( isMarketPhase() ) {
         if ( isMarketAuctionPhase() ) {
-            const auctionLotId = AUCTIONS[getNextAuction( game.players )].id;
-            const highestBidderId = game.players.reduce( (prev, current) => {
-                return ( current.turn.auctionBid > prev.turn.auctionBid || (current.turn.auctionBid === prev.turn.auctionBid && getPlayerNumber(current.id) < getPlayerNumber(prev.id)) ) ? current : prev },
-                game.players[game.state.ambassador]
-            ).id;
-            const winner = getPlayer( highestBidderId );
-            if ( !winner.advancements.auctions.includes( auctionLotId ) ) {
-                winner.advancements.auctions.push( auctionLotId );
+            const auctionLot = getNextAuction( game.players );
+            if ( auctionLot ) {
+                const highestBidderId = game.players.reduce( (prev, current) => {
+                    return ( current.turn.auctionBid > prev.turn.auctionBid || (current.turn.auctionBid === prev.turn.auctionBid && getPlayerNumber(current.id) < getPlayerNumber(prev.id)) ) ? current : prev },
+                    game.players[game.state.ambassador]
+                ).id;
+                const winner = getPlayer( highestBidderId );
+                if ( !winner.advancements.auctions.includes( auctionLot.id ) ) {
+                    winner.advancements.auctions.push( auctionLot.id );
+                }
+                winner.advancements.auctionWins.push( auctionLot.id );
+                winner.warBucks -= winner.turn.auctionBid;
+                game.players.forEach( p => {
+                    p.turn.auctionBid = null;
+                });
             }
-            winner.advancements.auctionWins.push( auctionLotId );
-            winner.warBucks -= winner.turn.auctionBid;
-            game.players.forEach( p => {
-                p.turn.auctionBid = null;
-            })
         }
         else {
             //
@@ -966,14 +988,18 @@ function getInsurrectionVictim() {
 }
 
 function getNextAuction( players ) {
-    let result = 0;
-    players.forEach( function( player ) {
-        for ( let i = 0; i < player.advancements.auctionWins.length; i++ ) {
-            if ( player.advancements.auctionWins[i] === "1" && i > result ) {
-                result = i;
-            }
+    let auctionIndex = null;
+    for ( let i = 0; i < AUCTIONS.length; i++ ) {
+        if ( !players.some( p => p.advancements.auctionWins.includes( AUCTIONS[i].id ) ) ) {
+            auctionIndex = i;
+            break;
         }
-    } );
+    }
+
+    let result = null;
+    if ( Number.isInteger( auctionIndex ) ) {
+        result = AUCTIONS[auctionIndex];
+    }
     return result;
 }
 

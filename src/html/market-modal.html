@@ -107,7 +107,7 @@
         const availableGardens = GARDENS.filter( g => !marketModalValues.advancements.gardens.includes( g.id ) );
         const availableAuctions = AUCTIONS.filter( a => !marketModalValues.advancements.auctions.includes( a.id ) );
         //todo 10 - Add "None" option to Common?
-        //todo - make Gardens act almost exactly like auctions because they too can be locked if there are fewer than 2 districts
+        //todo 5 - make Gardens act almost exactly like auctions because they too can be locked if there are fewer than 2 districts
         addAllToSelect( 'technologySelect', [{text: "None", value: null}].concat( availableTechnologies.map( (t) => { return {text: t.name, value: t.id}; } ) ) );
         addAllToSelect( 'doctrineSelect', [{text: "None", value: null}].concat( availableDoctrines.map( (d) => { return {text: d.name, value: d.id}; } ) ) );
         populateAdvancementCheckboxes( availableGardens, "gardens", function( item ) { return item.costFunction( currentPlayer.districts.tileIds.length ) + "WB"; } );
@@ -199,10 +199,7 @@
     }
 
     function purchase() {
-        if ( !isCurrentPlayerTurn() ) {
-            showToaster( "Cannot purchase out of turn" );
-        }
-        else if ( marketTotal > marketModalValues.warBucks ) {
+        if ( marketTotal > marketModalValues.warBucks ) {
             showToaster( "Cannot afford purchase" );
         }
         else {

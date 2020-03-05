@@ -38,8 +38,8 @@
                 <div><span class="link" style="padding-left: 1em" onclick="viewAuctions()">Auction Lots:</span> <span id="auctionLotsValue">0/7</span></div>
                 <div><span class="link" onclick="viewInitiatives()">Initiative Tokens:</span> <span id="initiativeTokensValue">0</span></div>
                 <div><span class="link" onclick="viewCards()">Chaos Cards:</span> <span id="chaosCardsValue">0</span></div>
-                <div id="unassignedUnits" style="margin-top: .5em">
-                    <span style="font-weight: bold">Unassigned Units:</span>
+                <div id="unassignedUnits" style="margin-top: .5em; display: none">
+                    <span id="units-all-unassigned" class="link" onclick="selectAllUnits('unassigned')">Unassigned Units:</span>
                     <div id="unassignedUnitsValue"></div>
                 </div>
             </div>
@@ -53,6 +53,7 @@
                     <div id="tileUnits" style="margin-top: 1em"></div>
                 </div>
             </div>
+            <div><button id="perform" class="button" style="width: 100%; margin-top: .5em; display: none" onclick="performUnitAbilities()">Use Ability</button></div>
         </div>
         <div class="col-6">
             <div id="mapDiv" class="center">

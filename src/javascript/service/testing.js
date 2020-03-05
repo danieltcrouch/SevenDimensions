@@ -103,8 +103,8 @@ function generateNewPlayers( testPlayers ) {
                     purchasedCardCount: 0,
                     auctionBid: null, //WB value (0 if passed)
                     hasReaped: false,
-                    attendedCouncil: false, //todo - may not be needed
-                    attendedDoomsdayClock: false //todo - may not be needed
+                    attendedCouncil: false, //todo 5 - may not be needed
+                    attendedDoomsdayClock: false //todo 5 - may not be needed
                 },
                 selects: {
                     highPriestVictim: null //playerId

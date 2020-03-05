@@ -101,7 +101,7 @@ const APOSTLE_EVANG = "1";
 
 function performApostleAbility( abilityId, unit, player ) {
     if ( abilityId === APOSTLE_FOUND ) {
-        //remove unit in both places
+        //remove unit in both places (ambiguous and disambiguous)
         //add district to player
         //remove unit display (combine to killing in object in abstracted method for adding/removing units)
         //add district display

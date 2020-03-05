@@ -1,6 +1,6 @@
 <?php
 
-//todo - &useSSL=false (in DB properties)
+//todo 12 - &useSSL=false (in DB properties)
 
 function loadGame( $gameId )
 {
