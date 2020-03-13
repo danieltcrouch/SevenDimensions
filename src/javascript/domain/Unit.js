@@ -91,31 +91,3 @@ const HEROES = [
     new Hero( "8", null, "Winchester the Bear",  "When in a successful invading force, 2 Bear Berserkers are immediately trained in that district" ),
     new Hero( "9", null, "Slorgoth",             "When in a successful invading force, receive a free Chaos Card" )
 ];
-
-
-/**** APOSTLE ****/
-
-
-const APOSTLE_FOUND = "0";
-const APOSTLE_EVANG = "1";
-
-function performApostleAbility( abilityId, unit, player ) {
-    if ( abilityId === APOSTLE_FOUND ) {
-        //remove unit in both places (ambiguous and disambiguous)
-        //add district to player
-        //remove unit display (combine to killing in object in abstracted method for adding/removing units)
-        //add district display
-    }
-    else if ( abilityId === APOSTLE_EVANG ) {
-        //add religion to player
-        //add religion display
-    }
-}
-
-function addUnit( unit, player ) {
-    //todo 5 - move to move service
-}
-
-function removeUnit() {
-    //todo 5 - move to move service
-}

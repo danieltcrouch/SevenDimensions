@@ -1,7 +1,5 @@
 <?php
 
-//todo 12 - &useSSL=false (in DB properties)
-
 function loadGame( $gameId )
 {
     $query =

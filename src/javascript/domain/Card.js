@@ -14,8 +14,12 @@ function getCard( id, list ) { return getEntity( id, list ); }
 
 class Chaos extends Card {
     constructor( id, name, description ) {
-        super( id, "Chaos", name, 4, description );
+        super( id, "Chaos", name, Chaos.getCost, description );
     }
+
+    static getCost() { return 4; }
+
+    static getCostDisplay() { return Chaos.getCost() + "WB"; }
 }
 
 function getChaosCard( id ) { return getEntity( id, CHAOS ); }

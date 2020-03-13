@@ -4,7 +4,6 @@
 <head>
     <?php includeHeadInfo(); ?>
     <script src="javascript/game.js"></script>
-    <?php include(getSubPath() . "html/include-domain.html"); ?>
 </head>
 
 <body>
@@ -74,6 +73,13 @@
 
 </body>
 
+<?php include("modals/market-modal.html"); ?>
+<?php include("modals/council-modal.html"); ?>
+<?php include("modals/event-modal.html"); ?>
+<?php includeModals(); ?>
+
+<?php include("html/include-domain.html"); ?>
+
 <script>
     const gameId       = "<?php echo $_GET['id']; ?>";
     const testPlayerId = "<?php echo $_GET['testPlayerId']; ?>";
@@ -83,8 +89,4 @@
 
     generateMapSVG( tileClickCallback );
 </script>
-<?php include("html/market-modal.html"); ?>
-<?php include("html/council-modal.html"); ?>
-<?php include("html/event-modal.html"); ?>
-<?php includeModals(); ?>
 </html>

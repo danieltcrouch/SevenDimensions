@@ -1,3 +1,5 @@
+/* for DB certificate issues: &useSSL=false (in DB properties) */
+
 /*** DELETE ***/
 DELETE m, s, mp, p
 FROM meta m

@@ -17,6 +17,8 @@ class Technology extends Advancement {
     }
 
     static getCost() { return 7; }
+
+    static getCostDisplay() { return Technology.getCost() + "WB"; }
 }
 
 function getTechnology( id ) { return getEntity( id, TECHNOLOGIES ); }
@@ -63,6 +65,8 @@ class Doctrine extends Advancement {
     }
 
     static getCost() { return 7; }
+
+    static getCostDisplay() { return Doctrine.getCost() + "WB"; }
 }
 
 function getDoctrine( id ) { return getEntity( id, DOCTRINES ); }
@@ -103,9 +107,19 @@ class Garden extends Advancement {
     }
 
     static getCost( districtCount ) { return 7 * districtCount; }
+
+    getCostOrLocked( districtCount ) {
+        return this.isLocked( districtCount ) ? LOCKED_SPAN : (this.costFunction() + "WB");
+    }
+
+    isLocked( districtCount ) {
+        return districtCount < 2;
+    }
 }
 
 function getGarden( id ) { return getEntity( id, GARDENS ); }
+
+const LOCKED_SPAN = "<span style='font-style: italic'>Locked</span>";
 
 const WATER_GARDEN     = 0;
 const VEGETABLE_GARDEN = 1;
@@ -140,8 +154,6 @@ class Auction extends Advancement {
 }
 
 function getAuctionLot( id ) { return getEntity( id, AUCTIONS ); }
-
-const LOCKED_SPAN = "<span style='font-style: italic'>Locked</span>";
 
 const COASTAL_PROPERTY       = 0;
 const MULTI_LEVEL_MARKET     = 1;

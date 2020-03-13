@@ -80,153 +80,28 @@ function isAdjacentToCapitalHex( hex, capitalHexIds ) {
 }
 
 
-/*** GENERATE MAP DISPLAY ***/
+/*** UTILITY ***/
 
 
-function generateMapSVG( callbackFunction ) {
-    let svg = id( "map" );
-    const maxTileDepth = MAP_TILE_RADIUS * 2;
-    const viewBoxWidth = (TILE_SIDE_LENGTH * 1.5 * maxTileDepth); //point-to-point hexagon height
-    const viewBoxHeight = (TILE_SIDE_LENGTH * Math.sqrt( 3 ) * maxTileDepth); //flat hexagon height
-    svg.setAttributeNS(null, "viewBox", "0 0 " + viewBoxWidth + " " + viewBoxHeight );
-
-    const centerHex = new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS, TILE_SIDE_LENGTH );
-    for ( let i = 0; i < maxTileDepth; i++ ) {
-       for ( let j = 0; j < maxTileDepth; j++ ) {
-           const hex = new Hex( i, j, TILE_SIDE_LENGTH );
-           if ( hex.calculateDistance( centerHex ) < MAP_TILE_RADIUS ) {
-               let tile = document.createElementNS( "http://www.w3.org/2000/svg", "g" );
-               tile.setAttributeNS(null, "id", hex.id );
-               tile.setAttributeNS(null, "onclick", callbackFunction.name + "('" + hex.id + "')" );
-               tile.classList.add( "tile" );
-
-               //todo 8 - image not working on phone - svg filter is the problem
-               let background = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
-               background.setAttributeNS(null, "id", hex.id + "-background" );
-               background.setAttributeNS(null, "points", hex.vertices.map( p => (p.x + "," + p.y) ).join(" ") );
-               background.classList.add( "tileBackground" );
-               tile.appendChild( background );
-
-               let border = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
-               border.setAttributeNS(null, "id", hex.id + "-border" );
-               border.setAttributeNS(null, "fill", "none" );
-               border.setAttributeNS(null, "points", hex.vertices.map( p => (p.x + "," + p.y) ).join(" ") );
-               tile.appendChild( border );
-
-               let text = document.createElementNS( "http://www.w3.org/2000/svg", "text" );
-               text.setAttributeNS(null, "id", hex.id + "-text" );
-               text.setAttributeNS(null, "x", hex.midPoint.x );
-               text.setAttributeNS(null, "y", hex.midPoint.y );
-               text.setAttributeNS(null, "class", "tileText" );
-               text.innerHTML = "" + j;
-               tile.appendChild( text );
-
-               const X_OFFSET = (TILE_SIDE_LENGTH / 2) - (TILE_SIDE_LENGTH * .1);
-               const Y_OFFSET = (TILE_SIDE_LENGTH / 2) + (TILE_SIDE_LENGTH * .1);
-
-               let iconWonder = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
-               iconWonder.setAttributeNS(null, "id", hex.id + "-wonder" );
-               iconWonder.setAttributeNS(null, "cx", hex.midPoint.x - X_OFFSET );
-               iconWonder.setAttributeNS(null, "cy", hex.midPoint.y - Y_OFFSET );
-               iconWonder.setAttributeNS(null, "fill", "url(#won0)");
-               iconWonder.classList.add( "tileIcon" );
-               iconWonder.style.display = "none";
-               tile.appendChild( iconWonder );
-
-               let iconCamelot = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
-               iconCamelot.setAttributeNS(null, "id", hex.id + "-camelot" );
-               iconCamelot.setAttributeNS(null, "cx", hex.midPoint.x - 0 );
-               iconCamelot.setAttributeNS(null, "cy", hex.midPoint.y - Y_OFFSET );
-               iconCamelot.setAttributeNS(null, "fill", "url(#cam)");
-               iconWonder.classList.add( "tileIcon" );
-               iconCamelot.style.display = "none";
-               tile.appendChild( iconCamelot );
-
-               let iconResource = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
-               iconResource.setAttributeNS(null, "id", hex.id + "-resource" );
-               iconResource.setAttributeNS(null, "cx", hex.midPoint.x + X_OFFSET );
-               iconResource.setAttributeNS(null, "cy", hex.midPoint.y - Y_OFFSET );
-               iconResource.setAttributeNS(null, "fill", "url(#res0)");
-               iconResource.classList.add( "tileIcon" );
-               iconResource.style.display = "none";
-               tile.appendChild( iconResource );
-
-               let iconUnit = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
-               iconUnit.setAttributeNS(null, "id", hex.id + "-unit" );
-               iconUnit.setAttributeNS(null, "cx", hex.midPoint.x - X_OFFSET );
-               iconUnit.setAttributeNS(null, "cy", hex.midPoint.y + Y_OFFSET );
-               iconUnit.setAttributeNS(null, "fill", "url(#unit0)");
-               iconUnit.classList.add( "tileIcon" );
-               iconUnit.style.display = "none";
-               tile.appendChild( iconUnit );
-               addPlusSymbol( tile, iconUnit );
-
-               let iconHero = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
-               iconHero.setAttributeNS(null, "id", hex.id + "-hero" );
-               iconHero.setAttributeNS(null, "cx", hex.midPoint.x + 0 );
-               iconHero.setAttributeNS(null, "cy", hex.midPoint.y + Y_OFFSET );
-               iconHero.setAttributeNS(null, "fill", "url(#hero0)");
-               iconHero.classList.add( "tileIcon" );
-               iconHero.style.display = "none";
-               tile.appendChild( iconHero );
-
-               let iconReligion = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
-               iconReligion.setAttributeNS(null, "id", hex.id + "-religion" );
-               iconReligion.setAttributeNS(null, "cx", hex.midPoint.x + X_OFFSET );
-               iconReligion.setAttributeNS(null, "cy", hex.midPoint.y + Y_OFFSET );
-               iconReligion.setAttributeNS(null, "fill", "url(#rel0)");
-               iconReligion.classList.add( "tileIcon" );
-               iconReligion.style.display = "none";
-               tile.appendChild( iconReligion );
-               addPlusSymbol( tile, iconReligion );
-
-               const toHexes = getRelevantAdjacentHexes( hex ).filter( h => isInitTokenMasterHex( hex, h ) );
-               toHexes.forEach( function( toHex ) {
-                   let toHexSide = new Hex( toHex.x, toHex.y, TILE_SIDE_LENGTH );
-                   let initiativeToken = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
-                   initiativeToken.setAttributeNS(null, "id", hex.id + "-" + toHexSide.id + "-token" );
-                   initiativeToken.setAttributeNS(null, "cx", (hex.midPoint.x + toHexSide.midPoint.x) / 2 );
-                   initiativeToken.setAttributeNS(null, "cy", (hex.midPoint.y + toHexSide.midPoint.y) / 2 );
-                   initiativeToken.setAttributeNS(null, "fill", "url(#init)");
-                   initiativeToken.classList.add( "tileIcon" );
-                   initiativeToken.style.display = "none";
-                   tile.appendChild( initiativeToken );
-               } );
-
-               svg.appendChild( tile );
-           }
-       }
-    }
-
-    for ( let i = 0; i < (MAP_TILE_RADIUS * 6); i++ ) {
-        let moveShape = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
-        moveShape.setAttributeNS(null, "id", "move-polygon-" + i );
-        moveShape.setAttributeNS(null, "name", "move-polygon" );
-        moveShape.setAttributeNS(null, "fill", "transparent");
-        moveShape.classList.add( "tile" );
-        moveShape.style.stroke = "darkred";
-        moveShape.style.fill = "none";
-        svg.appendChild( moveShape );
-    }
-
-    let selectedShape = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
-    selectedShape.setAttributeNS(null, "id", "selected-polygon" );
-    selectedShape.setAttributeNS(null, "fill", "transparent");
-    selectedShape.classList.add( "tile" );
-    selectedShape.style.stroke = "gold";
-    selectedShape.style.fill = "none";
-    svg.appendChild( selectedShape );
+function getHexFromId( id ) {
+    const indexes = id.split("-");
+    return new Hex( parseInt( indexes[0] ), parseInt( indexes[1] ) );
 }
 
-function addPlusSymbol( tile, icon ) {
-    let plus = document.createElementNS( "http://www.w3.org/2000/svg", "circle" );
-    plus.setAttributeNS(null, "id", icon.getAttributeNS( null, "id" ) + "-plus" );
-    plus.setAttributeNS(null, "cx", parseFloat(icon.getAttributeNS( null, "cx" )) + 1.5 );
-    plus.setAttributeNS(null, "cy", parseFloat(icon.getAttributeNS( null, "cy" )) - 0.5 );
-    plus.setAttributeNS(null, "fill", "url(#plus)");
-    plus.classList.add( "tileIconPlus" );
-    plus.style.display = "none";
-    tile.appendChild( plus );
+function getRelevantAdjacentHexes( hex ) {
+    return getAllAdjacentHexes( hex ).filter( h => h.calculateDistance( new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS ) ) < MAP_TILE_RADIUS );
+}
+
+function getAllAdjacentHexes( hex ) {
+    const shiftValue = (hex.x % 2 === 0) ? -1 : 0;
+    return [
+        new Hex( hex.x-1, hex.y+shiftValue ),
+        new Hex( hex.x, hex.y-1 ),
+        new Hex( hex.x+1, hex.y+shiftValue ),
+        new Hex( hex.x-1, hex.y+1+shiftValue ),
+        new Hex( hex.x, hex.y+1 ),
+        new Hex( hex.x+1, hex.y+1+shiftValue )
+    ];
 }
 
 
@@ -234,12 +109,12 @@ function addPlusSymbol( tile, icon ) {
 
 
 class Hex {
-    constructor( x, y, sideLength = 0 ) {
-        this.x = x;
-        this.y = y;
-        this.id = x + "-" + y;
+    constructor( xIndex, yIndex, sideLength = 0 ) {
+        this.x = xIndex;
+        this.y = yIndex;
+        this.id = xIndex + "-" + yIndex;
         this.sideLength = sideLength;
-        this.midPoint = Hex.calculateMidpoint( x, y, sideLength );
+        this.midPoint = Hex.calculateMidpoint( xIndex, yIndex, sideLength );
         this.vertices = Hex.calculateVertices( this.midPoint, sideLength );
     }
 
@@ -292,81 +167,4 @@ class Point {
         this.x = x;
         this.y = y;
     }
-}
-
-
-/*** SHORTEST PATH ***/
-
-
-function calculateShortestNonCombatPath( rootTileId, destinationTileId, allTileIds, impassableTileIds, maxMove = 100 ) {
-    let result = [];
-
-    if ( getHexFromId( rootTileId ).calculateDistance( getHexFromId( destinationTileId ) ) <= maxMove ) {
-        let allTiles = allTileIds.map( t => { return {id: t, visited: false, distance: Number.POSITIVE_INFINITY, prev: null }; } );
-        const initialTile = allTiles.find( t => t.id === rootTileId );
-        const destinationTile = allTiles.find( t => t.id === destinationTileId );
-        initialTile.distance = 0;
-
-        while ( !destinationTile.visited ) {
-            let currentTile = allTiles.filter( t => !t.visited ).reduce((a, b) => a.distance < b.distance ? a : b );
-            let adjacentHexes = getAllAdjacentHexes( getHexFromId( currentTile.id ) ).filter( h => allTiles.some( t => t.id === h.id && !t.visited ) ).filter( h => !impassableTileIds.some( tileId => tileId === h.id ) );
-            allTiles.filter( t => adjacentHexes.some( h => h.id === t.id ) ).forEach( t => {
-                if ( currentTile.distance + 1 < t.distance) {
-                    t.distance = currentTile.distance + 1;
-                    t.prev = currentTile.id;
-                }
-            } );
-            currentTile.visited = true;
-
-            if ( currentTile.distance > maxMove ) {
-                impassableTileIds.push( currentTile.id );
-            }
-        }
-
-        if ( destinationTile.distance && destinationTile.distance < Number.POSITIVE_INFINITY ) {
-            let currentTile = destinationTile;
-            while ( currentTile !== initialTile ) {
-                result.push( currentTile.id );
-                currentTile = allTiles.find( t => t.id === currentTile.prev );
-            }
-        }
-    }
-
-    return result;
-}
-
-
-/*** UTILITY ***/
-
-
-function getHexFromId( id ) {
-    const indexes = id.split("-");
-    return new Hex( parseInt( indexes[0] ), parseInt( indexes[1] ) );
-}
-
-function getRelevantAdjacentHexes( hex ) {
-    return getAllAdjacentHexes( hex ).filter( h => h.calculateDistance( new Hex( MAP_TILE_RADIUS, MAP_TILE_RADIUS ) ) < MAP_TILE_RADIUS );
-}
-
-function getAllAdjacentHexes( hex ) {
-    const shiftValue = (hex.x % 2 === 0) ? -1 : 0;
-    return [
-        new Hex( hex.x-1, hex.y+shiftValue ),
-        new Hex( hex.x, hex.y-1 ),
-        new Hex( hex.x+1, hex.y+shiftValue ),
-        new Hex( hex.x-1, hex.y+1+shiftValue ),
-        new Hex( hex.x, hex.y+1 ),
-        new Hex( hex.x+1, hex.y+1+shiftValue )
-    ];
-}
-
-function getInitTokenIconId( initToken ) {
-    let hexes = [ getHexFromId(initToken.from), getHexFromId(initToken.to) ];
-    const fromTileId = hexes.reduce( (f,t) => isInitTokenMasterHex( f, t ) ? f : t ).id;
-    const toTileId = hexes.find( h => h.id !== fromTileId ).id;
-    return fromTileId + "-" + toTileId + "-token";
-}
-
-function isInitTokenMasterHex( fromHex, toHex ) {
-    return fromHex.x > toHex.x || ( fromHex.x === toHex.x && fromHex.y > toHex.y );
 }

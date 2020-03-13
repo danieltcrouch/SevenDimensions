@@ -68,7 +68,7 @@ function signOut() {
     } );
 }
 
-//********************
+//TO MOVE * * * *
 
 function postCallEncoded( endPoint, data, successCallback, failureCallback = function(){}, asynchronous = true ) {
     return postCall( endPoint, data, successCallback, failureCallback, asynchronous, false );

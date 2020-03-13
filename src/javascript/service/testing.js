@@ -27,7 +27,6 @@ function readTestFile( callbackFunction ) {
 
 function getScenarioGame( scenarios ) {
     //todo 9 - parse scenario file which simply contains json object
-    //todo 5 - default reaper count for civil resistance should be a constant somewhere
     return getNewGame( TEST_USERS.slice( 0, 3 ) );
 }
 
@@ -102,9 +101,7 @@ function generateNewPlayers( testPlayers ) {
                     purchasedAdvancementCount: 0,
                     purchasedCardCount: 0,
                     auctionBid: null, //WB value (0 if passed)
-                    hasReaped: false,
-                    attendedCouncil: false, //todo 5 - may not be needed
-                    attendedDoomsdayClock: false //todo 5 - may not be needed
+                    hasReaped: false
                 },
                 selects: {
                     highPriestVictim: null //playerId

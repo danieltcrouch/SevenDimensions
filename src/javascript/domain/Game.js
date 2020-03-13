@@ -15,6 +15,8 @@ const PHASES = [
     { id: "3", name: "Council" }
 ];
 
+const POST_EVENT = "Midnight";
+
 const EVENT_ELECTION = 0;
 const EVENT_GAMBIT = 1;
 const EVENT_FESTIVAL = 2;
@@ -32,3 +34,9 @@ const EVENTS = [
     { id: "5", name: "Annual Restock" },
     { id: "6", name: "Mars Attack!" }
 ];
+
+
+/*** MISCELLANEOUS ***/
+
+
+const REAPERS_IN_CR = 5; //Civil Resistance

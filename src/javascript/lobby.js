@@ -6,8 +6,7 @@ function setUserType( userType ) {
         //showToaster( "Multi-Player is not currently supported." );
     }
 
-    id('start').style.display = "";
-    //todo 11 - add to Common show and hide functions (allow show to pass in parameter to set specific kind of display (e.g. block))
+    show('start');
 }
 
 function startGame() {
