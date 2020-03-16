@@ -58,25 +58,26 @@ function updateUnitIconsFromId( tileId ) {
 }
 
 function updateUnitIcons( tileId, unitSets, isDistrict, controlPlayerId ) {
-    const unitIds = unitSets.find( set => set.id === controlPlayerId ).map( u => u.id );
+    const unitSet = unitSets.find( set => set.id === controlPlayerId );
+    const unitIds = unitSet ? unitSet.units.map( u => u.id ) : [];
     const normalUnitIds = unitIds.filter( id => id !== UNIT_TYPES[HERO].id );
     const isMultipleUnits = unitSets.reduce( ( units, set ) => units.concat( set.units ), [] ).length > 1;
     const isNonHeroUnits = !!normalUnitIds.length;
     if ( isNonHeroUnits ) {
         const strongestUnitId = Math.max( ...normalUnitIds );
         id(tileId + "-unit").setAttributeNS(null, "fill", `url(#unit${strongestUnitId})`);
-        show( tileId + "-unit", isNonHeroUnits );
-        show( tileId + "-unit-plus", isNonHeroUnits && isMultipleUnits );
     }
     const isHeroUnit = unitIds.includes( UNIT_TYPES[HERO].id );
     if ( isHeroUnit ) {
         const heroId = Faction.getHero( getPlayer( controlPlayerId ).factionId ).id;
         id(tileId + "-hero").setAttributeNS(null, "fill", `url(#hero${heroId})`);
-        show( tileId + "-hero", isHeroUnit );
     }
 
     const color = isDistrict ? null : getColorFromPlayerId( controlPlayerId );
+    show( tileId + "-unit", isNonHeroUnits );
+    show( tileId + "-unit-plus", isNonHeroUnits && isMultipleUnits );
     colorElement( `${tileId}-unit`, color, true );
+    show( tileId + "-hero", isHeroUnit );
     colorElement( `${tileId}-hero`, color, true );
 }
 
@@ -88,7 +89,7 @@ function updateWonderIcons( tileId, wonderId ) {
 }
 
 function updateResourceIcons( tileId, resourceIds ) {
-    const isResourcePresent = resourceIds && resourceIds.length;
+    const isResourcePresent = Array.isArray( resourceIds ) && resourceIds.length;
     show( tileId + "-resource", isResourcePresent );
     if ( isResourcePresent ) {
         const resourceId = resourceIds.length > 1 ? "All" : resourceIds[0];
@@ -97,7 +98,7 @@ function updateResourceIcons( tileId, resourceIds ) {
 }
 
 function updateReligionIcons( tileId, religionIds, districtPlayerId ) {
-    const isReligionPresent = religionIds && religionIds.length;
+    const isReligionPresent = Array.isArray( religionIds ) && religionIds.length;
     show( tileId + "-religion", isReligionPresent );
     if ( isReligionPresent ) {
         const playerReligion = districtPlayerId ? getPlayer( districtPlayerId ).religion : null;
@@ -108,7 +109,7 @@ function updateReligionIcons( tileId, religionIds, districtPlayerId ) {
 }
 
 function updateInitiativeIcons( politicalInitiatives ) {
-    if ( politicalInitiatives.length ) {
+    if ( Array.isArray( politicalInitiatives ) && politicalInitiatives.length ) {
         politicalInitiatives.forEach( token => show( getInitTokenIconId( token ) ) );
     }
 }
@@ -282,12 +283,12 @@ function isImageTile( tileId ) {
     return id(tileId + "-text").style.display === "none";
 }
 
-function colorElement( id, color, isImage ) {
+function colorElement( elementId, color, isImage ) {
     if ( color ) {
-        id( id ).classList.add( color + (isImage ? "Image" : "") );
+        id( elementId ).classList.add( color + (isImage ? "Image" : "") );
     }
     else {
-        const colorClassList = [...id( id ).classList].filter( cl => COLORS.some( c => cl.includes( c ) ) );
-        id( id ).classList.remove( ...colorClassList );
+        const colorClassList = Array.from( id( elementId ).classList ).filter( cl => COLORS.some( c => cl.includes( c ) ) );
+        id( elementId ).classList.remove( ...colorClassList );
     }
 }

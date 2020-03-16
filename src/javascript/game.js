@@ -362,6 +362,7 @@ function getTileDetails( id ) {
 
         const type = TileType.getDisplayName( tile.getTileType() );
         const population = tile.getTileType().value;
+        const resourceIds = tile.resourceIds;
         const districtPlayer = game.players.find( p => p.districts.tileIds.includes( id ) );
         const districtPlayerId = districtPlayer ? districtPlayer.id : null;
         const controlPlayerId = districtPlayerId || unitSets.reduce( (id, set) => set.combat ? set.id : ( id || set.id ), null ); //district > combat > any unit > null
@@ -375,6 +376,7 @@ function getTileDetails( id ) {
             id: id,
             type: type,
             population: population,
+            resourceIds: resourceIds,
             districtPlayerId: districtPlayerId,
             controlPlayerId: controlPlayerId,
             wonderId: wonderId,
@@ -443,5 +445,5 @@ function getPlayerNumber( id ) {
 
 function getColorFromPlayerId( playerId ) {
     const index = game.players.findIndex( p => p.id === playerId );
-    return (index && index < COLORS.length) ? COLORS[index] : null;
+    return (Number.isInteger(index) && index < COLORS.length) ? COLORS[index] : null;
 }

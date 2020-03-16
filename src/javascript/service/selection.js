@@ -50,10 +50,10 @@ function clearSelectedTile() {
 
 
 class SelectUnits {
-    static isAllSelected();
-    static isTypeSelected();
-    static highlightAll();
-    static highlightType();
+    static isAllSelected() {};
+    static isTypeSelected() {};
+    static highlightAll() {};
+    static highlightType() {};
 }
 
 function selectAllUnits( tileSelectType ) {

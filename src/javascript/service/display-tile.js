@@ -28,9 +28,9 @@ function displayTileDetails( tileId ) {
     id('tileUnits').innerHTML = tileUnitsHTML;
 }
 
-function showTileDetails( show = true ) {
-    show( 'tileDetailsContents', show );
-    show( 'tileDetailsNoContents', !show );
+function showTileDetails( isShow = true ) {
+    show( 'tileDetailsContents', isShow );
+    show( 'tileDetailsNoContents', !isShow );
 }
 
 

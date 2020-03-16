@@ -85,8 +85,9 @@
     const testPlayerId = "<?php echo $_GET['testPlayerId']; ?>";
     const newGame      = "<?php echo $_GET['newGame']; ?>";
 
-    setLoginAttributes( loadGame );
-
-    generateMapSVG( tileClickCallback );
+    docReady(function() {
+        setLoginAttributes( loadGame );
+        generateMapSVG( tileClickCallback );
+    });
 </script>
 </html>

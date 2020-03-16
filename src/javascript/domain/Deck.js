@@ -27,7 +27,7 @@ class Deck {
     removeCardIndex( cardIndex ) {
         const card = this.cards[cardIndex];
         if ( typeof card !== "undefined" ) {
-            card.splice( cardIndex, 1 );
+            this.cards.splice( cardIndex, 1 );
         }
         return card;
     }
