@@ -1,67 +1,79 @@
 /*** VIEW ***/
 
 
-function viewVP() {
+function populatePlayerDisplay( player = currentPlayer, idSuffix = "" ) {
+    id('factionName' + idSuffix).innerText = getFaction( player.factionId ).name;
+    id('victoryPointsValue' + idSuffix).innerText      = calculateVP( player ) + "";
+    id('warBucksValue' + idSuffix).innerText           = player.warBucks + "";
+    id('technologiesValue' + idSuffix).innerText       = player.advancements.technologies.length + "/" + TECHNOLOGIES.length;
+    id('doctrinesValue' + idSuffix).innerText          = player.advancements.doctrines.length    + "/" + DOCTRINES.length;
+    id('gardensValue' + idSuffix).innerText            = player.advancements.gardens.length      + "/" + GARDENS.length;
+    id('auctionLotsValue' + idSuffix).innerText        = player.advancements.auctions.length     + "/" + AUCTIONS.length;
+    id('initiativeTokensValue' + idSuffix).innerText   = ( player.initiatives.politicalTokens + player.initiatives.culturalTokens ) + "";
+    id('chaosCardsValue' + idSuffix).innerText         = player.cards.chaos.length + "";
+}
+
+function viewVP( player = currentPlayer ) {
     const insurrectionPlayerId = getInsurrectionVictim();
-    const isHighPriestActive = currentPlayer.cards.offices.includes( "0" ) || currentPlayer.selects.highPriestVictim;
+    const isHighPriestActive = player.cards.offices.includes( "0" ) || player.selects.highPriestVictim;
     let message =
         `<div><span style='font-weight: bold'>Victory Points Total:</span> ${id('victoryPointsValue').innerText}</div>
-         <div>Districts: ${currentPlayer.districts.tileIds.length}</div>
-         <div>Dimensions: ${currentPlayer.dimensions.length}</div>
-         <div>Wonders: ${(currentPlayer.dimensions.filter( d => !!d.wonderTileId ).length * 2)}</div>
-         <div>Hero: ${(hasHero( currentPlayer.units ) ? "1" : "0")}</div>
-         <div>Chaos Cards: ${currentPlayer.cards.chaos.filter( c => isHeavensGate( c ) ).length}</div>`;
+         <div>Districts: ${player.districts.tileIds.length}</div>
+         <div>Dimensions: ${player.dimensions.length}</div>
+         <div>Wonders: ${(player.dimensions.filter( d => !!d.wonderTileId ).length * 2)}</div>
+         <div>Hero: ${(hasHero( player.units ) ? "1" : "0")}</div>
+         <div>Chaos Cards: ${player.cards.chaos.filter( c => isHeavensGate( c ) ).length}</div>`;
     if ( isHighPriestActive ) {
-        message += `<div>High Priest: ${currentPlayer.cards.offices.includes( "0" ) ? "1" : ( currentPlayer.selects.highPriestVictim ? "-1" : "0" )}</div>`;
+        message += `<div>High Priest: ${player.cards.offices.includes( "0" ) ? "1" : ( player.selects.highPriestVictim ? "-1" : "0" )}</div>`;
     }
-    if ( insurrectionPlayerId && insurrectionPlayerId === currentPlayer.id ) {
+    if ( insurrectionPlayerId && insurrectionPlayerId === player.id ) {
         message += "<div>Insurrection Event: -1</div>";
     }
     showMessage( "Victory Points", message );
 }
 
-function viewWB() {
-    const resourceDisplay = currentPlayer.resources.map( r => r.count + " " + getResource(r.id).name + (r.count > 1 ? "s" : "") ).join("<br/>");
+function viewWB( player = currentPlayer ) {
+    const resourceDisplay = player.resources.map( r => r.count + " " + getResource(r.id).name + (r.count > 1 ? "s" : "") ).join("<br/>");
     const message =
-        `<div>War-Bucks: ${currentPlayer.warBucks}</div>
+        `<div>War-Bucks: ${player.warBucks}</div>
          <div style='font-weight: bold; margin-top: 1em'>Resources</div>
         ${(resourceDisplay || "None")}`;
     showMessage( "War-Bucks", message );
 }
 
-function viewTechnologies() {
+function viewTechnologies( player = currentPlayer ) {
     //todo 8 - table poorly formatted on phone
     let message = getAdvancementTable(
         TECHNOLOGIES,
-        currentPlayer.advancements.technologies,
+        player.advancements.technologies,
         Technology.getCostDisplay
     );
     showMessage( "Technologies", message, {padding: ".5em 20%"} );
 }
 
-function viewDoctrines() {
+function viewDoctrines( player = currentPlayer ) {
     let message = getAdvancementTable(
         DOCTRINES,
-        currentPlayer.advancements.doctrines,
+        player.advancements.doctrines,
         Doctrine.getCostDisplay
     );
     showMessage( "Doctrines", message, {padding: ".5em 20%"} );
 }
 
-function viewGardens() {
+function viewGardens( player = currentPlayer ) {
     let message = getAdvancementTable(
         GARDENS,
-        currentPlayer.advancements.gardens,
-        function( item ) { return item.getCostOrLocked( currentPlayer.districts.tileIds.length ); }
+        player.advancements.gardens,
+        function( item ) { return item.getCostOrLocked( player.districts.tileIds.length ); }
     );
     message += "<div style='margin-top: .5em'>(Cost calculated by 7WB times the number of districts; must have at least 2 districts.)</div>";
     showMessage( "Gardens", message, {padding: ".5em 20%"} );
 }
 
-function viewAuctions() {
+function viewAuctions( player = currentPlayer ) {
     let message = getAdvancementTable(
         AUCTIONS,
-        currentPlayer.advancements.auctions,
+        player.advancements.auctions,
         function( item ) { return item.getCostOrLocked( game.players ); }
     );
     showMessage( "Auction Lots", message, {padding: ".5em 20%"} );
@@ -81,17 +93,18 @@ function getAdvancementTable( data, userData, costFunction ) {
     return resultHTML;
 }
 
-function viewInitiatives() {
+function viewInitiatives( player = currentPlayer ) {
     const message =
-        `<div>Political Initiative Tokens: ${currentPlayer.initiatives.politicalTokens}</div>
-         <div>Cultural Initiative Tokens: ${currentPlayer.initiatives.culturalTokens}</div>`;
+        `<div>Political Initiative Tokens: ${player.initiatives.politicalTokens}</div>
+         <div>Cultural Initiative Tokens: ${player.initiatives.culturalTokens}</div>`;
     showMessage( "Initiative Tokens", message );
 }
 
-function viewCards() {
+function viewCards( player = currentPlayer ) {
+    //tod 6 - if not currentPLayer, just give card count
     let message = getCardTable(
         CHAOS,
-        currentPlayer.cards.chaos
+        player.cards.chaos
     );
     showMessage( "Cards", message, {padding: ".5em 20%"} );
 }

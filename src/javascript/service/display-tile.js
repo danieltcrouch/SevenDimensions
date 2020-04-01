@@ -20,7 +20,7 @@ function displayTileDetails( tileId ) {
         const units = isExpansionPlayer ? getConsolidatedUnits().filter( u => u.tileId === tileId ) : us.units;
         for ( let i = 0; i < units.length; i++ ) {
             const unit = units[i];
-            const spanUnitAttributes = isExpansionPlayer ? ` id='units-${unit.id}' class='link' onclick='selectUnits("selected","${unit.id}")'` : "";
+            const spanUnitAttributes = isExpansionPlayer ? ` id='units-se-${unit.id}' class='link' onclick='selectUnits("selected","${unit.id}")'` : "";
             const unitDisplay = getUnitDisplayName( unit.id, unit.count, us.id );
             tileUnitsHTML += `<div style='padding-left: 1em'><span${spanUnitAttributes}>${unitDisplay}</span></div>\n`;
         }
@@ -37,21 +37,30 @@ function showTileDetails( isShow = true ) {
 /*** UNIT SELECTION ***/
 
 
+function updatePerformAbilityButton() {
+    if ( selectedUnits.length === 1 && selectedUnits[0].unitType.id === UNIT_TYPES[APOSTLE].id ) {
+        id('perform').classList.remove( "staticInverseButton" );
+    }
+    else {
+        id('perform').classList.add( "staticInverseButton" );
+    }
+}
+
 class SelectTileUnits extends SelectUnits {
     static isAllSelected() {
         return id('units-all-selected').style.background === "lightgray";
     }
 
-    static isTypeSelected( unitTypeId, movesRemaining ) {
-        return id(`units-${unitTypeId}-${movesRemaining}`).style.background === "lightgray";
+    static isTypeSelected( unitTypeId ) {
+        return id(`units-se-${unitTypeId}`).style.background === "lightgray";
     }
 
     static highlightAll( highlight = true ) {
         id('units-all-selected').style.background = highlight ? "lightgray" : "";
-        document.querySelectorAll( '*[id^="units-un-"]' ).forEach( s => s.style.background = (highlight ? "lightgray" : "") );
+        document.querySelectorAll( '*[id^="units-se-"]' ).forEach( s => s.style.background = (highlight ? "lightgray" : "") );
     }
 
-    static highlightType( unitTypeId, movesRemaining, highlight = true ) {
-        return id(`units-${unitTypeId}-${movesRemaining}`).style.background = highlight ? "lightgray" : "";
+    static highlightType( unitTypeId, highlight = true ) {
+        return id(`units-se-${unitTypeId}`).style.background = highlight ? "lightgray" : "";
     }
 }

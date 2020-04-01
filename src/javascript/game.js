@@ -79,17 +79,9 @@ function loadUser() {
 
 function loadUserCallback( playerId ) {
     currentPlayer = getPlayer( playerId );
-    id('playerName').innerText = currentPlayer.username;
-    id('factionName').innerText = getFaction( currentPlayer.factionId ).name;
 
-    id('victoryPointsValue').innerText      = calculateVP( currentPlayer ) + "";
-    id('warBucksValue').innerText           = currentPlayer.warBucks + "";
-    id('technologiesValue').innerText       = currentPlayer.advancements.technologies.length + "/" + TECHNOLOGIES.length;
-    id('doctrinesValue').innerText          = currentPlayer.advancements.doctrines.length    + "/" + DOCTRINES.length;
-    id('gardensValue').innerText            = currentPlayer.advancements.gardens.length      + "/" + GARDENS.length;
-    id('auctionLotsValue').innerText        = currentPlayer.advancements.auctions.length     + "/" + AUCTIONS.length;
-    id('initiativeTokensValue').innerText   = ( currentPlayer.initiatives.politicalTokens + currentPlayer.initiatives.culturalTokens ) + "";
-    id('chaosCardsValue').innerText         = currentPlayer.cards.chaos.length + "";
+    id('playerName').innerText = currentPlayer.username;
+
 
     displayUnassignedUnits();
     show( 'perform', isExpansionPhase() );
@@ -119,12 +111,6 @@ function submit() {
         isValidToSubmit = false;
         showToaster( "Player has already submitted" );
     }
-    else if ( isMarketSubPhase() || isExpansionPhase() ) {
-        if ( !isCurrentPlayerTurn() ) {
-            isValidToSubmit = false;
-            showToaster( "It is not your turn." );
-        }
-    }
     else if ( isMarketPhase() ) {
         if ( isMarketAuctionPhase() ) {
             if ( Number.isNaN( currentPlayer.turn.auctionBid ) ) {
@@ -133,14 +119,21 @@ function submit() {
             }
         }
         else {
-            if ( currentPlayer.units.some( u => u.tileId === DEFAULT_TILE ) ) {
+            if ( !isCurrentPlayerTurn() ) {
+                isValidToSubmit = false;
+                showToaster( "It is not your turn." );
+            }
+            else if ( currentPlayer.units.some( u => u.tileId === DEFAULT_TILE ) ) {
                 isValidToSubmit = false;
                 showToaster( "Must assign purchased units" );
             }
         }
     }
     else if ( isExpansionPhase() ) {
-        //
+        if ( !isCurrentPlayerTurn() ) {
+            isValidToSubmit = false;
+            showToaster( "It is not your turn." );
+        }
     }
     else if ( isHarvestPhase() ) {
         if ( !currentPlayer.turn.hasReaped ) {

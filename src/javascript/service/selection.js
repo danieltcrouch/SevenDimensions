@@ -61,8 +61,7 @@ function selectAllUnits( tileSelectType ) {
     const tileId = isUnassigned ? "unassigned" : selectedTile.id;
     const SelectClass = isUnassigned ? SelectUnassignedUnits : SelectTileUnits;
 
-    const isAllCurrentlySelected = SelectClass.isAllSelected();
-    if ( selectedUnits.length && isAllCurrentlySelected ) {
+    if ( selectedUnits.length && SelectClass.isAllSelected() ) {
         SelectClass.highlightAll( false );
         unselectUnits();
     }
@@ -70,6 +69,7 @@ function selectAllUnits( tileSelectType ) {
         SelectClass.highlightAll();
         selectedUnits = getDisambiguousUnitGroup( tileId );
     }
+    updatePerformAbilityButton();
     clearMoveSuggestion();
 }
 
@@ -78,8 +78,7 @@ function selectUnits( tileSelectType, unitTypeId ) {
     const tileId = isUnassigned ? "unassigned" : selectedTile.id;
     const SelectClass = isUnassigned ? SelectUnassignedUnits : SelectTileUnits;
 
-    const isUnitTypeCurrentlyIncluded = SelectClass.isTypeSelected( unitTypeId );
-    if ( selectedUnits.length && isUnitTypeCurrentlyIncluded ) {
+    if ( selectedUnits.length && SelectClass.isTypeSelected( unitTypeId ) ) {
         SelectClass.highlightType( unitTypeId, false );
         selectedUnits = selectedUnits.filter( u => u.unitType.id !== unitTypeId );
         if ( !selectedUnits.length ) {
@@ -97,6 +96,7 @@ function selectUnits( tileSelectType, unitTypeId ) {
             selectedUnits = selectedUnits.concat( unitsInTile );
         }
     }
+    updatePerformAbilityButton();
     clearMoveSuggestion();
 }
 
@@ -105,7 +105,7 @@ function selectUnitsByType( units ) {
         units,
         function( response ) {
             if ( response ) {
-                selectedUnits = selectedUnits.concat( units );
+                selectedUnits = units;
             }
         }
     );
@@ -145,14 +145,14 @@ function clearMoveSuggestion() {
 }
 
 function moveUnits( tileId ) {
-    const rootTileId = selectedTile ? selectedTile.id : "unassigned";
+    const rootTileId = selectedUnits[0].tileId;
     const destinationTileId = tileId;
 
     selectedUnits.forEach( unit => {
         unit.movesRemaining -= suggestedPath.length;
         unit.tileId = destinationTileId;
-        currentPlayer.units = getConsolidatedUnits();
     } );
+    currentPlayer.units = getConsolidatedUnits();
 
     updateUnitIconsFromId( destinationTileId );
     if ( rootTileId !== "unassigned" ) {
@@ -161,6 +161,9 @@ function moveUnits( tileId ) {
     }
     else {
         displayUnassignedUnits();
+        if ( selectedTile ) {
+            selectTile( selectedTile.id );
+        }
     }
 
     unselectUnits();

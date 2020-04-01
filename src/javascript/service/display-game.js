@@ -37,7 +37,7 @@ function showActions() {
 function showAuctionActions() {
     const hasBid = Number.isInteger( currentPlayer.turn.auctionBid );
     const auctionLot = getNextAuction( game.players );
-    if ( auctionLot ) {
+    if ( auctionLot && !currentPlayer.advancements.auctions.includes( auctionLot.id ) ) {
         const minimum = Math.floor( auctionLot.costFunction() / 2 );
         showPrompt( "Auction",
             "Enter an amount to bid on " + auctionLot.name + " (minimum: " + minimum + "WB):",
@@ -68,7 +68,6 @@ function showMarketActions() {
         currentPlayer,
         function( response ) {
             currentPlayer = response;
-            showToaster( "Purchase complete" );
             reloadPage( true );
         }
     );

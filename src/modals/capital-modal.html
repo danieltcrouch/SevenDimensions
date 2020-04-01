@@ -1,0 +1,30 @@
+<!-- Common modals must be included for CSS -->
+<!-- todo 10: Remove CSS declaration from each modal in Common--just have in one? -->
+<script src="modals/capital-modal.js"></script>
+
+<div id="capitalModal" class="modal-wrapper">
+    <div class="modal-foreground">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span id="modalHeader" class="subtitle">Capital</span>
+                <span id="close" class="close">&times;</span>
+            </div>
+            <div id="modalBody" class="modal-body">
+                <div id="factionNameCapital" style="margin-bottom: 1em">[Faction]</div>
+                <div><span class="link" onclick="viewVP( capitalPlayer )">Victory Points:</span> <span id="victoryPointsValueCapital">0</span></div>
+                <div><span class="link" onclick="viewWB( capitalPlayer )">War-Bucks:</span> <span id="warBucksValueCapital">0</span></div>
+                <div><span style="font-weight: bold">Advancements </span></div>
+                <div><span class="link" style="padding-left: 1em" onclick="viewTechnologies( capitalPlayer )">Technologies:</span> <span id="technologiesValueCapital">0/14</span></div>
+                <div><span class="link" style="padding-left: 1em" onclick="viewDoctrines( capitalPlayer )">Doctrines:</span> <span id="doctrinesValueCapital">0/11</span></div>
+                <div><span class="link" style="padding-left: 1em" onclick="viewGardens( capitalPlayer )">Gardens:</span> <span id="gardensValueCapital">0/5</span></div>
+                <div><span class="link" style="padding-left: 1em" onclick="viewAuctions( capitalPlayer )">Auction Lots:</span> <span id="auctionLotsValueCapital">0/7</span></div>
+                <div><span class="link" onclick="viewInitiatives( capitalPlayer )">Initiative Tokens:</span> <span id="initiativeTokensValueCapital">0</span></div>
+                <div><span class="link" onclick="viewCards( capitalPlayer )">Chaos Cards:</span> <span id="chaosCardsValueCapital">0</span></div>
+            </div>
+            <div id="modalSubmit" class="modal-submit center">
+                <button id="closeButton" class="button" style="width: 10em" onclick="closeOutCapitalModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-background"></div>
+</div>

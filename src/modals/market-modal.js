@@ -11,7 +11,7 @@ function openMarketModal( currentPlayer, callback ) {
     populateData();
 
     show( "marketModal", true, "block" );
-    setCloseHandlersJS( "marketModal" ); //todo - should this use closeOutMarketModal() ?
+    setCloseHandlersJS( "marketModal" );
     blurBackground();
 }
 
