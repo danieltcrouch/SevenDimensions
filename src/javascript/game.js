@@ -81,7 +81,7 @@ function loadUserCallback( playerId ) {
     currentPlayer = getPlayer( playerId );
 
     id('playerName').innerText = currentPlayer.username;
-
+    populatePlayerDisplay();
 
     displayUnassignedUnits();
     show( 'perform', isExpansionPhase() );

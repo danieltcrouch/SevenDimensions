@@ -15,8 +15,13 @@ function tileClickCallback( tileId ) {
     if ( selectedUnits.length && ( isExpansionPhase() && suggestedPath.includes( tileId ) ) ) {
         moveUnits( tileId );
     }
-    else if ( selectedUnits.length && selectedUnits.every( u => u.tileId === "unassigned" ) ) {
+    else if ( selectedUnits.length && selectedUnits.every( u => u.tileId === "unassigned" ) && !isImpassibleTile( tileId ) ) {
         moveUnits( tileId );
+    }
+    else if ( game.players.find( p => p.districts.capital === tileId && p.id !== currentPlayer.id ) ) {
+        openCapitalModal(
+            game.players.find( p => p.districts.capital === tileId ),
+            function() {} );
     }
     else {
         selectTile( tileId );
@@ -126,17 +131,19 @@ function moveSuggestion( tileId ) {
         const rootTileId = selectedTile.id;
         const destinationTileId = tileId;
         const allTiles = game.map.map( t => t.id );
-        const impassableTiles = allTiles.filter( t => {
-            const tileDetails = getTileDetails( t );
-            return tileDetails.type === TILE_TYPES[VOLCANO].name ||
-                (tileDetails.type === TILE_TYPES[CAPITAL].name && tileDetails.districtPlayerId !== currentPlayer.id ) ||
-                tileDetails.unitSets.filter( s => s.id !== currentPlayer.id ).some( s => s.combat );
-        } );
+        const impassableTiles = allTiles.filter( t => isImpassibleTile( t ) );
         const maxMove = Math.min( ...selectedUnits.map( u => u.movesRemaining ) );
         suggestedPath = calculateShortestNonCombatPath( rootTileId, destinationTileId, allTiles, impassableTiles, maxMove );
 
         highlightSuggestedTiles( suggestedPath );
     }
+}
+
+function isImpassibleTile( tileId ) {
+    const tileDetails = getTileDetails( tileId );
+    return tileDetails.type === TILE_TYPES[VOLCANO].name ||
+        (tileDetails.type === TILE_TYPES[CAPITAL].name && tileDetails.districtPlayerId !== currentPlayer.id ) ||
+        tileDetails.unitSets.filter( s => s.id !== currentPlayer.id ).some( s => s.combat );
 }
 
 function clearMoveSuggestion() {

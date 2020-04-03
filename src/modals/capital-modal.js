@@ -1,7 +1,7 @@
 let capitalPlayer;
 let capitalModalCallback;
 
-function openCouncilModal( selectedCapitalPlayer, callback ) {
+function openCapitalModal( selectedCapitalPlayer, callback ) {
     capitalPlayer = selectedCapitalPlayer;
     capitalModalCallback = callback;
 
