@@ -10,7 +10,7 @@ const TEST_USERS = [
 ];
 
 function readTestFile( callbackFunction ) {
-    //todo 11 - move this functionality (js and php) to Common
+    //todo 5 - move this functionality (js and php) to Common
     postCallEncoded(
         "php/controller.php",
         {

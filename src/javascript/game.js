@@ -1,5 +1,9 @@
-//todo 6 - Click on Capital and have link to pop modal with player/faction info
-//todo 7 - make battles
+//todo 1 - make battles
+//  Webhooks - try to connect with other user
+//  If fail, then email and give up to X time to join
+//  Else, use AI (never retreat, kill starting with cheapest)
+//todo 3 - Chaos Card structure (don't have to implement all of them, just the ones that cover basic use cases; esp. Shut Up)
+//todo 7 - Initiative Tokens
 const COLORS = ["red", "green", "blue", "purple", "orange", "teal", "gold"];
 
 let game;
@@ -92,11 +96,13 @@ function popModals() {
     if ( isMarketAuctionPhase() && !Number.isInteger( currentPlayer.turn.auctionBid ) ) {
         showAuctionActions();
     }
-    //todo 6 - show toaster if you won previous auction
     else if ( isHarvestPhase() && !currentPlayer.turn.hasReaped ) {
         showHarvestActions();
+        if ( currentPlayer.advancements.auctionWins.includes( AUCTIONS[game.state.round].id ) ) {
+            showToaster("You won this round's auction!");
+        }
     }
-    else if ( isDoomsdayClockPhase() && game.state.event <= EVENT_MARS ) {
+    else if ( isDoomsdayClockPhase() && game.state.event <= EVENT_MARS && !currentPlayer.turn.hasSubmitted ) {
         showToaster("Time is slipping...");
     }
 }
@@ -402,13 +408,16 @@ function isDoomsdayClockPhase() { return game.state.phase === PHASE_COUNCIL && g
 function getTurn( index ) {
     let result;
     if ( isMarketAuctionPhase() ) {
-        result = "(Auction)";
+        result = "All (Auction)";
     }
     else if ( isHarvestPhase() ) {
         result = "All";
     }
-    else if ( isCouncilPhase() ) {
+    else if ( isCouncilSubPhase() ) {
         result = "All";
+    }
+    else if ( isDoomsdayClockPhase() ) {
+        result = "All (Doomsday)";
     }
     else {
         result = game.players[index].username;

@@ -86,11 +86,11 @@ function getConsolidatedUnits() {
 }
 
 function addUnit( unit, player ) {
-    //todo 13
+    //todo 2
 }
 
 function removeUnit() {
-    //todo 13
+    //todo 2
 }
 
 
@@ -101,7 +101,7 @@ function performUnitAbilities() {
     if ( selectedUnits.length === 1 ) {
         const selectedUnit = selectedUnits[0];
         if ( selectedUnit.unitType.id === UNIT_TYPES[APOSTLE].id ) {
-            showBinaryChoice( //todo 10 - make a new modal that allows infinite button adding
+            showBinaryChoice( //todo 4 - make a new modal that allows infinite button adding
                 "Apostle",
                 "Choose an ability or cancel to move:",
                 "Found District",
@@ -124,7 +124,7 @@ const APOSTLE_FOUND = "0";
 const APOSTLE_EVANG = "1";
 
 function performApostleAbility( abilityId, unit, player ) {
-    //todo 13
+    //todo 2
     if ( abilityId === APOSTLE_FOUND ) {
         //remove unit in both places (ambiguous and disambiguous)
         //add district to player

@@ -1,5 +1,5 @@
 <?php
-//todo 10 - most/all of this file should be moved to Common
+//todo 4 - most/all of this file should be moved to Common
 
 /*** GOOGLE SIGN-IN ***/
 function validateUser( $app, $authToken, $createNew )
@@ -43,13 +43,13 @@ function httpCall( $baseUrl, $params )
 /*** EMAIL ***/
 function sendEmail( $addressList, $subject, $message )
 {
-    //todo 11 - clean this up and make more re-usable
+    //todo 5 - clean this up and make more re-usable
     $to = "danieltcrouch@gmail.com";
     $message = wordwrap($message, 70);
     $headers = "MIME-Version: 1.0\r\n";
     $headers .= "Content-type:text/html;charset=UTF-8\r\n";
     $headers .= "From: ReligionAndStory<noreply@religionandstory.com>\r\n" .
-                "Bcc: " . implode( ',', $addressList ); //todo 11 - possibly use global variables from startup.php
+                "Bcc: " . implode( ',', $addressList ); //todo 5 - possibly use global variables from startup.php
     return mail($to, $subject, $message, $headers);
 }
 

@@ -53,7 +53,7 @@ function populateAdvancements() {
     const availableDoctrines = DOCTRINES.filter( d => !marketModalValues.advancements.doctrines.includes( d.id ) );
     const availableGardens = GARDENS.filter( g => !marketModalValues.advancements.gardens.includes( g.id ) );
     const availableAuctions = AUCTIONS.filter( a => !marketModalValues.advancements.auctions.includes( a.id ) );
-    //todo 10 - Add "None" option to Common?
+    //todo 4 - Add "None" option to Common?
     addAllToSelect( 'technologySelect', [{text: "None", value: null}].concat( availableTechnologies.map( (t) => { return {text: t.name, value: t.id}; } ) ) );
     addAllToSelect( 'doctrineSelect', [{text: "None", value: null}].concat( availableDoctrines.map( (d) => { return {text: d.name, value: d.id}; } ) ) );
     populateAdvancementCheckboxes( availableGardens, "gardens", function( item ) { return item.getCostOrLocked( currentPlayer.districts.tileIds.length ); } );

@@ -1,4 +1,4 @@
-//todo 12 - Put all modals into classes to avoid polluting the namespace
+//todo 6 - Put all modals into classes to avoid polluting the namespace
 
 let councilModalValues;
 let councilModalCallback;

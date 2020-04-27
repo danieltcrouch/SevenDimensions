@@ -1,7 +1,7 @@
 //https://developers.google.com/identity/sign-in/web/sign-in
-//todo 10 - move Google Sign-In to Common
+//todo 4 - move Google Sign-In to Common
 //  Will require moving PHP backend code as well
-//todo 11 - do a major code clean-up across Common and all projects [Seven, Bracket, Reviews, Overflow (except Poker), Turing, Football]
+//todo 5 - do a major code clean-up across Common and all projects [Seven, Bracket, Reviews, Overflow (except Poker), Turing, Football]
 let loginCallback = function() {};
 let userId = "";
 
@@ -32,7 +32,7 @@ function validateUser( authToken, createNew = false ) {
         "php/controller.php",
         {
             action:    "validateUser",
-            appName:   location.hostname.split(".")[0], //todo 10 - possibly use global variables from startup.php
+            appName:   location.hostname.split(".")[0], //todo 4 - possibly use global variables from startup.php
             authToken: authToken,
             createNew: createNew
         },
@@ -74,17 +74,17 @@ function postCallEncoded( endPoint, data, successCallback, failureCallback = fun
     return postCall( endPoint, data, successCallback, failureCallback, asynchronous, false );
 }
 
-function postCall( endPoint, data, successCallback, failureCallback = function(){}, asynchronous = true, contentTypeJson = true ) { //todo 10 - use this one for this project (removes the need for $_POST all over the place)
+function postCall( endPoint, data, successCallback, failureCallback = function(){}, asynchronous = true, contentTypeJson = true ) { //todo 4 - use this one for this project (removes the need for $_POST all over the place)
     let contentType = contentTypeJson ? "application/json" : "application/x-www-form-urlencoded; charset=UTF-8";
     data = contentTypeJson ? JSON.stringify( data ) : urlEncodeJson( data );
 
-    //todo 11 - get rid of jQuery completely
+    //todo 5 - get rid of jQuery completely
     let httpRequest = new XMLHttpRequest();
     httpRequest.open( "POST", endPoint, asynchronous );
     httpRequest.setRequestHeader( "Content-Type", contentType );
     httpRequest.onload = function() {
         if ( this.status === 200 ) {
-            //successCallback( jsonParse( this.responseText ) ); //todo 11 - make it where you parse JSON in this function
+            //successCallback( jsonParse( this.responseText ) ); //todo 5 - make it where you parse JSON in this function
             successCallback( this.responseText );
         }
         else {

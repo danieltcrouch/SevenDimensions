@@ -7,7 +7,7 @@ if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
     $result = null;
 
     try {
-        //todo 10 - Google Sign-In - move to Common
+        //todo 4 - Google Sign-In - move to Common
         if ( isset($_POST['appName']) && isset($_POST['authToken']) && isset($_POST['createNew']) ) {
             $result = $action( $_POST['appName'], $_POST['authToken'], $_POST['createNew'] );
         }
@@ -37,7 +37,7 @@ if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
         }
 
         if ( isset($_POST['userId']) && $_POST['userId'] === getCurrentUser() ) {
-            //todo 10 - apply this check where necessary
+            //todo 4 - apply this check where necessary
         }
 
         echo json_encode($result);
