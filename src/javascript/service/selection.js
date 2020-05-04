@@ -18,6 +18,23 @@ function tileClickCallback( tileId ) {
     else if ( selectedUnits.length && selectedUnits.every( u => u.tileId === "unassigned" ) && !isImpassibleTile( tileId ) ) {
         moveUnits( tileId );
     }
+    else if ( selectedUnits.length && getAdjacentTiles( selectedUnits[0].tileId ).includes( tileId ) && hasEnemyUnits( tileId ) && !isImpassibleTile( tileId, false ) ) {
+        showConfirm( "Battle", "Are you sure you want to attack this player?", function( result ) {
+            if ( result ) {
+                const currentPlayerDetails = getPlayerBattleDetails( currentPlayer, selectedUnits[0].tileId );
+                const enemyPlayerDetails = getPlayerBattleDetails( game.players.find( p => p.units.some( u => u.tileId === tileId ) && p.id !== currentPlayer.id ), tileId );
+                createBattle( currentPlayerDetails, enemyPlayerDetails, function() {
+                    openBattleModal(
+                        currentPlayerDetails,
+                        enemyPlayerDetails,
+                        true,
+                        game.state.timeLimit,
+                        function() {}
+                    );
+                } );
+            }
+        } );
+    }
     else if ( game.players.find( p => p.districts.capital === tileId && p.id !== currentPlayer.id ) ) {
         openCapitalModal(
             game.players.find( p => p.districts.capital === tileId ),
@@ -26,6 +43,7 @@ function tileClickCallback( tileId ) {
     else {
         selectTile( tileId );
     }
+    //todo 2 - need a way to kill Apostles in same tile as your units--see game.php
 }
 
 function selectTile( tileId ) {
@@ -139,11 +157,17 @@ function moveSuggestion( tileId ) {
     }
 }
 
-function isImpassibleTile( tileId ) {
+function hasEnemyUnits( tileId ) {
+    const tileDetails = getTileDetails( tileId );
+    return tileDetails.unitSets.filter( s => s.id !== currentPlayer.id ).some( s => s.combat );
+}
+
+function isImpassibleTile( tileId, checkCombat = true ) {
     const tileDetails = getTileDetails( tileId );
     return tileDetails.type === TILE_TYPES[VOLCANO].name ||
-        (tileDetails.type === TILE_TYPES[CAPITAL].name && tileDetails.districtPlayerId !== currentPlayer.id ) ||
-        tileDetails.unitSets.filter( s => s.id !== currentPlayer.id ).some( s => s.combat );
+        ( false /* Check for Camelot */ ) ||
+        ( tileDetails.type === TILE_TYPES[CAPITAL].name && tileDetails.districtPlayerId !== currentPlayer.id ) ||
+        ( checkCombat && tileDetails.unitSets.filter( s => s.id !== currentPlayer.id ).some( s => s.combat ) );
 }
 
 function clearMoveSuggestion() {

@@ -12,7 +12,7 @@ const TEST_USERS = [
 function readTestFile( callbackFunction ) {
     //todo 5 - move this functionality (js and php) to Common
     postCallEncoded(
-        "php/controller.php",
+        "php/main-controller.php",
         {
             action:   "readLocalFile",
             fileName: "../resources/test-game.txt"
@@ -35,6 +35,7 @@ function getNewGame( testPlayers = TEST_USERS ) {
     const newPlayers = generateNewPlayers( testPlayers );
     return {
         state: {
+            timeLimit: 0,
             ambassador: 0,
             round: 0,
             phase: 0,
@@ -114,7 +115,7 @@ function generateNewPlayers( testPlayers ) {
 function initializeTestGame( gameData, callbackFunction ) {
     gameData = JSON.stringify( gameData );
     postCallEncoded(
-        "php/controller.php",
+        "php/main-controller.php",
         {
             action:    "updateGame",
             userId:    userId,

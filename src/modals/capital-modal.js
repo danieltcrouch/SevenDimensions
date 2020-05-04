@@ -16,5 +16,5 @@ function openCapitalModal( selectedCapitalPlayer, callback ) {
 
 function closeOutCapitalModal() {
     closeModalJS( "capitalModal" );
-    councilModalCallback( councilModalValues );
+    capitalModalCallback( capitalPlayer );
 }

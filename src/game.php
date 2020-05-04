@@ -53,6 +53,7 @@
                 </div>
             </div>
             <div><button id="perform" class="button" style="width: 100%; margin-top: .5em; display: none" onclick="performUnitAbilities()">Use Ability</button></div>
+            <div><button id="killApostle" class="button" style="width: 100%; margin-top: .5em; display: none" onclick="killApostle()">Kill Apostle</button></div>
         </div>
         <div class="col-6">
             <div id="mapDiv" class="center">

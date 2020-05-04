@@ -1,6 +1,6 @@
 <?php
 require_once( "service.php" );
-require_once( "database.php" );
+require_once( "main-database.php" );
 
 if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
     $action = $_POST['action'];

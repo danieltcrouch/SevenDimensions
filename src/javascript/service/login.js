@@ -29,7 +29,7 @@ function initializeUser() {
 
 function validateUser( authToken, createNew = false ) {
     postCallEncoded(
-        "php/controller.php",
+        "php/main-controller.php",
         {
             action:    "validateUser",
             appName:   location.hostname.split(".")[0], //todo 4 - possibly use global variables from startup.php

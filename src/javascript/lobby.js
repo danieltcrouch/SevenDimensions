@@ -17,7 +17,7 @@ function startGame() {
 
 function initializeGame( gameData ) {
     postCallEncoded(
-        "php/controller.php",
+        "php/main-controller.php",
         {
             action:    "createGame",
             game:      JSON.stringify( gameData ) //todo 5 - can calling JSON.stringify be built into helper?

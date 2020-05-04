@@ -41,6 +41,10 @@ function calculateShortestNonCombatPath( rootTileId, destinationTileId, allTileI
     return result;
 }
 
+function getAdjacentTiles( tileId, checkImpassible = true, checkCombat = false ) {
+    return getAllAdjacentHexes( getHexFromId( tileId ) ).map( h => h.id ).filter( t => !checkImpassible || isImpassibleTile( t, checkCombat ) );
+}
+
 
 /*** HELPER ***/
 
@@ -53,14 +57,20 @@ function getUnitDisplayName( unitTypeId, unitCount, playerId ) {
     return name;
 }
 
+function disambiguateCurrentUnits( units ) {
+    currentPlayerDisambiguousUnits = disambiguateUnits( units );
+}
+
 function disambiguateUnits( units ) {
+    let result = [];
     for ( let i = 0; i < units.length; i++ ) {
        const unitStack = units[i];
        for ( let j = 0; j < unitStack.count; j++ ) {
            const id = ( Math.floor( Math.random() * 100000 ) + "" ).padStart( 4, '0' );
-           currentPlayerDisambiguousUnits.push( new Unit( id, getUnitType( unitStack.id ), unitStack.tileId ) );
+           result.push( new Unit( id, getUnitType( unitStack.id ), unitStack.tileId ) );
        }
     }
+    return result;
 }
 
 function getDisambiguousUnitGroup( tileId, unitTypeIds = "" ) {

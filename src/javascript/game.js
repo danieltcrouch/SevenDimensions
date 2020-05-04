@@ -1,5 +1,5 @@
 //todo 1 - make battles
-//  Webhooks - try to connect with other user
+//  Webhooks - try to connect with other user at beginning and before every defensive roll
 //  If fail, then email and give up to X time to join
 //  Else, use AI (never retreat, kill starting with cheapest)
 //todo 3 - Chaos Card structure (don't have to implement all of them, just the ones that cover basic use cases; esp. Shut Up)
@@ -18,7 +18,7 @@ function loadGame() {
         }
         else {
             postCallEncoded(
-               "php/controller.php",
+               "php/main-controller.php",
                {
                    action: "loadGame",
                    id:     gameId
@@ -38,6 +38,7 @@ function loadGameCallback( response ) {
     loadUser();
 
     popModals();
+    pollForBattles();
 }
 
 function parseMap( map ) {
@@ -69,7 +70,7 @@ function loadUser() {
     }
     else {
         postCallEncoded(
-            "php/controller.php",
+            "php/main-controller.php",
             {
                 action: "getPlayer",
                 gameId: gameId,
@@ -89,7 +90,7 @@ function loadUserCallback( playerId ) {
 
     displayUnassignedUnits();
     show( 'perform', isExpansionPhase() );
-    disambiguateUnits( currentPlayer.units );
+    disambiguateCurrentUnits( currentPlayer.units );
 }
 
 function popModals() {
@@ -105,6 +106,10 @@ function popModals() {
     else if ( isDoomsdayClockPhase() && game.state.event <= EVENT_MARS && !currentPlayer.turn.hasSubmitted ) {
         showToaster("Time is slipping...");
     }
+}
+
+function pollForBattles() {
+    window.setInterval( getCurrentBattle, 5000 );
 }
 
 
@@ -235,7 +240,7 @@ function completeSubPhase() {
 
 function updateGame() {
     postCallEncoded(
-        "php/controller.php",
+        "php/main-controller.php",
         {
             action:    "updateGame",
             userId:    userId,
@@ -257,7 +262,7 @@ function reloadPage( internal = false ) {
     }
     else {
         postCallEncoded(
-           "php/controller.php",
+           "php/main-controller.php",
            {
                action: "loadGame",
                id:     gameId

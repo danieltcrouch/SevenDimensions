@@ -1,0 +1,33 @@
+<!-- Common modals must be included for CSS -->
+<script src="modals/capital-modal.js"></script>
+
+<div id="battleModal" class="modal-wrapper">
+    <div class="modal-foreground">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span id="modalHeader" class="subtitle">Battle</span>
+                <span id="close" class="close">&times;</span>
+            </div>
+            <div id="modalBody" class="modal-body">
+                <div id="attackingPlayer" style="margin-bottom: 1em">Player 1</div>
+                <div id="attackingUnits"></div>
+                <div id="defendingPlayer" style="margin-bottom: 1em">Player 2</div>
+                <div id="defendingUnits"></div>
+                <div>
+                    <span id="status"></span>
+                </div>
+                <div>
+                    <button id="attack"  class="button" style="margin-top: .4em; padding: .1em .5em; display: none" onclick="attack()">Attack!</button>
+                    <button id="disband" class="button" style="margin-top: .4em; padding: .1em .5em; display: none" onclick="disband()">Disband</button>
+                </div>
+                <div>
+                    <button id="retreat" class="button" style="margin-top: .4em; padding: .1em .5em; display: none" onclick="retreat()">Retreat</button>
+                </div>
+            </div>
+            <div id="modalSubmit" class="modal-submit center">
+                <button id="closeButton" class="button" style="width: 10em" onclick="closeOutBattleModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-background"></div>
+</div>
