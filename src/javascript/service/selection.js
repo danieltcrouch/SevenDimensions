@@ -21,8 +21,9 @@ function tileClickCallback( tileId ) {
     else if ( selectedUnits.length && getAdjacentTiles( selectedUnits[0].tileId ).includes( tileId ) && hasEnemyUnits( tileId ) && !isImpassibleTile( tileId, false ) ) {
         showConfirm( "Battle", "Are you sure you want to attack this player?", function( result ) {
             if ( result ) {
-                const currentPlayerDetails = getPlayerBattleDetails( currentPlayer, selectedUnits[0].tileId );
-                const enemyPlayerDetails = getPlayerBattleDetails( game.players.find( p => p.units.some( u => u.tileId === tileId ) && p.id !== currentPlayer.id ), tileId );
+                const enemyPlayer = game.players.find( p => p.units.some( u => u.tileId === tileId ) && p.id !== currentPlayer.id );
+                const enemyPlayerDetails = getPlayerBattleDetails( enemyPlayer.id, disambiguateUnits( enemyPlayer.units ), tileId );
+                const currentPlayerDetails = getPlayerBattleDetails( currentPlayer.id, currentPlayerDisambiguousUnits, selectedUnits[0].tileId );
                 createBattle( currentPlayerDetails, enemyPlayerDetails, function() {
                     openBattleModal(
                         currentPlayerDetails,

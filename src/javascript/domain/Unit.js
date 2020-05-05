@@ -45,6 +45,7 @@ class Unit extends Entity {
         this.unitType = unitType;
         this.tileId = tileId;
         this.movesRemaining = unitType.move;
+        this.hitDeflection = 0;
     }
 }
 

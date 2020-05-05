@@ -8,11 +8,11 @@ const AI_TIMEOUT = 10000;
 const NORMAL_TIMEOUT = 30000;
 const MAX_TIMEOUT = 3600000;
 
-function getPlayerBattleDetails( player, tileId ) {
+function getPlayerBattleDetails( playerId, units, tileId ) {
     return {
-        id: player.id,
+        id: playerId,
         tileId: tileId,
-        units: disambiguateUnits( player.units ).filter( u => u.tileId === tileId ).map( u => { return {
+        units: units.filter( u => u.tileId === tileId ).map( u => { return {
             id: u.id,
             unitTypeId: u.unitType.id,
             roll: null,
@@ -20,7 +20,7 @@ function getPlayerBattleDetails( player, tileId ) {
             hitDeflectionsUsed: 0,
             disbanded: false
         }; } )
-    }
+    };
 }
 
 function getCurrentBattle() {
@@ -224,9 +224,48 @@ function endBattle( attackPlayerDetails, defendPlayerDetails ) {
        },
        function() {
            game.battles.push( battleLog );
-           //todo 1 - assign unit deaths and move units in; this may require disambiguating all units up front? Do hit deflections need to hold over turns? Oh no...
+           updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResult );
        }
     );
+}
+
+function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResult ) {
+    attackPlayerDetails.units.forEach( u => {
+        let unit = currentPlayerDisambiguousUnits.find( du => du.id === u.id );
+        if ( u.disbanded ) {
+            currentPlayerDisambiguousUnits.splice( currentPlayerDisambiguousUnits.indexOf( unit ), 1 );
+        }
+        else {
+            if ( u.hitDeflectionsUsed ) {
+                unit.hitDeflection = u.hitDeflectionsUsed;
+            }
+            if ( attackResult === "W" && u.roll ) {
+                unit.tileId = defendPlayerDetails.tileId;
+            }
+        }
+    } );
+    const defendPlayer = game.players.find( p => p.id === defendPlayerDetails.id );
+    defendPlayerDetails.units.forEach( u => {
+        let unitStack = defendPlayer.units.find( us => us.id === u.unitTypeId );
+        if ( u.disbanded ) {
+            if ( unitStack.count <= 1 ) {
+                defendPlayer.units.splice( defendPlayer.units.indexOf( unitStack ), 1 ); //todo 4 - make helper function in common for removing an item from array
+            }
+            else {
+                unitStack.count--;
+            }
+        }
+        else {
+            if ( u.hitDeflectionsUsed ) {
+                unitStack.hitDeflection = u.hitDeflectionsUsed;
+            }
+        }
+    } );
+    if ( attackResult === "W" ) {
+        attackPlayerDetails.units.filter( u => u.roll && !u.disbanded ).forEach( u => {
+            currentPlayerDisambiguousUnits.find( du => du.id === u.id ).tileId = defendPlayerDetails.tileId;
+        } );
+    }
 }
 
 function setLimitedInterval( delay, maxTime, callback, timeOutCallback ) {

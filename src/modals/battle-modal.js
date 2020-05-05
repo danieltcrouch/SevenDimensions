@@ -102,6 +102,7 @@ function updateUnits() {
     currentPlayerDetails.units.forEach( u => {
         if ( u.disbanded ) {
             id(`unit${u.id}Display`).style.textDecoration = "line-through";
+            id(`unit${u.id}`).checked = false
             id(`unit${u.id}`).disabled = "disabled";
         }
     } );
@@ -109,6 +110,7 @@ function updateUnits() {
     enemyPlayerDetails.units.forEach( u => {
         if ( u.disbanded ) {
             id(`unit${u.id}Display`).style.textDecoration = "line-through";
+            id(`unit${u.id}`).checked = false;
             id(`unit${u.id}`).disabled = "disabled";
         }
     } );
