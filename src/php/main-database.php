@@ -8,7 +8,7 @@ function loadGame( $gameId )
     	JOIN state s  ON s.gameId = m.id
         JOIN map mp   ON mp.gameId = m.id
         JOIN player p ON p.gameId = m.id AND p.active = 1
-        JOIN battle b ON b.gameId = m.id AND b.status IS NULL
+        LEFT OUTER JOIN battle b ON b.gameId = m.id AND b.status IS NULL
     WHERE m.id = :gameId ";
 
     $connection = getConnection();
@@ -54,6 +54,7 @@ function createGame( $game )
     $stateJson = json_encode( $game->state );
     $mapJson   = json_encode( $game->map );
     $players  = $game->players; //should work as empty if no players are sent in
+    $playerCount  = count($players);
 
     $playerValues = "";
     for ( $i = 0; $i < count( $players ); $i++ )
@@ -75,20 +76,20 @@ function createGame( $game )
     $connection = getConnection();
     $statement = $connection->prepare( $query );
     $statement->bindParam(':gameId',      $gameId);
-    $statement->bindParam(':playerCount', count($game->players));
+    $statement->bindParam(':playerCount', $playerCount);
     $statement->bindParam(':round',       $game->state->round);
     $statement->bindParam(':phase',       $game->state->phase);
     $statement->bindParam(':subPhase',    $game->state->subPhase);
     $statement->bindParam(':turn',        $game->state->turn);
     $statement->bindParam(':stateJson',   $stateJson);
     $statement->bindParam(':mapJson',     $mapJson);
-    for ( $i = 0; $i < count( $players ); $i++ )
+    for ( $i = 0; $i < $playerCount; $i++ )
     {
         $player = $players[$i];
-        $statement->bindParam(":playerId$i",   $player->id);
-        $statement->bindParam(":userId$i",     $player->userId);
-        $statement->bindParam(":factionId$i",  $player->factionId);
-        $statement->bindParam(":playerJson$i", json_encode($player));
+        $playerJson = json_encode($player);
+        $statement->bindValue(":playerId$i",   $player->id);
+        $statement->bindValue(":userId$i",     $player->userId);
+        $statement->bindValue(":playerJson$i", $playerJson);
     }
     $statement->execute();
 
@@ -129,31 +130,6 @@ function updateGame( $gameId, $game )
     return $gameId;
 }
 
-function updatePlayer( $gameId, $player, $state )
-{
-    $updateMeta     = "UPDATE meta   SET round = :round, phase = :phase, subPhase = :subPhase, turn = :turn WHERE id = :gameId";
-    $updateState    = "UPDATE state  SET stateJson = :stateJson WHERE gameId = :gameId";
-
-    $query =
-        "$updateMeta;\n
-         $updateState";
-
-    $connection = getConnection();
-    $statement = $connection->prepare( $query );
-    $statement->bindParam(':gameId',      $gameId);
-    $statement->bindParam(':round',       $state->round);
-    $statement->bindParam(':phase',       $state->phase);
-    $statement->bindParam(':subPhase',    $state->subPhase);
-    $statement->bindParam(':turn',        $state->turn);
-    $statement->bindParam(':stateJson',   $stateJson);
-    $statement->execute();
-
-    updatePlayers( $gameId, [$player] );
-
-    $connection = null;
-    return $gameId;
-}
-
 function updatePlayers( $gameId, $players )
 {
     $playerActiveCase = "CASE WHEN id IN (";
@@ -176,9 +152,26 @@ function updatePlayers( $gameId, $players )
     {
         $player = $players[$i];
         $playerJson = json_encode($player);
-        $statement->bindParam(":playerId$i",   $player->id);
-        $statement->bindParam(":playerJson$i", $playerJson);
+        $statement->bindValue(":playerId$i",   $player->id);
+        $statement->bindValue(":playerJson$i", $playerJson);
     }
+    $statement->execute();
+
+    $connection = null;
+    return true;
+}
+
+function updatePlayer( $gameId, $player )
+{
+    $player = json_decode( $player );
+    $playerJson = json_encode( $player );
+    $query  = "UPDATE player SET playerJson = :playerJson WHERE gameId = :gameId AND id = :playerId";
+
+    $connection = getConnection();
+    $statement = $connection->prepare( $query );
+    $statement->bindParam(':gameId',     $gameId);
+    $statement->bindParam(":playerId",   $player->id);
+    $statement->bindParam(":playerJson", $playerJson);
     $statement->execute();
 
     $connection = null;

@@ -130,7 +130,7 @@ function submit() {
     }
     else if ( isMarketPhase() ) {
         if ( isMarketAuctionPhase() ) {
-            if ( Number.isNaN( currentPlayer.turn.auctionBid ) ) {
+            if ( !Number.isInteger( currentPlayer.turn.auctionBid ) ) {
                 isValidToSubmit = false;
                 showToaster( "Must bid or pass for auction." );
             }
@@ -161,16 +161,58 @@ function submit() {
     }
 
     if ( isValidToSubmit ) {
-        incrementTurn();
         submitTurn( isAsyncTurn );
     }
 }
 
-function incrementTurn() {
+function submitTurn( isAsyncTurn ) {
     currentPlayer.turn.hasSubmitted = true;
+    if ( isAsyncTurn ) {
+        updatePlayer();
+    }
+    else {
+        incrementTurn();
+        updateGame();
+    }
+}
 
+function updatePlayer() {
+    postCallEncoded(
+        "php/main-controller.php",
+        {
+            action:    "updatePlayer",
+            userId:    userId,
+            gameId:    gameId,
+            player:    JSON.stringify( currentPlayer )
+        },
+        updatePlayerCallback,
+        function( error ) {
+            showToaster( "Unable to save game." );
+        }
+    );
+}
+
+function updatePlayerCallback() {
+    postCallEncoded(
+        "php/main-controller.php",
+        {
+            action: "loadGame",
+            id:     gameId
+        },
+        function( response ) {
+            game = jsonParse( response );
+            incrementTurn();
+            updateGame();
+        },
+        function( error ) {
+            showToaster( "Unable to save turn." );
+        }
+    );
+}
+
+function incrementTurn() {
     game.state.turn++;
-    if ( game.state.turn >= game.players.length ) {
+    if ( game.players.every( p => p.turn.hasSubmitted ) ) {
         completeSubPhase();
         game.state.turn = 0;
         game.state.subPhase++;
@@ -237,15 +279,6 @@ function completeSubPhase() {
     game.players.forEach( p => p.turn.hasSubmitted = false );
 }
 
-function submitTurn( isAsyncTurn ) {
-    if ( isAsyncTurn ) {
-        updatePlayer();
-    }
-    else {
-        updateGame();
-    }
-}
-
 function updateGame() {
     postCallEncoded(
         "php/main-controller.php",
@@ -254,26 +287,6 @@ function updateGame() {
             userId:    userId,
             gameId:    gameId,
             game:      JSON.stringify( game )
-        },
-        function( response ) {
-            showToaster("Turn successfully saved.");
-            reloadPage();
-        },
-        function( error ) {
-            showToaster( "Unable to save game." );
-        }
-    );
-}
-
-function updatePlayer() {
-    postCallEncoded(
-        "php/main-controller.php",
-        {
-            action:    "updatePlayer",
-            userId:    userId,
-            gameId:    gameId,
-            player:    JSON.stringify( currentPlayer ),
-            state:     JSON.stringify( game.state )
         },
         function( response ) {
             showToaster("Turn successfully saved.");

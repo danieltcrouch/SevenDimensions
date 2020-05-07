@@ -20,8 +20,8 @@ if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
                 $result = $action( $_POST['gameId'], $_POST['game'] );
             }
             //updatePlayer
-            elseif ( isset($_POST['userId']) && isset($_POST['gameId']) && isset($_POST['player']) && isset($_POST['state']) ) {
-                $result = $action( $_POST['gameId'], $_POST['player'], $_POST['state'] );
+            elseif ( isset($_POST['userId']) && isset($_POST['gameId']) && isset($_POST['player']) ) {
+                $result = $action( $_POST['gameId'], $_POST['player'] );
             }
             //getPlayer
             elseif ( isset($_POST['gameId']) && isset($_POST['userId']) ) {

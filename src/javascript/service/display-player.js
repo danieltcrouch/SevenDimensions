@@ -134,7 +134,7 @@ function displayUnassignedUnits() {
         for ( let i = 0; i < unassignedUnits.length; i++ ) {
             const unit = unassignedUnits[i];
             const unitDisplay = getUnitDisplayName( unit.id, unit.count, currentPlayer.id );
-            unitsHTML += `<div style='padding-left: 1em'><span id='units-un-${unit.id}' class='link' onclick='selectUnits("unassigned","${unit.id}")'>${unitDisplay}</span></div>\n`;
+            unitsHTML += `<div style='padding-left: 1em'><span id='units-un-${unit.id}-1' class='link' onclick='selectUnits("unassigned","${unit.id}")'>${unitDisplay}</span></div>\n`;
         }
         id('unassignedUnitsValue').innerHTML = unitsHTML;
         show( 'unassignedUnits' );

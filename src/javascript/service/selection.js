@@ -15,7 +15,10 @@ function tileClickCallback( tileId ) {
     if ( selectedUnits.length && ( isExpansionPhase() && suggestedPath.includes( tileId ) ) ) {
         moveUnits( tileId );
     }
-    else if ( selectedUnits.length && selectedUnits.every( u => u.tileId === "unassigned" ) && !isImpassibleTile( tileId ) ) {
+    else if ( selectedUnits.length && isExpansionPhase() && selectedUnits.every( u => u.tileId === "unassigned" ) && !isImpassibleTile( tileId ) ) {
+        moveUnits( tileId );
+    }
+    else if ( selectedUnits.length && isMarketPhase() && selectedUnits.every( u => u.tileId === "unassigned" ) && currentPlayer.districts.tileIds.includes( tileId ) ) {
         moveUnits( tileId );
     }
     else if ( selectedUnits.length && getAdjacentTiles( selectedUnits[0].tileId ).includes( tileId ) && hasEnemyUnits( tileId ) && !isImpassibleTile( tileId, false ) ) {

@@ -25,9 +25,9 @@ function readTestFile( callbackFunction ) {
     );
 }
 
-function getScenarioGame( scenarios ) {
-    //todo 9 - parse scenario file which simply contains json object
-    return getNewGame( TEST_USERS.slice( 0, 3 ) );
+function getScenarioGame( fileScenario ) {
+    const scenarioString = fileScenario.join('');
+    return jsonParse( scenarioString );
 }
 
 function getNewGame( testPlayers = TEST_USERS ) {

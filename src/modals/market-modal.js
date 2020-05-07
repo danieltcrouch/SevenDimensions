@@ -93,6 +93,8 @@ function populateData() {
     id('resourceCMax').innerText = chronotineCount + "";
     id('resourceUMax').max       = unobtaniumCount;
     id('resourceUMax').innerText = unobtaniumCount + "";
+
+    id('currentFunds').innerText = marketModalValues.warBucks;
 }
 
 function unitChange() {
