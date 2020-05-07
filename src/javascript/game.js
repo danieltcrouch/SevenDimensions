@@ -118,38 +118,37 @@ function pollForBattles() {
 
 function submit() {
     let isValidToSubmit = true;
-    if ( currentPlayer.turn.hasSubmitted ) {
+
+    const isAsyncTurn = isMarketAuctionPhase() || isHarvestPhase() || isDoomsdayClockPhase();
+    if ( !isAsyncTurn && !isCurrentPlayerTurn() ) {
         isValidToSubmit = false;
-        showToaster( "Player has already submitted" );
+        showToaster( "It is not your turn." );
+    }
+    else if ( currentPlayer.turn.hasSubmitted ) {
+        isValidToSubmit = false;
+        showToaster( "Player has already submitted." );
     }
     else if ( isMarketPhase() ) {
         if ( isMarketAuctionPhase() ) {
             if ( Number.isNaN( currentPlayer.turn.auctionBid ) ) {
                 isValidToSubmit = false;
-                showToaster( "Must bid or pass for auction" );
+                showToaster( "Must bid or pass for auction." );
             }
         }
         else {
-            if ( !isCurrentPlayerTurn() ) {
+            if ( currentPlayer.units.some( u => u.tileId === DEFAULT_TILE ) ) {
                 isValidToSubmit = false;
-                showToaster( "It is not your turn." );
-            }
-            else if ( currentPlayer.units.some( u => u.tileId === DEFAULT_TILE ) ) {
-                isValidToSubmit = false;
-                showToaster( "Must assign purchased units" );
+                showToaster( "Must assign purchased units." );
             }
         }
     }
     else if ( isExpansionPhase() ) {
-        if ( !isCurrentPlayerTurn() ) {
-            isValidToSubmit = false;
-            showToaster( "It is not your turn." );
-        }
+        //
     }
     else if ( isHarvestPhase() ) {
         if ( !currentPlayer.turn.hasReaped ) {
             isValidToSubmit = false;
-            showToaster( "Must reap harvest" );
+            showToaster( "Must reap harvest." );
         }
     }
     else if ( isCouncilPhase() ) {
@@ -163,7 +162,7 @@ function submit() {
 
     if ( isValidToSubmit ) {
         incrementTurn();
-        updateGame();
+        submitTurn( isAsyncTurn );
     }
 }
 
@@ -238,6 +237,15 @@ function completeSubPhase() {
     game.players.forEach( p => p.turn.hasSubmitted = false );
 }
 
+function submitTurn( isAsyncTurn ) {
+    if ( isAsyncTurn ) {
+        updatePlayer();
+    }
+    else {
+        updateGame();
+    }
+}
+
 function updateGame() {
     postCallEncoded(
         "php/main-controller.php",
@@ -253,7 +261,28 @@ function updateGame() {
         },
         function( error ) {
             showToaster( "Unable to save game." );
-        } );
+        }
+    );
+}
+
+function updatePlayer() {
+    postCallEncoded(
+        "php/main-controller.php",
+        {
+            action:    "updatePlayer",
+            userId:    userId,
+            gameId:    gameId,
+            player:    JSON.stringify( currentPlayer ),
+            state:     JSON.stringify( game.state )
+        },
+        function( response ) {
+            showToaster("Turn successfully saved.");
+            reloadPage();
+        },
+        function( error ) {
+            showToaster( "Unable to save game." );
+        }
+    );
 }
 
 function reloadPage( internal = false ) {

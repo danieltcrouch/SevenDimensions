@@ -129,6 +129,31 @@ function updateGame( $gameId, $game )
     return $gameId;
 }
 
+function updatePlayer( $gameId, $player, $state )
+{
+    $updateMeta     = "UPDATE meta   SET round = :round, phase = :phase, subPhase = :subPhase, turn = :turn WHERE id = :gameId";
+    $updateState    = "UPDATE state  SET stateJson = :stateJson WHERE gameId = :gameId";
+
+    $query =
+        "$updateMeta;\n
+         $updateState";
+
+    $connection = getConnection();
+    $statement = $connection->prepare( $query );
+    $statement->bindParam(':gameId',      $gameId);
+    $statement->bindParam(':round',       $state->round);
+    $statement->bindParam(':phase',       $state->phase);
+    $statement->bindParam(':subPhase',    $state->subPhase);
+    $statement->bindParam(':turn',        $state->turn);
+    $statement->bindParam(':stateJson',   $stateJson);
+    $statement->execute();
+
+    updatePlayers( $gameId, [$player] );
+
+    $connection = null;
+    return $gameId;
+}
+
 function updatePlayers( $gameId, $players )
 {
     $playerActiveCase = "CASE WHEN id IN (";
@@ -150,8 +175,9 @@ function updatePlayers( $gameId, $players )
     for ( $i = 0; $i < count( $players ); $i++ )
     {
         $player = $players[$i];
+        $playerJson = json_encode($player);
         $statement->bindParam(":playerId$i",   $player->id);
-        $statement->bindParam(":playerJson$i", json_encode($player));
+        $statement->bindParam(":playerJson$i", $playerJson);
     }
     $statement->execute();
 
