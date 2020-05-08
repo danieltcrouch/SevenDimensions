@@ -67,7 +67,7 @@ function disambiguateUnits( units ) {
        const unitStack = units[i];
        for ( let j = 0; j < unitStack.count; j++ ) {
            const id = ( Math.floor( Math.random() * 100000 ) + "" ).padStart( 4, '0' );
-           result.push( new Unit( id, getUnitType( unitStack.id ), unitStack.tileId ) );
+           result.push( new Unit( id, getUnitType( unitStack.unitTypeId ), unitStack.tileId ) );
        }
     }
     return result;
@@ -95,12 +95,46 @@ function getConsolidatedUnits() {
     }, [] ).sort( (u1, u2) => u1.id - u2.id );
 }
 
-function addUnit( unit, player ) {
-    //todo 2
+function swapUnit( unit, fromPlayer, toPlayer ) {
+    removeUnit( unit, fromPlayer, false );
+    addUnit( unit, toPlayer, false );
+    updateUnitIconsFromId( unit.tileId );
 }
 
-function removeUnit() {
-    //todo 2
+function addUnit( unit, player, updateDisplay = true ) {
+    const tileId = unit.tileId;
+    const unitsToAdd = unit.count || 1;
+    let unitStack = player.units.find( us => us.unitTypeId === unit.unitTypeId );
+    if ( unitStack ) {
+        unitStack.count += unitsToAdd;
+    }
+    else {
+        player.units.push( {unitTypeId: unit.unitTypeId, count: unitsToAdd, tileId: tileId} );
+    }
+
+    if ( player.id === currentPlayer.id && isExpansionPhase() ) {
+        disambiguateCurrentUnits( player.units );
+    }
+
+    if ( updateDisplay ) {
+        updateUnitIconsFromId( tileId );
+    }
+}
+
+function removeUnit( unit, player, updateDisplay = true ) {
+    const tileId = unit.tileId;
+    const unitsToRemove = unit.count || 1;
+    let unitStack = player.units.find( us => us.unitTypeId === unit.unitTypeId );
+    unitStack.count -= unitsToRemove;
+    player.units = player.units.filter( us => us.count <= 0 );
+
+    if ( player.id === currentPlayer.id && isExpansionPhase() ) {
+        disambiguateCurrentUnits( player.units );
+    }
+
+    if ( updateDisplay ) {
+        updateUnitIconsFromId( tileId );
+    }
 }
 
 
@@ -117,7 +151,7 @@ function performUnitAbilities() {
                 "Found District",
                 "Evangelize",
                 function( response ) {
-                    performApostleAbility( response ? "0" : "1" );
+                    performApostleAbility( response ? "0" : "1", selectedUnit );
             });
         }
     }
@@ -133,16 +167,18 @@ function performUnitAbilities() {
 const APOSTLE_FOUND = "0";
 const APOSTLE_EVANG = "1";
 
-function performApostleAbility( abilityId, unit, player ) {
-    //todo 2
+function performApostleAbility( abilityId, unit ) {
+    const tileId = unit.tileId;
     if ( abilityId === APOSTLE_FOUND ) {
-        //remove unit in both places (ambiguous and disambiguous)
-        //add district to player
-        //remove unit display (combine to killing in object in abstracted method for adding/removing units)
-        //add district display
+        removeUnit( unit, currentPlayer );
+        addDistrict( currentPlayer, tileId );
     }
     else if ( abilityId === APOSTLE_EVANG ) {
-        //add religion to player
-        //add religion display
+        if ( currentPlayer.religion ) {
+            addReligion( currentPlayer, tileId );
+        }
+        else {
+            showToaster( "Must have founded a religion." );
+        }
     }
 }

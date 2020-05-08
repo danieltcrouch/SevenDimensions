@@ -1,9 +1,11 @@
+let unitModalResult;
 let unitModalValues;
 let unitModalCallback;
 
 function openUnitsModal( units, callback ) {
     unitModalValues = units;
     unitModalCallback = callback;
+    unitModalResult = [];
 
     populateUnits();
 
@@ -25,7 +27,7 @@ function populateUnits() {
         input.name = groupId;
         input.type = "checkbox";
         let label = document.createElement( "LABEL" );
-        label.for = id;
+        label.htmlFor = id;
         label.innerHTML = `${unit.unitType.name} (Moves: ${unit.movesRemaining})`;
         div.appendChild( input );
         div.appendChild( label );
@@ -40,7 +42,7 @@ function checkAllUnits() {
 
 function submitUnits() {
     const checkedUnitIds = nm('unitOptions').filter( c => c.checked ).map( c => c.id.split('-')[1] );
-    unitModalValues = unitModalValues.filter( u => checkedUnitIds.includes( u.id ) );
+    unitModalResult = unitModalValues.filter( u => checkedUnitIds.includes( u.id ) );
 
     closeOutUnitsModal();
 }
@@ -52,5 +54,5 @@ function uncheckUnits() {
 function closeOutUnitsModal() {
     uncheckUnits();
     closeModalJS( "unitsModal" );
-    unitModalCallback( unitModalValues );
+    unitModalCallback( unitModalResult );
 }

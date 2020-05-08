@@ -20,10 +20,10 @@ function populateUnits() {
     wrapper.innerHTML = "";
     for ( let i = 0; i < UNIT_TYPES.length; i++ ) {
         let unit = UNIT_TYPES[i];
-        const id = "unitCount" + i;
+        const id = "unitCount-" + unit.id;
         let div = document.createElement( "DIV" );
         let label = document.createElement( "LABEL" );
-        label.for = id;
+        label.htmlFor = id;
         label.style.display = "inline-block";
         label.style.width = "10em";
         label.innerText = unit.name + " (" + unit.cost + "WB) ";
@@ -74,7 +74,7 @@ function populateAdvancementCheckboxes( data, wrapperId, costFunction ) {
         let label = document.createElement( "LABEL" );
         let cost = costFunction( data[i] );
         let isLocked = Number.isNaN(parseInt(cost));
-        label.for = id;
+        label.htmlFor = id;
         label.innerHTML = data[i].name + " (" + cost + ")";
         input.disabled = isLocked;
         div.appendChild( input );
@@ -188,11 +188,13 @@ function purchase() {
 function assignPurchases() {
     let unitInputs = nm('unitCounts');
     for ( let i = 0; i < unitInputs.length; i++ ) {
-        const unitInput = unitInputs[i];
-        const unitCount = parseInt( unitInput.value ) || 0;
-        const unitTypeId = i + "";
-        if ( unitCount > 0 ) {
-            marketModalValues.units.push( {id: unitTypeId, count: unitCount, tileId: DEFAULT_TILE} );
+        const units = {
+            unitTypeId: unitInputs[i].id.split('-')[1],
+            count: parseInt( unitInputs[i].value ) || 0,
+            tileId: DEFAULT_TILE,
+        };
+        if ( units.count > 0 ) {
+            addUnit( units, marketModalValues, false );
         }
     }
 

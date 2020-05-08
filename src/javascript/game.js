@@ -1,7 +1,4 @@
-//todo 1 - make battles
-//  Webhooks - try to connect with other user at beginning and before every defensive roll
-//  If fail, then email and give up to X time to join
-//  Else, use AI (never retreat, kill starting with cheapest)
+//todo 1 - make battles [TEST]
 //todo 3 - Chaos Card structure (don't have to implement all of them, just the ones that cover basic use cases; esp. Shut Up)
 //todo 7 - Initiative Tokens
 const COLORS = ["red", "green", "blue", "purple", "orange", "teal", "gold"];

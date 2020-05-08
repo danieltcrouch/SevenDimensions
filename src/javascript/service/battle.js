@@ -229,13 +229,13 @@ function endBattle( attackPlayerDetails, defendPlayerDetails ) {
     );
 }
 
-function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResult ) {
+function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResult ) { //todo 2
     attackPlayerDetails.units.forEach( u => {
-        let unit = currentPlayerDisambiguousUnits.find( du => du.id === u.id );
         if ( u.disbanded ) {
-            currentPlayerDisambiguousUnits.splice( currentPlayerDisambiguousUnits.indexOf( unit ), 1 );
+            removeUnit( u, currentPlayer );
         }
         else {
+            let unit = currentPlayerDisambiguousUnits.find( du => du.id === u.id );
             if ( u.hitDeflectionsUsed ) {
                 unit.hitDeflection = u.hitDeflectionsUsed;
             }
@@ -244,27 +244,27 @@ function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResu
             }
         }
     } );
+
     const defendPlayer = game.players.find( p => p.id === defendPlayerDetails.id );
     defendPlayerDetails.units.forEach( u => {
-        let unitStack = defendPlayer.units.find( us => us.id === u.unitTypeId );
         if ( u.disbanded ) {
-            if ( unitStack.count <= 1 ) {
-                defendPlayer.units.splice( defendPlayer.units.indexOf( unitStack ), 1 ); //todo 4 - make helper function in common for removing an item from array
-            }
-            else {
-                unitStack.count--;
-            }
+            removeUnit( u, defendPlayer );
         }
         else {
+            let unitStack = defendPlayer.units.find( us => us.unitTypeId === u.unitTypeId );
             if ( u.hitDeflectionsUsed ) {
                 unitStack.hitDeflection = u.hitDeflectionsUsed;
             }
         }
     } );
+
     if ( attackResult === "W" ) {
         attackPlayerDetails.units.filter( u => u.roll && !u.disbanded ).forEach( u => {
             currentPlayerDisambiguousUnits.find( du => du.id === u.id ).tileId = defendPlayerDetails.tileId;
         } );
+        if ( getTileDetails(defendPlayerDetails.tileId).districtPlayerId ) {
+            swapDistrict( defendPlayerDetails.id, attackPlayerDetails.id, defendPlayerDetails.tileId );
+        }
     }
 }
 

@@ -1,3 +1,36 @@
+/*** CHANGE TILES ***/
+
+
+function swapDistrict( fromPlayer, toPlayer, tileId ) {
+    removeDistrict( fromPlayer, tileId );
+    addDistrict( toPlayer, tileId );
+}
+
+function addDistrict( player, tileId ) {
+    player.districts.tileIds.push( tileId );
+    colorElement( `${tileId}-background`, getColorFromPlayerId( player.id ), isImageTile(tileId) );
+}
+
+function removeDistrict( player, tileId ) {
+    let tiles = player.districts.tileIds;
+    tiles.splice( tiles.indexOf( tileId ), 1 );
+    colorElement( `${tileId}-background`, getColorFromPlayerId( player.id ), isImageTile(tileId) );
+}
+
+function addReligion( player, tileId ) {
+    player.religion.tileIds.push( tileId );
+    const tileDetails = getTileDetails( tileId );
+    updateReligionIcons( tileId, tileDetails.religionIds, tileDetails.districtPlayerId );
+}
+
+function removeReligion( player, tileId ) {
+    let tiles = player.religion.tileIds;
+    tiles.splice( tiles.indexOf( tileId ), 1 ); //todo 5 - add array remove to Common (be able to handle primitives and objects) (do a removeAll)
+    const tileDetails = getTileDetails( tileId );
+    updateReligionIcons( tileId, tileDetails.religionIds, tileDetails.districtPlayerId );
+}
+
+
 /*** HIGHLIGHT TILES ***/
 
 
@@ -40,7 +73,7 @@ function fillTile( tile, districtPlayerId ) {
     }
 
     if ( districtPlayerId ) {
-        colorElement( `${tile.id}-background`, getColorFromPlayerId( districtPlayerId ), isImageTile(tile.id) )
+        colorElement( `${tile.id}-background`, getColorFromPlayerId( districtPlayerId ), isImageTile(tile.id) );
     }
 }
 

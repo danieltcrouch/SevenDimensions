@@ -45,7 +45,7 @@ function displayUnitsByPlayer( playerId, units, divId ) {
             input.checked = ( playerId === isAttacking ) ? "checked" : "";
             input.disabled = ( playerId === isAttacking ) ? "disabled" : "";
             let label = document.createElement( "LABEL" );
-            label.for = id;
+            label.htmlFor = id;
             label.id = id + "Display";
             label.innerHTML = getUnitDisplayName( unit.id, unit.count, playerId );
             div.appendChild( input );

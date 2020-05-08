@@ -132,7 +132,7 @@ function selectUnitsByType( units ) {
         units,
         function( response ) {
             if ( response ) {
-                selectedUnits = units;
+                selectedUnits = response;
             }
         }
     );

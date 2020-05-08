@@ -28,7 +28,7 @@ function populateDimensionCheckboxes() {
         input.onchange = dimensionChange;
         let label = document.createElement( "LABEL" );
         let cost = dimension.costFunction();
-        label.for = id;
+        label.htmlFor = id;
         label.innerHTML = dimension.name + " (" + cost + ") ";
         div.appendChild( input );
         div.appendChild( label );

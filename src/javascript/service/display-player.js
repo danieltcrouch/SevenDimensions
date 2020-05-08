@@ -134,7 +134,7 @@ function displayUnassignedUnits() {
         for ( let i = 0; i < unassignedUnits.length; i++ ) {
             const unit = unassignedUnits[i];
             const unitDisplay = getUnitDisplayName( unit.id, unit.count, currentPlayer.id );
-            unitsHTML += `<div style='padding-left: 1em'><span id='units-un-${unit.id}-1' class='link' onclick='selectUnits("unassigned","${unit.id}")'>${unitDisplay}</span></div>\n`;
+            unitsHTML += `<div style='padding-left: 1em'><span id='units-un-${unit.id}' class='link' onclick='selectUnits("unassigned","${unit.id}")'>${unitDisplay}</span></div>\n`;
         }
         id('unassignedUnitsValue').innerHTML = unitsHTML;
         show( 'unassignedUnits' );
@@ -153,7 +153,7 @@ class SelectUnassignedUnits extends SelectUnits {
     }
 
     static isTypeSelected( unitTypeId ) {
-        return id(`units-un-${unitTypeId}-1`).style.background === "lightgray";
+        return id(`units-un-${unitTypeId}`).style.background === "lightgray";
     }
 
     static highlightAll( highlight = true ) {
@@ -162,6 +162,6 @@ class SelectUnassignedUnits extends SelectUnits {
     }
 
     static highlightType( unitTypeId, highlight = true ) {
-        return id(`units-un-${unitTypeId}-1`).style.background = highlight ? "lightgray" : "";
+        return id(`units-un-${unitTypeId}`).style.background = highlight ? "lightgray" : "";
     }
 }

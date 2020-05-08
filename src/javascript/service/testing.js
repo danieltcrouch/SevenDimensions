@@ -90,7 +90,7 @@ function generateNewPlayers( testPlayers ) {
                     chaos: chaosDeck.getRandomCards( faction.startingSupplies.cards ).map( c => c.id ),
                     offices: [], //["1"
                 },
-                units: faction.startingSupplies.units.slice().map( u => ({ ...u, tileId: p.tileId }) ).concat( [{ id: UNIT_TYPES[HERO].id, count: 1, tileId: p.tileId}] ),
+                units: faction.startingSupplies.units.slice().map( u => ({ ...u, tileId: p.tileId }) ).concat( [{ unitTypeId: UNIT_TYPES[HERO].id, count: 1, tileId: p.tileId}] ),
                 districts: {
                     capital: p.tileId,
                     tileIds: [p.tileId]
