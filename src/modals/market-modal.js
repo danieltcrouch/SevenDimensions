@@ -54,8 +54,8 @@ function populateAdvancements() {
     const availableGardens = GARDENS.filter( g => !marketModalValues.advancements.gardens.includes( g.id ) );
     const availableAuctions = AUCTIONS.filter( a => !marketModalValues.advancements.auctions.includes( a.id ) );
     //todo 4 - Add "None" option to Common?
-    addAllToSelect( 'technologySelect', [{text: "None", value: null}].concat( availableTechnologies.map( (t) => { return {text: t.name, value: t.id}; } ) ) );
-    addAllToSelect( 'doctrineSelect', [{text: "None", value: null}].concat( availableDoctrines.map( (d) => { return {text: d.name, value: d.id}; } ) ) );
+    addAllToSelect( 'technologySelect', [{text: "None", value: null}].concat( availableTechnologies.map( (t) => ({text: t.name, value: t.id}) ) ) );
+    addAllToSelect( 'doctrineSelect', [{text: "None", value: null}].concat( availableDoctrines.map( (d) => ({text: d.name, value: d.id}) ) ) );
     populateAdvancementCheckboxes( availableGardens, "gardens", function( item ) { return item.getCostOrLocked( currentPlayer.districts.tileIds.length ); } );
     populateAdvancementCheckboxes( availableAuctions, "auctions", function( item ) { return item.getCostOrLocked( game.players ); } );
 }
@@ -186,15 +186,11 @@ function purchase() {
 }
 
 function assignPurchases() {
-    let unitInputs = nm('unitCounts');
-    for ( let i = 0; i < unitInputs.length; i++ ) {
-        const units = {
-            unitTypeId: unitInputs[i].id.split('-')[1],
-            count: parseInt( unitInputs[i].value ) || 0,
-            tileId: DEFAULT_TILE,
-        };
-        if ( units.count > 0 ) {
-            addUnit( units, marketModalValues, false );
+    for ( let unitInput in nm('unitCounts') ) {
+        const count = unitInput.value || 0;
+        const unitTypeId = unitInputs[i].id.split('-')[1];
+        for ( let i = 0; i < count; i++ ) {
+            addUnit( new Unit( getRandomUnitId(), unitTypeId, DEFAULT_TILE ), marketModalValues, false );
         }
     }
 

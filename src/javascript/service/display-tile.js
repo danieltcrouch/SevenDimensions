@@ -17,11 +17,11 @@ function displayTileDetails( tileId ) {
         const spanTitleAttributes = isExpansionPlayer ? " id='units-all-selected' class='link' onclick='selectAllUnits(\"selected\")'" : "";
         tileUnitsHTML += `<div><span${spanTitleAttributes}>Units (${player.username}): </span></div>`;
 
-        const units = isExpansionPlayer ? getConsolidatedUnits().filter( u => u.tileId === tileId ) : us.units;
+        const units = isExpansionPlayer ? us.units : getConsolidatedUnitsByType( us.units );
         for ( let i = 0; i < units.length; i++ ) {
             const unit = units[i];
-            const spanUnitAttributes = isExpansionPlayer ? ` id='units-se-${unit.unitTypeId}' class='link' onclick='selectUnits("selected","${unit.unitTypeId}")'` : "";
-            const unitDisplay = getUnitDisplayName( unit.unitTypeId, unit.count, us.id );
+            const spanUnitAttributes = isExpansionPlayer ? ` id='units-se-${unit.id}' class='link' onclick='selectUnits("selected","${unit.id}")'` : "";
+            const unitDisplay = getUnitDisplayName( unit.unitTypeId, us.id, unit.count );
             tileUnitsHTML += `<div style='padding-left: 1em'><span${spanUnitAttributes}>${unitDisplay}</span></div>\n`;
         }
     } );
@@ -51,8 +51,8 @@ class SelectTileUnits extends SelectUnits {
         return id('units-all-selected').style.background === "lightgray";
     }
 
-    static isTypeSelected( unitTypeId ) {
-        return id(`units-se-${unitTypeId}`).style.background === "lightgray";
+    static isUnitSelected( unitId ) {
+        return id(`units-se-${unitId}`).style.background === "lightgray";
     }
 
     static highlightAll( highlight = true ) {
@@ -60,7 +60,7 @@ class SelectTileUnits extends SelectUnits {
         document.querySelectorAll( '*[id^="units-se-"]' ).forEach( s => s.style.background = (highlight ? "lightgray" : "") );
     }
 
-    static highlightType( unitTypeId, highlight = true ) {
-        return id(`units-se-${unitTypeId}`).style.background = highlight ? "lightgray" : "";
+    static highlightUnit( unitId, highlight = true ) {
+        return id(`units-se-${unitId}`).style.background = highlight ? "lightgray" : "";
     }
 }

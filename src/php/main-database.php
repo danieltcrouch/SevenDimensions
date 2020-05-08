@@ -22,7 +22,7 @@ function loadGame( $gameId )
     $game = [
         'id'      => $result['id'],
         'state'   => json_decode( $result['stateJson'] ),
-        'map'     => json_decode( $result['mapJson'] ),
+        'board'   => json_decode( $result['mapJson'] ),
         'players' => [],
         'battles' => []
     ];
@@ -52,7 +52,7 @@ function createGame( $game )
     $gameId = getGUID();
     $game = json_decode( $game );
     $stateJson = json_encode( $game->state );
-    $mapJson   = json_encode( $game->map );
+    $mapJson   = json_encode( $game->board );
     $players  = $game->players; //should work as empty if no players are sent in
     $playerCount  = count($players);
 
@@ -101,7 +101,7 @@ function updateGame( $gameId, $game )
 {
     $game = json_decode( $game );
     $stateJson = json_encode( $game->state );
-    $mapJson   = json_encode( $game->map );
+    $mapJson   = json_encode( $game->board );
     $players  = $game->players; //should work as empty if no players are sent in
 
     $updateMeta     = "UPDATE meta   SET round = :round, phase = :phase, subPhase = :subPhase, turn = :turn WHERE id = :gameId";

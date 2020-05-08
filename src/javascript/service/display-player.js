@@ -133,8 +133,8 @@ function displayUnassignedUnits() {
         let unitsHTML = "";
         for ( let i = 0; i < unassignedUnits.length; i++ ) {
             const unit = unassignedUnits[i];
-            const unitDisplay = getUnitDisplayName( unit.unitTypeId, unit.count, currentPlayer.id );
-            unitsHTML += `<div style='padding-left: 1em'><span id='units-un-${unit.unitTypeId}' class='link' onclick='selectUnits("unassigned","${unit.unitTypeId}")'>${unitDisplay}</span></div>\n`;
+            const unitDisplay = getUnitDisplayName( unit.unitTypeId, currentPlayer.id );
+            unitsHTML += `<div style='padding-left: 1em'><span id='units-un-${unit.id}' class='link' onclick='selectUnits("unassigned","${unit.id}")'>${unitDisplay}</span></div>\n`;
         }
         id('unassignedUnitsValue').innerHTML = unitsHTML;
         show( 'unassignedUnits' );
@@ -152,8 +152,8 @@ class SelectUnassignedUnits extends SelectUnits {
         return id('units-all-unassigned').style.background === "lightgray";
     }
 
-    static isTypeSelected( unitTypeId ) {
-        return id(`units-un-${unitTypeId}`).style.background === "lightgray";
+    static isUnitSelected( unitId ) {
+        return id(`units-un-${unitId}`).style.background === "lightgray";
     }
 
     static highlightAll( highlight = true ) {
@@ -161,7 +161,7 @@ class SelectUnassignedUnits extends SelectUnits {
         document.querySelectorAll( '*[id^="units-un-"]' ).forEach( s => s.style.background = (highlight ? "lightgray" : "") );
     }
 
-    static highlightType( unitTypeId, highlight = true ) {
-        return id(`units-un-${unitTypeId}`).style.background = highlight ? "lightgray" : "";
+    static highlightUnit( unitId, highlight = true ) {
+        return id(`units-un-${unitId}`).style.background = highlight ? "lightgray" : "";
     }
 }

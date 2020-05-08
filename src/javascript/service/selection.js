@@ -24,9 +24,10 @@ function tileClickCallback( tileId ) {
     else if ( selectedUnits.length && getAdjacentTiles( selectedUnits[0].tileId ).includes( tileId ) && hasEnemyUnits( tileId ) && !isImpassibleTile( tileId, false ) ) {
         showConfirm( "Battle", "Are you sure you want to attack this player?", function( result ) {
             if ( result ) {
+                //todo 1 - make sure apostles are not involved
                 const enemyPlayer = game.players.find( p => p.units.some( u => u.tileId === tileId ) && p.id !== currentPlayer.id );
-                const enemyPlayerDetails = getPlayerBattleDetails( enemyPlayer.id, disambiguateUnits( enemyPlayer.units ), tileId );
-                const currentPlayerDetails = getPlayerBattleDetails( currentPlayer.id, currentPlayerDisambiguousUnits, selectedUnits[0].tileId );
+                const enemyPlayerDetails = getPlayerBattleDetails( enemyPlayer.id, enemyPlayer.units, tileId );
+                const currentPlayerDetails = getPlayerBattleDetails( currentPlayer.id, currentPlayer.units, selectedUnits[0].tileId );
                 createBattle( currentPlayerDetails, enemyPlayerDetails, function() {
                     openBattleModal(
                         currentPlayerDetails,
@@ -47,12 +48,11 @@ function tileClickCallback( tileId ) {
     else {
         selectTile( tileId );
     }
-    //todo 2 - need a way to kill Apostles in same tile as your units--see game.php
 }
 
 function selectTile( tileId ) {
     const isTileChange = !selectedTile || selectedTile.id !== tileId;
-    selectedTile = game.map.find( t => t.id === tileId );
+    selectedTile = game.board.find( t => t.id === tileId );
 
     highlightSelectedTile( tileId );
     displayTileDetails( tileId );
@@ -78,9 +78,9 @@ function clearSelectedTile() {
 
 class SelectUnits {
     static isAllSelected() {};
-    static isTypeSelected() {};
+    static isUnitSelected() {};
     static highlightAll() {};
-    static highlightType() {};
+    static highlightUnit() {};
 }
 
 function selectAllUnits( tileSelectType ) {
@@ -94,49 +94,30 @@ function selectAllUnits( tileSelectType ) {
     }
     else {
         SelectClass.highlightAll();
-        selectedUnits = getDisambiguousUnitGroup( tileId );
+        selectedUnits = currentPlayer.units.filter( u => u.tileId === tileId );
     }
     updatePerformAbilityButton();
     clearMoveSuggestion();
 }
 
-function selectUnits( tileSelectType, unitTypeId ) {
+function selectUnits( tileSelectType, unitId ) {
     const isUnassigned = tileSelectType === "unassigned";
-    const tileId = isUnassigned ? "unassigned" : selectedTile.id;
     const SelectClass = isUnassigned ? SelectUnassignedUnits : SelectTileUnits;
 
-    if ( selectedUnits.length && SelectClass.isTypeSelected( unitTypeId ) ) {
-        SelectClass.highlightType( unitTypeId, false );
-        selectedUnits = selectedUnits.filter( u => u.unitType.id !== unitTypeId );
+    if ( selectedUnits.length && SelectClass.isUnitSelected( unitId ) ) {
+        SelectClass.highlightUnit( unitId, false );
+        selectedUnits = selectedUnits.filter( u => u.unitType.id !== unitId );
         if ( !selectedUnits.length ) {
             SelectClass.highlightAll( false );
             unselectUnits();
         }
     }
     else {
-        SelectClass.highlightType( unitTypeId );
-        const unitsInTile = getDisambiguousUnitGroup( tileId, unitTypeId );
-        if ( unitsInTile.length > 1 ) {
-            selectUnitsByType( unitsInTile );
-        }
-        else {
-            selectedUnits = selectedUnits.concat( unitsInTile );
-        }
+        SelectClass.highlightUnit( unitId );
+        selectedUnits = selectedUnits.concat( currentPlayer.units.filter( u => u.id === unitId ) );
     }
     updatePerformAbilityButton();
     clearMoveSuggestion();
-}
-
-function selectUnitsByType( units ) {
-    openUnitsModal(
-        units,
-        function( response ) {
-            if ( response ) {
-                selectedUnits = response;
-                updatePerformAbilityButton();
-            }
-        }
-    );
 }
 
 function unselectUnits() {
@@ -153,7 +134,7 @@ function moveSuggestion( tileId ) {
 
         const rootTileId = selectedTile.id;
         const destinationTileId = tileId;
-        const allTiles = game.map.map( t => t.id );
+        const allTiles = game.board.map( t => t.id );
         const impassableTiles = allTiles.filter( t => isImpassibleTile( t ) );
         const maxMove = Math.min( ...selectedUnits.map( u => u.movesRemaining ) );
         suggestedPath = calculateShortestNonCombatPath( rootTileId, destinationTileId, allTiles, impassableTiles, maxMove );
@@ -189,7 +170,6 @@ function moveUnits( tileId ) {
         unit.movesRemaining -= suggestedPath.length;
         unit.tileId = destinationTileId;
     } );
-    currentPlayer.units = getConsolidatedUnits();
 
     updateUnitIconsFromId( destinationTileId );
     selectTile( destinationTileId );

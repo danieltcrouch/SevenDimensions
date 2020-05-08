@@ -13,7 +13,7 @@ function openEventModal( event, eventData, players, callback ) {
     if ( event === EVENT_ELECTION ) {
         show('divEventElection');
         id('eventOfficeValue').innerText = eventData.office;
-        addAllToSelect( 'eventPlayerSelect', ["Abstain"].concat( eventModalPlayers.map( p => { return {text: p.username, value: p.id}; } ) ) );
+        addAllToSelect( 'eventPlayerSelect', ["Abstain"].concat( eventModalPlayers.map( p => ({text: p.username, value: p.id}) ) ) );
     }
     else if ( event === EVENT_GAMBIT ) {
         //

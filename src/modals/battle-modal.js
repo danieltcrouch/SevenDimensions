@@ -47,7 +47,7 @@ function displayUnitsByPlayer( playerId, units, divId ) {
             let label = document.createElement( "LABEL" );
             label.htmlFor = id;
             label.id = id + "Display";
-            label.innerHTML = getUnitDisplayName( unit.id, unit.count, playerId );
+            label.innerHTML = getUnitDisplayName( unit.id, playerId );
             div.appendChild( input );
             div.appendChild( label );
         }

@@ -47,7 +47,7 @@ function getNewGame( testPlayers = TEST_USERS ) {
                 disaster: null
             }
         },
-        map: newMap,
+        board: newMap,
         players: newPlayers
     };
 }
@@ -67,6 +67,16 @@ function generateNewPlayers( testPlayers ) {
     return testPlayers.map(
         p => {
             const faction = getFaction( p.factionId );
+            const chaosCards = chaosDeck.getRandomCards( faction.startingSupplies.cards ).map( c => c.id );
+            const religion = faction.startingSupplies.religion ? { id: faction.startingSupplies.religion.id, tileIds: [p.tileId] } : null;
+            let units = [];
+            for ( let unitStack in faction.startingSupplies.units ) {
+                for ( let i = 0; i < unitStack.count; i++ ) {
+                    units.push( new Unit( getRandomUnitId(), unitStack.unitTypeId, p.tileId ) );
+                }
+            }
+            units.push( HEROES[faction.heroIndex] );
+
             return {
                 id: p.id,
                 username: p.username,
@@ -87,16 +97,16 @@ function generateNewPlayers( testPlayers ) {
                     culturalActive: [], //see getScenarioGame
                 },
                 cards: {
-                    chaos: chaosDeck.getRandomCards( faction.startingSupplies.cards ).map( c => c.id ),
-                    offices: [], //["1"
+                    chaos: chaosCards,
+                    offices: [], //["1"]
                 },
-                units: faction.startingSupplies.units.slice().map( u => ({ ...u, tileId: p.tileId }) ).concat( [{ unitTypeId: UNIT_TYPES[HERO].id, count: 1, tileId: p.tileId}] ),
+                units: units,
                 districts: {
                     capital: p.tileId,
                     tileIds: [p.tileId]
                 },
                 dimensions: [], //see getScenarioGame
-                religion: faction.startingSupplies.religion ? faction.startingSupplies.units.slice().map( u => ({ ...u, tileIds: [p.tileId] }) ) : null,
+                religion: religion,
                 turn: {
                     hasSubmitted: false,
                     purchasedAdvancementCount: 0,

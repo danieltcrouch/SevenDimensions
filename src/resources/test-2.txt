@@ -11,7 +11,7 @@
 			"disaster":null
 		}
 	},
-	"map":[
+	"board":[
 		{
 			"id":"1-2",
 			"type":"TILE",
@@ -330,18 +330,18 @@
 			},
 			"units":[
 				{
+					"id":"0007",
 					"unitTypeId":"1",
-					"count":2,
 					"tileId":"1-2"
 				},
 				{
+					"id":"0006",
 					"unitTypeId":"2",
-					"count":3,
 					"tileId":"1-2"
 				},
 				{
+					"id":"0005",
 					"unitTypeId":"7",
-					"count":1,
 					"tileId":"1-2"
 				}
 			],
@@ -393,28 +393,28 @@
 			},
 			"units":[
 				{
+					"id":"0000",
 					"unitTypeId":"0",
-					"count":1,
 					"tileId":"7-5"
 				},
 				{
+					"id":"0001",
 					"unitTypeId":"1",
-					"count":1,
 					"tileId":"7-5"
 				},
 				{
+					"id":"0002",
 					"unitTypeId":"2",
-					"count":1,
 					"tileId":"7-5"
 				},
 				{
+					"id":"0003",
 					"unitTypeId":"3",
-					"count":1,
 					"tileId":"7-5"
 				},
 				{
+					"id":"0004",
 					"unitTypeId":"7",
-					"count":1,
 					"tileId":"7-5"
 				}
 			],

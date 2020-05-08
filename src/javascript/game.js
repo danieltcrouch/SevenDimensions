@@ -1,4 +1,5 @@
 //todo 1 - make battles [TEST]
+//todo 2 - Remove unit stacks
 //todo 3 - Chaos Card structure (don't have to implement all of them, just the ones that cover basic use cases; esp. Shut Up)
 //todo 7 - Initiative Tokens
 const COLORS = ["red", "green", "blue", "purple", "orange", "teal", "gold"];
@@ -28,7 +29,7 @@ function loadGame() {
 
 function loadGameCallback( response ) {
     game = jsonParse( response );
-    game.map = parseMap( game.map );
+    convertClasses( game );
 
     loadGameState();
     loadMap();
@@ -38,8 +39,9 @@ function loadGameCallback( response ) {
     pollForBattles();
 }
 
-function parseMap( map ) {
-    return map.map( t => new Tile( t.id, t.tileTypeId, t.resourceIds ) );
+function convertClasses( game ) {
+    game.board.map( t => new Tile( t.id, t.tileTypeId, t.resourceIds ) );
+    game.players.forEach( p => p.units.map( u => new Unit( u.id, u.unitTypeId, u.tileId ) ) );
 }
 
 function loadGameState() {
@@ -50,8 +52,8 @@ function loadGameState() {
 }
 
 function loadMap() {
-    for ( let i = 0; i < game.map.length; i++ ) {
-        const tile = game.map[i];
+    for ( let i = 0; i < game.board.length; i++ ) {
+        const tile = game.board[i];
         const tileDetails = getTileDetails( tile.id );
         fillTile( tile, tileDetails.districtPlayerId );
         addTileIcons( tile, tileDetails );
@@ -87,7 +89,6 @@ function loadUserCallback( playerId ) {
 
     displayUnassignedUnits();
     show( 'perform', isExpansionPhase() );
-    disambiguateCurrentUnits( currentPlayer.units );
 }
 
 function popModals() {
@@ -363,7 +364,7 @@ function getNextAuction( players ) {
 
 function calculateWarBuckHarvestReward() {
     const districts = currentPlayer.districts.tileIds.reduce( ( total, tileId ) => {
-        return total + game.map.find( t => t.id === tileId ).getTileType().value;
+        return total + game.board.find( t => t.id === tileId ).getTileType().value;
     }, 0 );
     const religion = 0;
     return districts + religion;
@@ -371,7 +372,7 @@ function calculateWarBuckHarvestReward() {
 
 function calculateResourceHarvestReward() {
     return currentPlayer.districts.tileIds.reduce( ( result, tileId ) => {
-        const tileResourceIds = game.map.find( t => t.id === tileId ).resourceIds;
+        const tileResourceIds = game.board.find( t => t.id === tileId ).resourceIds;
         if ( tileResourceIds.length ) {
             tileResourceIds.forEach( id => {
                 const currentResource = result.find( cr => cr.id === id );
@@ -393,7 +394,7 @@ function calculateResourceHarvestReward() {
 
 function getTileDetails( id ) {
     let result = null;
-    let tile = game.map.find( t => t.id === id );
+    let tile = game.board.find( t => t.id === id );
     if ( tile ) {
         let unitSets = [];
         game.players.forEach( p => {

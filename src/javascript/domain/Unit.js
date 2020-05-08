@@ -40,11 +40,11 @@ const UNIT_TYPES = [
 
 
 class Unit extends Entity {
-    constructor( id, unitType, tileId ) {
-        super( id, unitType.type, unitType.name, function() { return unitType.cost; } );
-        this.unitType = unitType;
+    constructor( id, unitTypeId, tileId ) {
+        super( id, getUnitType( unitTypeId ).type, getUnitType( unitTypeId ).name, function() { return getUnitType( unitTypeId ).cost; } );
+        this.unitTypeId = unitTypeId;
         this.tileId = tileId;
-        this.movesRemaining = unitType.move;
+        this.movesRemaining = getUnitType( unitTypeId ).move;
         this.hitDeflection = 0;
     }
 }

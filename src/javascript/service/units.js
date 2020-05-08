@@ -1,6 +1,3 @@
-let currentPlayerDisambiguousUnits = [];
-
-
 /*** CALCULATE ***/
 
 
@@ -8,7 +5,7 @@ function calculateShortestNonCombatPath( rootTileId, destinationTileId, allTileI
     let result = [];
 
     if ( getHexFromId( rootTileId ).calculateDistance( getHexFromId( destinationTileId ) ) <= maxMove ) {
-        let allTiles = allTileIds.map( t => { return {id: t, visited: false, distance: Number.POSITIVE_INFINITY, prev: null }; } );
+        let allTiles = allTileIds.map( t => ({id: t, visited: false, distance: Number.POSITIVE_INFINITY, prev: null }) );
         let initialTile = allTiles.find( t => t.id === rootTileId );
         const destinationTile = allTiles.find( t => t.id === destinationTileId );
         initialTile.distance = 0;
@@ -49,7 +46,7 @@ function getAdjacentTiles( tileId, checkImpassible = true, checkCombat = false )
 /*** HELPER ***/
 
 
-function getUnitDisplayName( unitTypeId, unitCount, playerId ) {
+function getUnitDisplayName( unitTypeId, playerId, unitCount = 1 ) {
     const isMultiple = unitCount > 1;
     const unitType = getUnitType( unitTypeId );
     let name = unitTypeId === UNIT_TYPES[HERO].id ? ( playerId ? Faction.getHero( getPlayer( playerId ).factionId ).name : UNIT_TYPES[HERO].name ) : unitType.name;
@@ -57,36 +54,11 @@ function getUnitDisplayName( unitTypeId, unitCount, playerId ) {
     return name;
 }
 
-function disambiguateCurrentUnits( units ) {
-    currentPlayerDisambiguousUnits = disambiguateUnits( units );
-}
-
-function disambiguateUnits( units ) {
-    let result = [];
-    for ( let i = 0; i < units.length; i++ ) {
-       const unitStack = units[i];
-       for ( let j = 0; j < unitStack.count; j++ ) {
-           const id = ( Math.floor( Math.random() * 100000 ) + "" ).padStart( 4, '0' );
-           result.push( new Unit( id, getUnitType( unitStack.unitTypeId ), unitStack.tileId ) );
-       }
-    }
-    return result;
-}
-
-function getDisambiguousUnitGroup( tileId, unitTypeIds = "" ) {
-    let result = currentPlayerDisambiguousUnits.filter( u => u.tileId === tileId );
-    unitTypeIds = Array.isArray( unitTypeIds ) ? unitTypeIds : ( unitTypeIds ? [unitTypeIds] : [] );
-    if ( unitTypeIds.length ) {
-        result = result.filter( u => unitTypeIds.includes( u.unitType.id ) );
-    }
-    return result.sort( (u1, u2) => u1.unitType.id === u2.unitType.id ? u1.movesRemaining - u2.movesRemaining : u1.unitType.id - u2.unitType.id );
-}
-
-function getConsolidatedUnits() {
-    return currentPlayerDisambiguousUnits.reduce( ( units, nextUnit ) => {
-        let unit = units.find( u => u.unitTypeId === nextUnit.unitType.id && u.tileId === nextUnit.tileId );
-        if ( unit ) {
-            unit.count++;
+function getConsolidatedUnitsByType( units ) {
+    return units.reduce( ( units, nextUnit ) => {
+        let unitStack = units.find( u => u.unitTypeId === nextUnit.unitType.id && u.tileId === nextUnit.tileId );
+        if ( unitStack ) {
+            unitStack.count++;
         }
         else {
             units.push( {unitTypeId: nextUnit.unitType.id, tileId: nextUnit.tileId, count: 1 } );
@@ -103,19 +75,7 @@ function swapUnit( unit, fromPlayer, toPlayer ) {
 
 function addUnit( unit, player, updateDisplay = true ) {
     const tileId = unit.tileId;
-    const unitsToAdd = unit.count || 1;
-    const unitTypeId = unit.unitTypeId || unit.unitType.id;
-    let unitStack = player.units.find( us => us.unitTypeId === unitTypeId && us.tileId === unit.tileId );
-    if ( unitStack ) {
-        unitStack.count += unitsToAdd;
-    }
-    else {
-        player.units.push( {unitTypeId: unit.unitTypeId, count: unitsToAdd, tileId: tileId} );
-    }
-
-    if ( player.id === currentPlayer.id && isExpansionPhase() ) {
-        currentPlayerDisambiguousUnits.push( unit );
-    }
+    player.units.push( unit );
 
     if ( updateDisplay ) {
         updateUnitIconsFromId( tileId );
@@ -125,15 +85,8 @@ function addUnit( unit, player, updateDisplay = true ) {
 
 function removeUnit( unit, player, updateDisplay = true ) {
     const tileId = unit.tileId;
-    const unitsToRemove = unit.count || 1;
-    const unitTypeId = unit.unitTypeId || unit.unitType.id;
-    let unitStack = player.units.find( us => us.unitTypeId === unitTypeId && us.tileId === unit.tileId );
-    unitStack.count -= unitsToRemove;
-    player.units = player.units.filter( us => us.count > 0 );
+    player.units.splice( player.units.findIndex( u => u.id === unit.id ), 1 );
 
-    if ( player.id === currentPlayer.id && isExpansionPhase() ) {
-        currentPlayerDisambiguousUnits = currentPlayerDisambiguousUnits.filter( u => u.id !== unit.id );
-    }
     if ( selectedUnits.some( u => u.id === unit.id ) ) {
         selectedUnits.splice( selectedUnits.findIndex( u => u.id === unit.id ), 1 );
     }
@@ -160,6 +113,10 @@ function performUnitAbilities() {
                 function( response ) {
                     performApostleAbility( response ? "0" : "1", selectedUnit );
             });
+        }
+        else {
+            //todo 2
+            killApostle( currentPlayer, );
         }
     }
     else {
@@ -188,4 +145,36 @@ function performApostleAbility( abilityId, unit ) {
             showToaster( "Must have founded a religion." );
         }
     }
+}
+
+
+/*** OTHER ***/
+
+
+function killApostle( unit ) {
+    const tileId = unit.tileId;
+    const enemyPlayer = game.players.find( p => p.units.some( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ) );
+    if ( enemyPlayer ) {
+        showBinaryChoice(
+            "Kill Apostle?",
+            "Would you like to kill the apostle(s) in this tile?",
+            "No",
+            "Yes",
+            function( isYes ) {
+                if ( isYes ) {
+                    enemyPlayer.units.filter( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ).forEach( u =>
+                        removeUnit( u, enemyPlayer )
+                    );
+                }
+            }
+        );
+    }
+}
+
+
+/*** OTHER ***/
+
+
+function getRandomUnitId() {
+    return ( Math.floor( Math.random() * 10000 ) + "" ).padStart( 4, '0' );
 }

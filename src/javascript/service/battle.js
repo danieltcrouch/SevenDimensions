@@ -12,14 +12,14 @@ function getPlayerBattleDetails( playerId, units, tileId ) {
     return {
         id: playerId,
         tileId: tileId,
-        units: units.filter( u => u.tileId === tileId ).map( u => { return {
+        units: units.filter( u => u.tileId === tileId && u.unitTypeId !== UNIT_TYPES[APOSTLE].id ).map( u => ({
             id: u.id,
             unitTypeId: u.unitType.id,
             roll: null,
             hit: false,
             hitDeflectionsUsed: 0,
             disbanded: false
-        }; } )
+        }) )
     };
 }
 
@@ -230,17 +230,18 @@ function endBattle( attackPlayerDetails, defendPlayerDetails ) {
 }
 
 function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResult ) {
+    const tileId = defendPlayerDetails.tileId;
     attackPlayerDetails.units.forEach( u => {
         if ( u.disbanded ) {
             removeUnit( u, currentPlayer );
         }
         else {
-            let unit = currentPlayerDisambiguousUnits.find( du => du.id === u.id );
+            let unit = currentPlayer.units.find( du => du.id === u.id );
             if ( u.hitDeflectionsUsed ) {
                 unit.hitDeflection = u.hitDeflectionsUsed;
             }
             if ( attackResult === "W" && u.roll ) {
-                unit.tileId = defendPlayerDetails.tileId;
+                unit.tileId = tileId;
             }
         }
     } );
@@ -251,19 +252,19 @@ function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResu
             removeUnit( u, defendPlayer );
         }
         else {
-            let unitStack = defendPlayer.units.find( us => us.unitTypeId === u.unitTypeId );
+            let unit = defendPlayer.units.find( du => du.id === u.id );
             if ( u.hitDeflectionsUsed ) {
-                unitStack.hitDeflection = u.hitDeflectionsUsed;
+                unit.hitDeflection = u.hitDeflectionsUsed;
             }
         }
     } );
 
     if ( attackResult === "W" ) {
         attackPlayerDetails.units.filter( u => u.roll && !u.disbanded ).forEach( u => {
-            currentPlayerDisambiguousUnits.find( du => du.id === u.id ).tileId = defendPlayerDetails.tileId;
+            currentPlayer.units.find( du => du.id === u.id ).tileId = tileId;
         } );
         if ( getTileDetails(defendPlayerDetails.tileId).districtPlayerId ) {
-            swapDistrict( defendPlayerDetails.id, attackPlayerDetails.id, defendPlayerDetails.tileId );
+            swapDistrict( defendPlayerDetails.id, attackPlayerDetails.id, tileId );
         }
     }
 }
