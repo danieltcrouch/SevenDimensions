@@ -96,7 +96,7 @@ function generateNewPlayers( testPlayers ) {
                     tileIds: [p.tileId]
                 },
                 dimensions: [], //see getScenarioGame
-                religion: null, //{id: RELIGIONS[0].id, tileIds: []}
+                religion: faction.startingSupplies.religion ? faction.startingSupplies.units.slice().map( u => ({ ...u, tileIds: [p.tileId] }) ) : null,
                 turn: {
                     hasSubmitted: false,
                     purchasedAdvancementCount: 0,

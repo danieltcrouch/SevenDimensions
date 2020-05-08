@@ -133,6 +133,7 @@ function selectUnitsByType( units ) {
         function( response ) {
             if ( response ) {
                 selectedUnits = response;
+                updatePerformAbilityButton();
             }
         }
     );
@@ -168,8 +169,9 @@ function hasEnemyUnits( tileId ) {
 
 function isImpassibleTile( tileId, checkCombat = true ) {
     const tileDetails = getTileDetails( tileId );
-    return tileDetails.type === TILE_TYPES[VOLCANO].name ||
-        ( false /* Check for Camelot */ ) ||
+    return !tileDetails ||
+        tileDetails.type === TILE_TYPES[VOLCANO].name ||
+        /*( Check for Camelot ) ||*/
         ( tileDetails.type === TILE_TYPES[CAPITAL].name && tileDetails.districtPlayerId !== currentPlayer.id ) ||
         ( checkCombat && tileDetails.unitSets.filter( s => s.id !== currentPlayer.id ).some( s => s.combat ) );
 }
@@ -190,15 +192,12 @@ function moveUnits( tileId ) {
     currentPlayer.units = getConsolidatedUnits();
 
     updateUnitIconsFromId( destinationTileId );
+    selectTile( destinationTileId );
     if ( rootTileId !== "unassigned" ) {
         updateUnitIconsFromId( rootTileId );
-        selectTile( rootTileId );
     }
     else {
         displayUnassignedUnits();
-        if ( selectedTile ) {
-            selectTile( selectedTile.id );
-        }
     }
 
     unselectUnits();

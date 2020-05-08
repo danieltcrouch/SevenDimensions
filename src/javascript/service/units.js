@@ -84,12 +84,12 @@ function getDisambiguousUnitGroup( tileId, unitTypeIds = "" ) {
 
 function getConsolidatedUnits() {
     return currentPlayerDisambiguousUnits.reduce( ( units, nextUnit ) => {
-        let unit = units.find( u => u.id === nextUnit.unitType.id && u.tileId === nextUnit.tileId );
+        let unit = units.find( u => u.unitTypeId === nextUnit.unitType.id && u.tileId === nextUnit.tileId );
         if ( unit ) {
             unit.count++;
         }
         else {
-            units.push( {id: nextUnit.unitType.id, tileId: nextUnit.tileId, count: 1 } );
+            units.push( {unitTypeId: nextUnit.unitType.id, tileId: nextUnit.tileId, count: 1 } );
         }
         return units;
     }, [] ).sort( (u1, u2) => u1.id - u2.id );
@@ -104,7 +104,8 @@ function swapUnit( unit, fromPlayer, toPlayer ) {
 function addUnit( unit, player, updateDisplay = true ) {
     const tileId = unit.tileId;
     const unitsToAdd = unit.count || 1;
-    let unitStack = player.units.find( us => us.unitTypeId === unit.unitTypeId );
+    const unitTypeId = unit.unitTypeId || unit.unitType.id;
+    let unitStack = player.units.find( us => us.unitTypeId === unitTypeId && us.tileId === unit.tileId );
     if ( unitStack ) {
         unitStack.count += unitsToAdd;
     }
@@ -113,27 +114,33 @@ function addUnit( unit, player, updateDisplay = true ) {
     }
 
     if ( player.id === currentPlayer.id && isExpansionPhase() ) {
-        disambiguateCurrentUnits( player.units );
+        currentPlayerDisambiguousUnits.push( unit );
     }
 
     if ( updateDisplay ) {
         updateUnitIconsFromId( tileId );
+        displayTileDetails( tileId );
     }
 }
 
 function removeUnit( unit, player, updateDisplay = true ) {
     const tileId = unit.tileId;
     const unitsToRemove = unit.count || 1;
-    let unitStack = player.units.find( us => us.unitTypeId === unit.unitTypeId );
+    const unitTypeId = unit.unitTypeId || unit.unitType.id;
+    let unitStack = player.units.find( us => us.unitTypeId === unitTypeId && us.tileId === unit.tileId );
     unitStack.count -= unitsToRemove;
-    player.units = player.units.filter( us => us.count <= 0 );
+    player.units = player.units.filter( us => us.count > 0 );
 
     if ( player.id === currentPlayer.id && isExpansionPhase() ) {
-        disambiguateCurrentUnits( player.units );
+        currentPlayerDisambiguousUnits = currentPlayerDisambiguousUnits.filter( u => u.id !== unit.id );
+    }
+    if ( selectedUnits.some( u => u.id === unit.id ) ) {
+        selectedUnits.splice( selectedUnits.findIndex( u => u.id === unit.id ), 1 );
     }
 
     if ( updateDisplay ) {
         updateUnitIconsFromId( tileId );
+        displayTileDetails( tileId );
     }
 }
 
@@ -170,8 +177,8 @@ const APOSTLE_EVANG = "1";
 function performApostleAbility( abilityId, unit ) {
     const tileId = unit.tileId;
     if ( abilityId === APOSTLE_FOUND ) {
-        removeUnit( unit, currentPlayer );
         addDistrict( currentPlayer, tileId );
+        removeUnit( unit, currentPlayer );
     }
     else if ( abilityId === APOSTLE_EVANG ) {
         if ( currentPlayer.religion ) {

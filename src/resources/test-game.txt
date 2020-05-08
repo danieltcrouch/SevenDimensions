@@ -425,7 +425,12 @@
 				]
 			},
 			"dimensions":[],
-			"religion":null,
+			"religion":{
+			    "id":"0"
+			    "tileIds":[
+					"7-5"
+			    ]
+			},
 			"turn":{
 				"hasSubmitted":false,
 				"purchasedAdvancementCount":0,

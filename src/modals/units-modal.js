@@ -7,14 +7,14 @@ function openUnitsModal( units, callback ) {
     unitModalCallback = callback;
     unitModalResult = [];
 
-    populateUnits();
+    populateUnitChoices();
 
     show( "unitsModal", true, "block" );
     setCloseHandlersJS( "unitsModal" );
     blurBackground();
 }
 
-function populateUnits() {
+function populateUnitChoices() {
     const groupId = "unitOptions";
     let wrapper = id(groupId);
     wrapper.innerHTML = "";
@@ -48,6 +48,7 @@ function submitUnits() {
 }
 
 function uncheckUnits() {
+    id('allUnitsCheckbox').checked = false;
     nm('unitOptions').forEach( c => c.checked = false );
 }
 

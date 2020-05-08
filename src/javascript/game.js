@@ -93,12 +93,12 @@ function loadUserCallback( playerId ) {
 function popModals() {
     if ( isMarketAuctionPhase() && !Number.isInteger( currentPlayer.turn.auctionBid ) ) {
         showAuctionActions();
-    }
-    else if ( isHarvestPhase() && !currentPlayer.turn.hasReaped ) {
-        showHarvestActions();
         if ( currentPlayer.advancements.auctionWins.includes( AUCTIONS[game.state.round].id ) ) {
             showToaster("You won this round's auction!");
         }
+    }
+    else if ( isHarvestPhase() && !currentPlayer.turn.hasReaped ) {
+        showHarvestActions();
     }
     else if ( isDoomsdayClockPhase() && game.state.event <= EVENT_MARS && !currentPlayer.turn.hasSubmitted ) {
         showToaster("Time is slipping...");
@@ -339,7 +339,7 @@ function getInsurrectionVictim() {
 }
 
 function hasHero( units ) {
-    return units.some( u => getUnitType( u.id ) === UNIT_TYPES[HERO] );
+    return units.some( u => getUnitType( u.unitTypeId ) === UNIT_TYPES[HERO] );
 }
 
 

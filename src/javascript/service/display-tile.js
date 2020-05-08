@@ -20,8 +20,8 @@ function displayTileDetails( tileId ) {
         const units = isExpansionPlayer ? getConsolidatedUnits().filter( u => u.tileId === tileId ) : us.units;
         for ( let i = 0; i < units.length; i++ ) {
             const unit = units[i];
-            const spanUnitAttributes = isExpansionPlayer ? ` id='units-se-${unit.id}' class='link' onclick='selectUnits("selected","${unit.id}")'` : "";
-            const unitDisplay = getUnitDisplayName( unit.id, unit.count, us.id );
+            const spanUnitAttributes = isExpansionPlayer ? ` id='units-se-${unit.unitTypeId}' class='link' onclick='selectUnits("selected","${unit.unitTypeId}")'` : "";
+            const unitDisplay = getUnitDisplayName( unit.unitTypeId, unit.count, us.id );
             tileUnitsHTML += `<div style='padding-left: 1em'><span${spanUnitAttributes}>${unitDisplay}</span></div>\n`;
         }
     } );
