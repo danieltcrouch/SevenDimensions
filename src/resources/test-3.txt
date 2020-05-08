@@ -324,17 +324,17 @@
             },
             "units": [
                 {
-                    "id": "1",
+                    "unitTypeId": "1",
                     "count": 2,
                     "tileId": "1-2"
                 },
                 {
-                    "id": "2",
+                    "unitTypeId": "2",
                     "count": 3,
                     "tileId": "1-2"
                 },
                 {
-                    "id": "7",
+                    "unitTypeId": "7",
                     "count": 1,
                     "tileId": "1-2"
                 }
@@ -387,27 +387,27 @@
             },
             "units": [
                 {
-                    "id": "1",
+                    "unitTypeId": "1",
                     "count": 1,
                     "tileId": "1-5"
                 },
                 {
-                    "id": "2",
+                    "unitTypeId": "2",
                     "count": 1,
                     "tileId": "1-5"
                 },
                 {
-                    "id": "3",
+                    "unitTypeId": "3",
                     "count": 1,
                     "tileId": "1-5"
                 },
                 {
-                    "id": "6",
+                    "unitTypeId": "6",
                     "count": 1,
                     "tileId": "1-5"
                 },
                 {
-                    "id": "7",
+                    "unitTypeId": "7",
                     "count": 1,
                     "tileId": "1-5"
                 }
@@ -460,27 +460,27 @@
             },
             "units": [
                 {
-                    "id": "0",
+                    "unitTypeId": "0",
                     "count": 1,
                     "tileId": "4-1"
                 },
                 {
-                    "id": "1",
+                    "unitTypeId": "1",
                     "count": 1,
                     "tileId": "4-1"
                 },
                 {
-                    "id": "2",
+                    "unitTypeId": "2",
                     "count": 1,
                     "tileId": "4-1"
                 },
                 {
-                    "id": "3",
+                    "unitTypeId": "3",
                     "count": 1,
                     "tileId": "4-1"
                 },
                 {
-                    "id": "7",
+                    "unitTypeId": "7",
                     "count": 1,
                     "tileId": "4-1"
                 }

@@ -399,7 +399,7 @@ function getTileDetails( id ) {
         game.players.forEach( p => {
             let units = p.units.filter( u => u.tileId === id );
             if ( units.length > 0 ) {
-                unitSets.push( { id: p.id, combat: !units.every( u => u.id === UNIT_TYPES[APOSTLE].id ), units: units } );
+                unitSets.push( { id: p.id, combat: !units.every( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id ), units: units } );
             }
         } );
 

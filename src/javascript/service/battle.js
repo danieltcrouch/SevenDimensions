@@ -229,7 +229,7 @@ function endBattle( attackPlayerDetails, defendPlayerDetails ) {
     );
 }
 
-function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResult ) { //todo 2
+function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResult ) {
     attackPlayerDetails.units.forEach( u => {
         if ( u.disbanded ) {
             removeUnit( u, currentPlayer );

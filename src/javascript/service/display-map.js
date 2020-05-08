@@ -92,7 +92,7 @@ function updateUnitIconsFromId( tileId ) {
 
 function updateUnitIcons( tileId, unitSets, isDistrict, controlPlayerId ) {
     const unitSet = unitSets.find( set => set.id === controlPlayerId );
-    const unitIds = unitSet ? unitSet.units.map( u => u.id ) : [];
+    const unitIds = unitSet ? unitSet.units.map( u => u.unitTypeId ) : [];
     const normalUnitIds = unitIds.filter( id => id !== UNIT_TYPES[HERO].id );
     const isMultipleUnits = unitSets.reduce( ( units, set ) => units.concat( set.units ), [] ).length > 1;
     const isNonHeroUnits = !!normalUnitIds.length;
