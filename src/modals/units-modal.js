@@ -29,7 +29,7 @@
 //         input.type = "checkbox";
 //         let label = document.createElement( "LABEL" );
 //         label.htmlFor = id;
-//         label.innerHTML = `${unit.unitType.name} (Moves: ${unit.movesRemaining})`;
+//         label.innerHTML = `${unit.getUnitType().name} (Moves: ${unit.movesRemaining})`;
 //         div.appendChild( input );
 //         div.appendChild( label );
 //         wrapper.appendChild( div );

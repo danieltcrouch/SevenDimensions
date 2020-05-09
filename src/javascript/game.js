@@ -40,8 +40,8 @@ function loadGameCallback( response ) {
 }
 
 function convertClasses( game ) {
-    game.board.map( t => new Tile( t.id, t.tileTypeId, t.resourceIds ) );
-    game.players.forEach( p => p.units.map( u => new Unit( u.id, u.unitTypeId, u.tileId ) ) );
+    game.board = game.board.map( t => new Tile( t.id, t.tileTypeId, t.resourceIds ) );
+    game.players.forEach( p => p.units = p.units.map( u => new Unit( u.id, u.unitTypeId, u.tileId ) ) );
 }
 
 function loadGameState() {
@@ -340,7 +340,7 @@ function getInsurrectionVictim() {
 }
 
 function hasHero( units ) {
-    return units.some( u => getUnitType( u.unitTypeId ) === UNIT_TYPES[HERO] );
+    return units.some( u => u.unitTypeId === UNIT_TYPES[HERO].id );
 }
 
 

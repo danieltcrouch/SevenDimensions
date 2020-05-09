@@ -426,7 +426,7 @@
 			},
 			"dimensions":[],
 			"religion":{
-			    "id":"0"
+			    "id":"0",
 			    "tileIds":[
 					"7-5"
 			    ]

@@ -69,13 +69,13 @@ function generateNewPlayers( testPlayers ) {
             const faction = getFaction( p.factionId );
             const chaosCards = chaosDeck.getRandomCards( faction.startingSupplies.cards ).map( c => c.id );
             const religion = faction.startingSupplies.religion ? { id: faction.startingSupplies.religion.id, tileIds: [p.tileId] } : null;
-            let units = [];
-            for ( let unitStack in faction.startingSupplies.units ) {
-                for ( let i = 0; i < unitStack.count; i++ ) {
+            let units = [ new Unit( getRandomUnitId(), UNIT_TYPES[HERO].id, p.tileId ) ];
+            for ( let i = 0; i < faction.startingSupplies.units.length; i++ ) {
+                const unitStack = faction.startingSupplies.units[i];
+                for ( let j = 0; j < unitStack.count; j++ ) {
                     units.push( new Unit( getRandomUnitId(), unitStack.unitTypeId, p.tileId ) );
                 }
             }
-            units.push( HEROES[faction.heroIndex] );
 
             return {
                 id: p.id,

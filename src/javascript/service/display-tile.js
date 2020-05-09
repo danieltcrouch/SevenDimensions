@@ -38,7 +38,7 @@ function showTileDetails( isShow = true ) {
 
 
 function updatePerformAbilityButton() {
-    if ( selectedUnits.length === 1 && selectedUnits[0].unitType.id === UNIT_TYPES[APOSTLE].id ) {
+    if ( selectedUnits.length === 1 && selectedUnits[0].unitTypeId === UNIT_TYPES[APOSTLE].id ) {
         id('perform').classList.remove( "staticInverseButton" );
     }
     else {

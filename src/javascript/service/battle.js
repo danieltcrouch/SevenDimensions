@@ -14,7 +14,7 @@ function getPlayerBattleDetails( playerId, units, tileId ) {
         tileId: tileId,
         units: units.filter( u => u.tileId === tileId && u.unitTypeId !== UNIT_TYPES[APOSTLE].id ).map( u => ({
             id: u.id,
-            unitTypeId: u.unitType.id,
+            unitTypeId: u.unitTypeId,
             roll: null,
             hit: false,
             hitDeflectionsUsed: 0,
@@ -76,7 +76,7 @@ function rollForUnits( units ) {
             result.push( {
                 id: u.id,
                 roll: roll,
-                isHit: roll > u.unitType.hit,
+                isHit: roll > getUnitType( u.unitTypeId ).hit,
             } );
         }
     } );
@@ -109,7 +109,7 @@ function countHits( units ) {
 }
 
 function getLowestDisbands( units, disbandCount ) {
-    return units.sort( (a,b) => parseInt(a.unitType.id) - parseInt(b.unitType.id) ).slice(0, disbandCount);
+    return units.sort( (a,b) => parseInt(a.unitTypeId) - parseInt(b.unitTypeId) ).slice(0, disbandCount);
 }
 
 function saveHits( playerDetails, isAttack, callback ) {

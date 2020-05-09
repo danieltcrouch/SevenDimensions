@@ -186,10 +186,12 @@ function purchase() {
 }
 
 function assignPurchases() {
-    for ( let unitInput in nm('unitCounts') ) {
+    const unitInputs = nm('unitCounts');
+    for ( let i = 0; i < unitInputs.length; i++ ) {
+        const unitInput = unitInputs[i];
+        const unitTypeId = unitInput.id.split('-')[1];
         const count = unitInput.value || 0;
-        const unitTypeId = unitInputs[i].id.split('-')[1];
-        for ( let i = 0; i < count; i++ ) {
+        for ( let j = 0; j < count; j++ ) {
             addUnit( new Unit( getRandomUnitId(), unitTypeId, DEFAULT_TILE ), marketModalValues, false );
         }
     }

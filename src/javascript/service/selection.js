@@ -106,7 +106,7 @@ function selectUnits( tileSelectType, unitId ) {
 
     if ( selectedUnits.length && SelectClass.isUnitSelected( unitId ) ) {
         SelectClass.highlightUnit( unitId, false );
-        selectedUnits = selectedUnits.filter( u => u.unitType.id !== unitId );
+        selectedUnits = selectedUnits.filter( u => u.unitTypeId !== unitId );
         if ( !selectedUnits.length ) {
             SelectClass.highlightAll( false );
             unselectUnits();

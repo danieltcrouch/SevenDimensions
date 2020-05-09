@@ -56,12 +56,12 @@ function getUnitDisplayName( unitTypeId, playerId, unitCount = 1 ) {
 
 function getConsolidatedUnitsByType( units ) {
     return units.reduce( ( units, nextUnit ) => {
-        let unitStack = units.find( u => u.unitTypeId === nextUnit.unitType.id && u.tileId === nextUnit.tileId );
+        let unitStack = units.find( u => u.unitTypeId === nextUnit.unitTypeId && u.tileId === nextUnit.tileId );
         if ( unitStack ) {
             unitStack.count++;
         }
         else {
-            units.push( {unitTypeId: nextUnit.unitType.id, tileId: nextUnit.tileId, count: 1 } );
+            units.push( {unitTypeId: nextUnit.unitTypeId, tileId: nextUnit.tileId, count: 1 } );
         }
         return units;
     }, [] ).sort( (u1, u2) => u1.id - u2.id );
@@ -104,7 +104,7 @@ function removeUnit( unit, player, updateDisplay = true ) {
 function performUnitAbilities() {
     if ( selectedUnits.length === 1 ) {
         const selectedUnit = selectedUnits[0];
-        if ( selectedUnit.unitType.id === UNIT_TYPES[APOSTLE].id ) {
+        if ( selectedUnit.unitTypeId === UNIT_TYPES[APOSTLE].id ) {
             showBinaryChoice( //todo 4 - make a new modal that allows infinite button adding
                 "Apostle",
                 "Choose an ability or cancel to move:",
