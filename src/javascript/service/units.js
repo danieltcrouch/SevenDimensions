@@ -104,19 +104,17 @@ function removeUnit( unit, player, updateDisplay = true ) {
 function performUnitAbilities() {
     if ( selectedUnits.length === 1 ) {
         const selectedUnit = selectedUnits[0];
-        if ( selectedUnit.unitTypeId === UNIT_TYPES[APOSTLE].id ) {
-            showBinaryChoice( //todo 4 - make a new modal that allows infinite button adding
-                "Apostle",
-                "Choose an ability or cancel to move:",
-                "Found District",
-                "Evangelize",
-                function( response ) {
-                    performApostleAbility( response ? "0" : "1", selectedUnit );
-            });
+        let abilities = getAbilitiesForUnit( selectedUnit );
+        if ( abilities.length > 0 ) {
+            showChoices(
+                getUnitDisplayName( selectedUnit.unitTypeId, currentPlayer.id ),
+                "",
+                abilities.map( a => a.text ),
+                function( aIndex ) { abilities[aIndex].aFunction( selectedUnit ); }
+            );
         }
         else {
-            //todo 2
-            killApostle( currentPlayer, );
+            showToaster("This unit has no current abilities.");
         }
     }
     else {
@@ -124,36 +122,41 @@ function performUnitAbilities() {
     }
 }
 
+function getAbilitiesForUnit( unit ) {
+    let result = [];
+    const tileDetails = getTileDetails( unit.tileId );
 
-/*** APOSTLE ***/
-
-
-const APOSTLE_FOUND = "0";
-const APOSTLE_EVANG = "1";
-
-function performApostleAbility( abilityId, unit ) {
-    const tileId = unit.tileId;
-    if ( abilityId === APOSTLE_FOUND ) {
-        addDistrict( currentPlayer, tileId );
-        removeUnit( unit, currentPlayer );
-    }
-    else if ( abilityId === APOSTLE_EVANG ) {
-        if ( currentPlayer.religion ) {
-            addReligion( currentPlayer, tileId );
+    if ( unit.unitTypeId === UNIT_TYPES[APOSTLE].id ) {
+        if ( !tileDetails.districtPlayerId ) {
+            result.push( { text: "Found District", aFunction: found } );
         }
-        else {
-            showToaster( "Must have founded a religion." );
+        if ( currentPlayer.religion && tileDetails.districtPlayerId && !tileDetails.religionIds.includes( currentPlayer.religion.id ) ) {
+            result.push( { text: "Evangelize", aFunction: evangelize } );
         }
     }
+    else {
+        if ( tileDetails.unitSets.filter( us => !us.combat ).length ) {
+            result.push( { text: "Kill Apostle", aFunction: killApostle } );
+        }
+    }
+
+    return result;
 }
 
+function found( unit ) {
+    const tileId = unit.tileId;
+    addDistrict( currentPlayer, tileId );
+    removeUnit( unit, currentPlayer );
+}
 
-/*** OTHER ***/
-
+function evangelize( unit ) {
+    const tileId = unit.tileId;
+    addReligion( currentPlayer, tileId );
+}
 
 function killApostle( unit ) {
     const tileId = unit.tileId;
-    const enemyPlayer = game.players.find( p => p.units.some( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ) );
+    const enemyPlayer = game.players.find( p => p.units.some( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ) ); //todo 4 - build a modal for checkboxes/radio buttons; helper function in this project to pick applicable player
     if ( enemyPlayer ) {
         showBinaryChoice(
             "Kill Apostle?",

@@ -25,7 +25,7 @@ function addReligion( player, tileId ) {
 
 function removeReligion( player, tileId ) {
     let tiles = player.religion.tileIds;
-    tiles.splice( tiles.indexOf( tileId ), 1 ); //todo 5 - add array remove to Common (be able to handle primitives and objects) (do a removeAll) (currently I either use splice or x = x.filter)
+    tiles.splice( tiles.indexOf( tileId ), 1 ); //todo 5 - use Common array remove (search for either splice or x = x.filter)
     const tileDetails = getTileDetails( tileId );
     updateReligionIcons( tileId, tileDetails.religionIds, tileDetails.districtPlayerId );
 }

@@ -1,6 +1,12 @@
-//todo 1 - make battles [TEST]
-//todo 2 - Display moves remaining during Expansion phase
+//todo 1 - Battles [TEST]
+//todo 2 - Finish movement and actions
+//  Bombard
+//  Kamikaze
+//  Evang and Found validation
+//  Kill Apostles
+//  Hit Delfections
 //todo 3 - Chaos Card structure (don't have to implement all of them, just the ones that cover basic use cases; esp. Shut Up)
+//todo 4 - Clean-up Common
 //todo 7 - Initiative Tokens
 const COLORS = ["red", "green", "blue", "purple", "orange", "teal", "gold"];
 
@@ -89,6 +95,7 @@ function loadUserCallback( playerId ) {
 
     displayUnassignedUnits();
     show( 'perform', isExpansionPhase() );
+    updatePerformAbilityButton();
 }
 
 function popModals() {

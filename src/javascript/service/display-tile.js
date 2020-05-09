@@ -22,7 +22,8 @@ function displayTileDetails( tileId ) {
             const unit = units[i];
             const spanUnitAttributes = isExpansionPlayer ? ` id='units-se-${unit.id}' class='link' onclick='selectUnits("selected","${unit.id}")'` : "";
             const unitDisplay = getUnitDisplayName( unit.unitTypeId, us.id, unit.count );
-            tileUnitsHTML += `<div style='padding-left: 1em'><span${spanUnitAttributes}>${unitDisplay}</span></div>\n`;
+            const movesRemaining = isExpansionPlayer ? ` (Moves: ${unit.movesRemaining})` : "";
+            tileUnitsHTML += `<div style='padding-left: 1em'><span${spanUnitAttributes}>${unitDisplay}${movesRemaining}</span></div>\n`;
         }
     } );
     id('tileUnits').innerHTML = tileUnitsHTML;
@@ -38,7 +39,7 @@ function showTileDetails( isShow = true ) {
 
 
 function updatePerformAbilityButton() {
-    if ( selectedUnits.length === 1 && selectedUnits[0].unitTypeId === UNIT_TYPES[APOSTLE].id ) {
+    if ( selectedUnits.length === 1 ) {
         id('perform').classList.remove( "staticInverseButton" );
     }
     else {

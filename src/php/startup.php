@@ -51,7 +51,7 @@ function includeHeader()
 function includeModals()
 {
     include(getRootPath() . "common/html/modal.html");
-    include(getRootPath() . "common/html/modal-binary.html");
+    include(getRootPath() . "common/html/modal-choice.html");
     include(getRootPath() . "common/html/modal-prompt.html");
     include(getRootPath() . "common/html/modal-prompt-big.html");
     include(getRootPath() . "common/html/toaster.html");
