@@ -1,5 +1,5 @@
 //todo 1 - make battles [TEST]
-//todo 2 - Remove unit stacks
+//todo 2 - Display moves remaining during Expansion phase
 //todo 3 - Chaos Card structure (don't have to implement all of them, just the ones that cover basic use cases; esp. Shut Up)
 //todo 7 - Initiative Tokens
 const COLORS = ["red", "green", "blue", "purple", "orange", "teal", "gold"];

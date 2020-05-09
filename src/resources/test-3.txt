@@ -329,7 +329,22 @@
 					"tileId":"1-2"
 				},
 				{
+					"id":"0013",
+					"unitTypeId":"1",
+					"tileId":"1-2"
+				},
+				{
 					"id":"0006",
+					"unitTypeId":"2",
+					"tileId":"1-2"
+				},
+				{
+					"id":"0014",
+					"unitTypeId":"2",
+					"tileId":"1-2"
+				},
+				{
+					"id":"0015",
 					"unitTypeId":"2",
 					"tileId":"1-2"
 				},
@@ -419,12 +434,7 @@
                 ]
             },
             "dimensions": [],
-			"religion":{
-			    "id":"0",
-			    "tileIds":[
-					"7-5"
-			    ]
-			},
+			"religion": null,
             "turn": {
                 "purchasedAdvancementCount": 0,
                 "purchasedCardCount": 0,

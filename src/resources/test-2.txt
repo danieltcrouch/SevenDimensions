@@ -335,7 +335,22 @@
 					"tileId":"1-2"
 				},
 				{
+					"id":"0008",
+					"unitTypeId":"1",
+					"tileId":"1-2"
+				},
+				{
 					"id":"0006",
+					"unitTypeId":"2",
+					"tileId":"1-2"
+				},
+				{
+					"id":"0009",
+					"unitTypeId":"2",
+					"tileId":"1-2"
+				},
+				{
+					"id":"0011",
 					"unitTypeId":"2",
 					"tileId":"1-2"
 				},
