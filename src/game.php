@@ -76,6 +76,7 @@
 
 <?php include("modals/capital-modal.html"); ?>
 <?php include("modals/market-modal.html"); ?>
+<?php include("modals/battle-modal.html"); ?>
 <?php include("modals/council-modal.html"); ?>
 <?php include("modals/event-modal.html"); ?>
 <?php includeModals(); ?>

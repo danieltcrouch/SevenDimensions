@@ -19,6 +19,8 @@ function getPlayerBattleDetails( player, tileId ) {
         tileId: tileId,
         bonuses: {
             kamikaze: player.advancements.doctrines.includes(DOCTRINES[HUMAN_SACRIFICE].id),
+            hangingGardens: false,
+            menOfSteel: false,
             potential: {
                 menOfSteel: player.cards.chaos.includes( CHAOS[61].id )
             }
@@ -52,10 +54,12 @@ function checkBattle( battleDetails ) {
     battleDetails = jsonParse( battleDetails );
     if ( battleDetails.id ) {
         battleId = battleDetails.id;
-        const isAttacker = battleDetails.attackDetails.id === currentPlayer.id;
+        const attackDetails = jsonParse( battleDetails.attackDetails );
+        const defendDetails = jsonParse( battleDetails.defendDetails );
+        const isAttacker = attackDetails.id === currentPlayer.id;
         openBattleModal(
-            isAttacker ? battleDetails.attackDetails : battleDetails.defendDetails,
-            !isAttacker ? battleDetails.attackDetails : battleDetails.defendDetails,
+            isAttacker ? attackDetails : defendDetails,
+            !isAttacker ? attackDetails : defendDetails,
             isAttacker,
             null,
             function() {}
@@ -69,11 +73,11 @@ function createBattle( attackPlayerDetails, defendPlayerDetails, callback ) {
        {
            action: "createBattle",
            gameId: gameId,
-           attackPlayerDetails: attackPlayerDetails,
-           defendPlayerDetails: defendPlayerDetails
+           attackPlayerDetails: JSON.stringify( attackPlayerDetails ),
+           defendPlayerDetails: JSON.stringify( defendPlayerDetails )
        },
        function( result ) {
-           battleId = result;
+           battleId = jsonParse( result );
            callback();
        }
     );
@@ -84,11 +88,11 @@ function rollForUnits( units, kamikazes = [] ) {
     units.forEach( u => {
         if ( !u.disbanded ) {
             const hitValue = kamikazes.includes( u.id ) ? KAMIKAZE_HIT : getUnitType( u.unitTypeId ).hit;
-            const roll = roll();
+            const rollResult = roll();
             result.push( {
                 id: u.id,
-                roll: roll,
-                isHit: roll > hitValue,
+                roll: rollResult,
+                isHit: rollResult >= hitValue,
             } );
         }
     } );
@@ -136,7 +140,7 @@ function saveHits( playerDetails, isAttack, callback ) {
             action: "saveHits",
             battleId: battleId,
             isAttack: isAttack,
-            playerDetails: playerDetails,
+            playerDetails: JSON.stringify( playerDetails ),
         },
         callback
     );
@@ -186,7 +190,7 @@ function saveDisbands( playerDetails, isAttack, callback ) {
             action: "saveDisbands",
             battleId: battleId,
             isAttack: isAttack,
-            playerDetails: playerDetails,
+            playerDetails: JSON.stringify( playerDetails ),
         },
         callback
     );
@@ -237,7 +241,7 @@ function endBattle( attackPlayerDetails, defendPlayerDetails ) {
        {
            action: "endBattle",
            battleId: battleId,
-           battleInfo: battleLog
+           battleInfo: JSON.stringify( battleLog )
        },
        function() {
            game.battles.push( battleLog );

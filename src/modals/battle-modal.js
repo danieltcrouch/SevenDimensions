@@ -5,6 +5,7 @@ let timeLimit;
 let battleModalCallback;
 let isFirstRound;
 let isAiActivated;
+let hasSubmitted;
 
 function openBattleModal( currentPlayer, enemyPlayer, isAttackingValue, timeLimitValue, callback ) {
     currentPlayerDetails = currentPlayer;
@@ -15,6 +16,9 @@ function openBattleModal( currentPlayer, enemyPlayer, isAttackingValue, timeLimi
 
     isFirstRound = true;
     isAiActivated = false;
+    hasSubmitted = false;
+
+    //todo 1 - load the correct status if existing game
 
     displayUnits();
     displayButtons();
@@ -48,29 +52,33 @@ function displayUnitsByPlayer( playerId, units, divId ) {
             label.htmlFor = id;
             label.id = id + "-display";
             label.name = "unitDisplays";
-            label.innerHTML = getUnitDisplayName( unit.id, playerId );
+            label.innerHTML = getUnitDisplayName( unit.unitTypeId, playerId );
             div.appendChild( input );
             div.appendChild( label );
         }
         else {
             let span = document.createElement( "SPAN" );
             span.id = id + "-display";
+            span.innerText = getUnitDisplayName( unit.unitTypeId, playerId );
             div.appendChild( span );
         }
         let rollSpan = document.createElement( "SPAN" );
         rollSpan.id = id + "-rolls";
         rollSpan.style.fontWeight = "bold";
+        rollSpan.style.marginLeft = ".5em";
         div.appendChild( rollSpan );
         let kSpan = document.createElement( "SPAN" );
         kSpan.id = id + "-kamikaze";
         kSpan.name = "kamikazeSpans";
-        kSpan.innerHTML = ` (Use Kamikaze <input id='check-${unit.id}-kamikaze' name="kamikazes" type="checkbox">)`;
+        kSpan.innerHTML = `(Use Kamikaze <input id='check-${unit.id}-kamikaze' name="kamikazes" type="checkbox">)`;
+        kSpan.style.marginLeft = ".5em";
         kSpan.style.display = "none";
         div.appendChild( kSpan );
         let dSpan = document.createElement( "SPAN" );
         dSpan.id = id + "-deflection";
         dSpan.name = "deflectionSpans";
-        dSpan.innerHTML = ` (Use Hit Deflection <input id='check-${unit.id}-deflection' name="deflections" type="checkbox">)`;
+        dSpan.innerHTML = `(Use Hit Deflection <input id='check-${unit.id}-deflection' name="deflections" type="checkbox">)`;
+        dSpan.style.marginLeft = ".5em";
         dSpan.style.display = "none";
         div.appendChild( dSpan );
         wrapper.appendChild( div );
@@ -145,8 +153,8 @@ function showHitDeflections( isDisband ) {
         } );
     }
     else {
-        nm( 'deflectionSpans' ).forEach( e => hide( e.id ) );
-        nm( 'deflections' ).forEach( e => e.checked = false );
+        nm('deflectionSpans').forEach( e => hide( e.id ) );
+        nm('deflections').forEach( e => e.checked = false );
     }
 }
 
@@ -160,11 +168,12 @@ function showSpecialAttacks( isAttack ) {
     }
     else {
         nm('kamikazeSpans').forEach( e => hide(e.id) );
-        nm( 'kamikazes' ).forEach( e => e.checked = false );
+        nm('kamikazes').forEach( e => e.checked = false );
     }
 }
 
 function startDisbands() {
+    hasSubmitted = false;
     updateButtons( false );
     showHitDeflections( true );
     showSpecialAttacks( false );
@@ -175,6 +184,7 @@ function startDisbands() {
 }
 
 function startAttacking() {
+    hasSubmitted = false;
     clearHits();
     updateButtons( true );
     showSpecialAttacks( true );
@@ -193,87 +203,97 @@ function getDeflectionIds() {
 }
 
 function attack() {
-    const assignedUnits = getSelectedUnits();
-    if ( assignedUnits && assignedUnits.length ) {
-        const kamikazeIds = getKamikazeIds();
-        const rollResults = rollForUnits( assignedUnits, kamikazeIds );
-        currentPlayerDetails = addRollsToDetails( currentPlayerDetails, rollResults );
-        if ( kamikazeIds ) {
-            currentPlayerDetails = addDisbandsToDetails( currentPlayerDetails, kamikazeIds.map( i => ({id: i}) ) );
-        }
+    if ( !hasSubmitted ) {
+        hasSubmitted = true;
+        const assignedUnits = getSelectedUnits();
+        if ( assignedUnits && assignedUnits.length ) {
+            const kamikazeIds = getKamikazeIds();
+            const rollResults = rollForUnits( assignedUnits, kamikazeIds );
+            currentPlayerDetails = addRollsToDetails( currentPlayerDetails, rollResults );
+            if ( kamikazeIds ) {
+                currentPlayerDetails = addDisbandsToDetails( currentPlayerDetails, kamikazeIds.map( i => ({id: i}) ) );
+            }
 
-        saveHits( currentPlayerDetails, isAttacking, function() {
-            id('status').innerText = "Waiting on opponent to submit attack...";
-            getHits(
-                isAttacking,
-                isAttacking ? ( isFirstRound ? timeLimit : ( isAiActivated ? AI_TIMEOUT : NORMAL_TIMEOUT ) ) : MAX_TIMEOUT,
-                getHitsCallback,
-                function() {
-                    if ( isAttacking ) {
-                        //AI Takeover
-                        isAiActivated = true;
-                        const rollResults = rollForUnits( enemyPlayerDetails.units );
-                        enemyPlayerDetails = addRollsToDetails( enemyPlayerDetails, rollResults );
-                        saveHits( enemyPlayerDetails, !isAttacking, function() { getHitsCallback( enemyPlayerDetails ); } );
+            saveHits( currentPlayerDetails, isAttacking, function() {
+                id('status').innerText = "Waiting on opponent to submit attack...";
+                getHits(
+                    isAttacking,
+                    isAttacking ? ( isFirstRound ? timeLimit : ( isAiActivated ? AI_TIMEOUT : NORMAL_TIMEOUT ) ) : MAX_TIMEOUT,
+                    getHitsCallback,
+                    function() {
+                        if ( isAttacking ) {
+                            //AI Takeover
+                            isAiActivated = true;
+                            const rollResults = rollForUnits( enemyPlayerDetails.units );
+                            enemyPlayerDetails = addRollsToDetails( enemyPlayerDetails, rollResults );
+                            saveHits( enemyPlayerDetails, !isAttacking, function() { getHitsCallback( enemyPlayerDetails ); } );
+                        }
+                        else {
+                            showToaster( "Consider playing with someone less rude." );
+                        }
                     }
-                    else {
-                        showToaster( "Consider playing with someone less rude." );
-                    }
-                }
-            );
-        } );
-    }
-    else {
-        showToaster( "Must choose units." );
+                );
+            } );
+        }
+        else {
+            showToaster( "Must choose units." );
+        }
     }
 }
 
 function getHitsCallback( enemyPlayer ) {
+    id('status').innerText = "";
+
     enemyPlayerDetails = enemyPlayer;
     displayHits();
     currentPlayerDetails.units.forEach( u => { u.roll = null; u.hit = null; } );
-    startDisbands();
+    window.setTimeout( startDisbands, DELAY );
 }
 
 function disband() {
-    const assignedUnits = getSelectedUnits();
-    if ( assignedUnits && assignedUnits.length === countHits( enemyPlayerDetails.units ) ) {
-        const deflectionIds = getDeflectionIds();
-        currentPlayerDetails = addDisbandsToDetails( currentPlayerDetails, assignedUnits, deflectionIds );
+    if ( !hasSubmitted ) {
+        hasSubmitted = true;
+        const assignedUnits = getSelectedUnits();
+        if ( assignedUnits && assignedUnits.length === countHits( enemyPlayerDetails.units ) ) {
+            const deflectionIds = getDeflectionIds();
+            currentPlayerDetails = addDisbandsToDetails( currentPlayerDetails, assignedUnits, deflectionIds );
 
-        saveDisbands( currentPlayerDetails, function() {
-            id('status').innerText = "Waiting on opponent to submit disbands...";
-            getDisbands(
-                isAttacking ? ( isAiActivated ? AI_TIMEOUT : NORMAL_TIMEOUT ) : MAX_TIMEOUT,
-                getDisbandsCallback,
-                function() {
-                    if ( isAttacking ) {
-                        //AI Takeover
-                        isAiActivated = true;
-                        const disbandUnits = getLowestDisbands( enemyPlayerDetails.units, countHits( enemyPlayerDetails.units ) );
-                        enemyPlayerDetails = addDisbandsToDetails( enemyPlayerDetails, disbandUnits );
-                        saveDisbands( enemyPlayerDetails, function() { getDisbandsCallback( enemyPlayerDetails ); } );
+            saveDisbands( currentPlayerDetails, isAttacking, function() {
+                id('status').innerText = "Waiting on opponent to submit disbands...";
+                getDisbands(
+                    isAttacking ? ( isAiActivated ? AI_TIMEOUT : NORMAL_TIMEOUT ) : MAX_TIMEOUT,
+                    getDisbandsCallback,
+                    function() {
+                        if ( isAttacking ) {
+                            //AI Takeover
+                            isAiActivated = true;
+                            const disbandUnits = getLowestDisbands( enemyPlayerDetails.units, countHits( enemyPlayerDetails.units ) );
+                            enemyPlayerDetails = addDisbandsToDetails( enemyPlayerDetails, disbandUnits );
+                            saveDisbands( enemyPlayerDetails, function() { getDisbandsCallback( enemyPlayerDetails ); } );
+                        }
+                        else {
+                            showToaster( "Consider playing with someone less rude." );
+                        }
                     }
-                    else {
-                        showToaster( "Consider playing with someone less rude." );
-                    }
-                }
-            );
-        } );
-    }
-    else {
-        showToaster( "Must disband units equal to the number of enemy hits." );
+                );
+            } );
+        }
+        else {
+            showToaster( "Must disband units equal to the number of enemy hits." );
+        }
     }
 }
 
 function getDisbandsCallback( enemyPlayer ) {
+    id('status').innerText = "";
+
     enemyPlayerDetails = enemyPlayer;
     updateUnits();
 
     const currentAlive = currentPlayerDetails.units.filter( u => !u.disbanded ).length;
     const enemyAlive = enemyPlayerDetails.units.filter( u => !u.disbanded ).length;
     if ( currentAlive && enemyAlive ) {
-        startAttacking();
+        window.setTimeout( startAttacking, DELAY );
     }
     else {
         if ( currentAlive ) {

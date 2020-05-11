@@ -40,7 +40,7 @@ function tileClickCallback( tileId ) {
                         currentPlayerDetails,
                         enemyPlayerDetails,
                         true,
-                        game.state.timeLimit,
+                        game.state.timeLimit * 60000, //convert minute to millisecond
                         function() {}
                     );
                 } );

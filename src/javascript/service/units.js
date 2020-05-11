@@ -39,7 +39,7 @@ function calculateShortestNonCombatPath( rootTileId, destinationTileId, allTileI
 }
 
 function getAdjacentTiles( tileId, checkImpassible = true, checkCombat = false ) {
-    return getAllAdjacentHexes( getHexFromId( tileId ) ).map( h => h.id ).filter( t => !checkImpassible || isImpassibleTile( t, checkCombat ) );
+    return getRelevantAdjacentHexes( getHexFromId( tileId ) ).map( h => h.id ).filter( t => !(checkImpassible && isImpassibleTile( t, checkCombat ) ) );
 }
 
 

@@ -74,7 +74,7 @@ function postCallEncoded( endPoint, data, successCallback, failureCallback = fun
     return postCall( endPoint, data, successCallback, failureCallback, asynchronous, false );
 }
 
-function postCall( endPoint, data, successCallback, failureCallback = function(){}, asynchronous = true, contentTypeJson = true ) { //todo 4 - use this one for this project (removes the need for $_POST all over the place)
+function postCall( endPoint, data, successCallback = function(){}, failureCallback = function(){}, asynchronous = true, contentTypeJson = true ) { //todo 4 - use this one for this project (removes the need for $_POST all over the place)
     let contentType = contentTypeJson ? "application/json" : "application/x-www-form-urlencoded; charset=UTF-8";
     data = contentTypeJson ? JSON.stringify( data ) : urlEncodeJson( data );
 

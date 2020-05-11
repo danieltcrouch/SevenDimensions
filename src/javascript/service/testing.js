@@ -35,7 +35,7 @@ function getNewGame( testPlayers = TEST_USERS ) {
     const newPlayers = generateNewPlayers( testPlayers );
     return {
         state: {
-            timeLimit: 0,
+            timeLimit: 300000,
             ambassador: 0,
             round: 0,
             phase: 0,
