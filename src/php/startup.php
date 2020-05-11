@@ -52,6 +52,7 @@ function includeModals()
 {
     include(getRootPath() . "common/html/modal.html");
     include(getRootPath() . "common/html/modal-choice.html");
+    include(getRootPath() . "common/html/modal-pick.html");
     include(getRootPath() . "common/html/modal-prompt.html");
     include(getRootPath() . "common/html/modal-prompt-big.html");
     include(getRootPath() . "common/html/toaster.html");

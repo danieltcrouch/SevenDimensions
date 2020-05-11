@@ -78,7 +78,6 @@
 <?php include("modals/market-modal.html"); ?>
 <?php include("modals/council-modal.html"); ?>
 <?php include("modals/event-modal.html"); ?>
-<?php include("modals/units-modal.html"); ?>
 <?php includeModals(); ?>
 
 <?php include("html/include-domain.html"); ?>

@@ -40,3 +40,7 @@ const EVENTS = [
 
 
 const REAPERS_IN_CR = 5; //Civil Resistance
+
+const MAX_ADVANCEMENTS = 7;
+const MAX_DISTRICTS = 7;
+const MAX_CARDS = 7;

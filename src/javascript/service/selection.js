@@ -1,18 +1,26 @@
 let selectedTile;
 let selectedUnits = [];
 let suggestedPath = [];
+let specialAction;
 
 /*** SELECT TILE ***/
 
 
 function tileHoverCallback( tileId ) {
-    if ( isExpansionPhase() && selectedUnits.length ) {
+    if ( specialAction ) {
+        specialSuggestion( tileId );
+    }
+    else if ( isExpansionPhase() && selectedUnits.length ) {
         moveSuggestion( tileId );
     }
 }
 
 function tileClickCallback( tileId ) {
-    if ( selectedUnits.length && ( isExpansionPhase() && suggestedPath.includes( tileId ) ) ) {
+    if ( specialAction && specialAction.isValidTile( tileId ) ) {
+        specialAction.callback( tileId );
+        specialAction = null;
+    }
+    else if ( selectedUnits.length && ( isExpansionPhase() && suggestedPath.includes( tileId ) ) ) {
         moveUnits( tileId );
     }
     else if ( selectedUnits.length && isExpansionPhase() && selectedUnits.every( u => u.tileId === "unassigned" ) && !isImpassibleTile( tileId ) ) {
@@ -24,10 +32,9 @@ function tileClickCallback( tileId ) {
     else if ( selectedUnits.length && getAdjacentTiles( selectedUnits[0].tileId ).includes( tileId ) && hasEnemyUnits( tileId ) && !isImpassibleTile( tileId, false ) ) {
         showConfirm( "Battle", "Are you sure you want to attack this player?", function( result ) {
             if ( result ) {
-                //todo 1 - make sure apostles are not involved
                 const enemyPlayer = game.players.find( p => p.units.some( u => u.tileId === tileId ) && p.id !== currentPlayer.id );
-                const enemyPlayerDetails = getPlayerBattleDetails( enemyPlayer.id, enemyPlayer.units, tileId );
-                const currentPlayerDetails = getPlayerBattleDetails( currentPlayer.id, currentPlayer.units, selectedUnits[0].tileId );
+                const enemyPlayerDetails = getPlayerBattleDetails( enemyPlayer, tileId );
+                const currentPlayerDetails = getPlayerBattleDetails( currentPlayer, selectedUnits[0].tileId );
                 createBattle( currentPlayerDetails, enemyPlayerDetails, function() {
                     openBattleModal(
                         currentPlayerDetails,
@@ -143,9 +150,8 @@ function moveSuggestion( tileId ) {
     }
 }
 
-function hasEnemyUnits( tileId ) {
-    const tileDetails = getTileDetails( tileId );
-    return tileDetails.unitSets.filter( s => s.id !== currentPlayer.id ).some( s => s.combat );
+function hasEnemyUnits( tileId, includeApostles = false ) {
+    return !!getEnemyPlayer( tileId, includeApostles );
 }
 
 function isImpassibleTile( tileId, checkCombat = true ) {
@@ -182,4 +188,26 @@ function moveUnits( tileId ) {
 
     unselectUnits();
     clearMoveSuggestion();
+}
+
+
+/*** SPECIAL ACTION ***/
+
+
+function setSpecialAction( isValidTile, callback ) {
+    specialAction = {
+        isValidTile: isValidTile,
+        callback: callback,
+    };
+}
+
+function specialSuggestion( tileId ) {
+    if ( specialAction ) {
+        highlightSuggestedTiles( null, false );
+        let tilesToHighlight = [];
+        if ( specialAction.isValidTile( tileId ) ) {
+            tilesToHighlight.push( tileId );
+        }
+        highlightSuggestedTiles( tilesToHighlight );
+    }
 }

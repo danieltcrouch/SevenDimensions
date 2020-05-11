@@ -151,18 +151,16 @@ function purchase() {
         showToaster( "Cannot afford purchase" );
     }
     else {
-        const maxAdvancements = 7;
-        const maxCards = 7;
         const advancementsInCartCount =
             getSelectedOption( "technologySelect" ).index +
             getSelectedOption( "doctrineSelect" ).index +
             nm('gardens').filter( c => c.checked ).length +
             nm('auctions').filter( c => c.checked ).length;
-        if ( advancementsInCartCount + marketModalValues.turn.purchasedAdvancementCount > maxAdvancements ) {
-            showToaster( "Cannot purchase more than " + maxAdvancements + " advancements" );
+        if ( advancementsInCartCount + marketModalValues.turn.purchasedAdvancementCount > MAX_ADVANCEMENTS ) {
+            showToaster( "Cannot purchase more than " + MAX_ADVANCEMENTS + " advancements" );
         }
-        else if ( parseInt( id('cardCount').value ) + marketModalValues.turn.purchasedCardCount > maxCards ) {
-            showToaster( "Cannot purchase more than " + maxCards + " cards" );
+        else if ( parseInt( id('cardCount').value ) + marketModalValues.turn.purchasedCardCount > MAX_CARDS ) {
+            showToaster( "Cannot purchase more than " + MAX_CARDS + " cards" );
         }
         else {
             let isValid = true;
@@ -206,6 +204,8 @@ function assignPurchases() {
     marketModalValues.advancements.doctrines    = marketModalValues.advancements.doctrines.concat( newDoctrineIds );
     marketModalValues.advancements.gardens      = marketModalValues.advancements.gardens.concat( newGardenIds );
     marketModalValues.advancements.auctions     = marketModalValues.advancements.auctions.concat( newAuctionIds );
+
+    //todo 9 - assign bonuses and religion
 
     const newCards = Deck.getCurrentDeck( CHAOS, game.players.map( p => p.cards.chaos.map( c => c.id ) ) ).getRandomCards( parseInt( id('cardCount').value ) ).map( c => c.id );
     marketModalValues.cards.chaos = marketModalValues.cards.chaos.concat( newCards );

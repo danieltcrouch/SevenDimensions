@@ -8,16 +8,27 @@ const AI_TIMEOUT = 10000;
 const NORMAL_TIMEOUT = 30000;
 const MAX_TIMEOUT = 3600000;
 
-function getPlayerBattleDetails( playerId, units, tileId ) {
+const KAMIKAZE_HIT = 3;
+
+function getPlayerBattleDetails( player, tileId ) {
+    const tileUnits = player.units.filter( u => u.tileId === tileId );
+    const isPlayerDistrict = player.districts.tileIds.includes( tileId );
+    const isDefending = player.id !== currentPlayer.id;
     return {
-        id: playerId,
+        id: player.id,
         tileId: tileId,
-        units: units.filter( u => u.tileId === tileId && u.unitTypeId !== UNIT_TYPES[APOSTLE].id ).map( u => ({
+        bonuses: {
+            kamikaze: player.advancements.doctrines.includes(DOCTRINES[HUMAN_SACRIFICE].id),
+            potential: {
+                menOfSteel: player.cards.chaos.includes( CHAOS[61].id )
+            }
+        },
+        units: tileUnits.filter( u => u.unitTypeId !== UNIT_TYPES[APOSTLE].id ).map( u => ({
             id: u.id,
             unitTypeId: u.unitTypeId,
             roll: null,
             hit: false,
-            hitDeflectionsUsed: 0,
+            hitDeflections: u.hitDeflections + ((isPlayerDistrict && isDefending) ? u.hitDeflectionsHG : 0),
             disbanded: false
         }) )
     };
@@ -68,15 +79,16 @@ function createBattle( attackPlayerDetails, defendPlayerDetails, callback ) {
     );
 }
 
-function rollForUnits( units ) {
+function rollForUnits( units, kamikazes = [] ) {
     let result = [];
     units.forEach( u => {
         if ( !u.disbanded ) {
+            const hitValue = kamikazes.includes( u.id ) ? KAMIKAZE_HIT : getUnitType( u.unitTypeId ).hit;
             const roll = roll();
             result.push( {
                 id: u.id,
                 roll: roll,
-                isHit: roll > getUnitType( u.unitTypeId ).hit,
+                isHit: roll > hitValue,
             } );
         }
     } );
@@ -96,10 +108,15 @@ function addRollsToDetails( playerDetails, rolls ) {
     return playerDetails;
 }
 
-function addDisbandsToDetails( playerDetails, disbands ) {
+function addDisbandsToDetails( playerDetails, disbands, deflections = [] ) {
     disbands.forEach( d => {
         let unit = playerDetails.units.find( u => u.id === d.id );
-        unit.disbanded = true;
+        if ( deflections.includes( unit.id ) ) {
+            unit.disbanded = true;
+        }
+        else {
+            unit.hitDeflections--;
+        }
     } );
     return playerDetails;
 }
@@ -237,9 +254,7 @@ function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResu
         }
         else {
             let unit = currentPlayer.units.find( du => du.id === u.id );
-            if ( u.hitDeflectionsUsed ) {
-                unit.hitDeflection = u.hitDeflectionsUsed;
-            }
+            unit.hitDeflections = u.hitDeflections;
             if ( attackResult === "W" && u.roll ) {
                 unit.tileId = tileId;
             }
@@ -253,8 +268,14 @@ function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResu
         }
         else {
             let unit = defendPlayer.units.find( du => du.id === u.id );
-            if ( u.hitDeflectionsUsed ) {
-                unit.hitDeflection = u.hitDeflectionsUsed;
+            if ( defendPlayer.districts.tileIds.includes( tileId ) ) {
+                const original = (unit.hitDeflections + unit.hitDeflectionsHG);
+                const used = original - u.hitDeflections;
+                unit.hitDeflectionsHG = Math.max(unit.hitDeflectionsHG - used, 0);
+                unit.hitDeflections = Math.min(original - used, unit.hitDeflections);
+            }
+            else {
+                unit.hitDeflections = u.hitDeflections;
             }
         }
     } );

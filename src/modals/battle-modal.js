@@ -46,20 +46,33 @@ function displayUnitsByPlayer( playerId, units, divId ) {
             input.disabled = ( playerId === isAttacking ) ? "disabled" : "";
             let label = document.createElement( "LABEL" );
             label.htmlFor = id;
-            label.id = id + "Display";
+            label.id = id + "-display";
+            label.name = "unitDisplays";
             label.innerHTML = getUnitDisplayName( unit.id, playerId );
             div.appendChild( input );
             div.appendChild( label );
         }
         else {
             let span = document.createElement( "SPAN" );
-            span.id = id + "Display";
+            span.id = id + "-display";
             div.appendChild( span );
         }
         let rollSpan = document.createElement( "SPAN" );
-        rollSpan.id = id + "Rolls";
+        rollSpan.id = id + "-rolls";
         rollSpan.style.fontWeight = "bold";
         div.appendChild( rollSpan );
+        let kSpan = document.createElement( "SPAN" );
+        kSpan.id = id + "-kamikaze";
+        kSpan.name = "kamikazeSpans";
+        kSpan.innerHTML = ` (Use Kamikaze <input id='check-${unit.id}-kamikaze' name="kamikazes" type="checkbox">)`;
+        kSpan.style.display = "none";
+        div.appendChild( kSpan );
+        let dSpan = document.createElement( "SPAN" );
+        dSpan.id = id + "-deflection";
+        dSpan.name = "deflectionSpans";
+        dSpan.innerHTML = ` (Use Hit Deflection <input id='check-${unit.id}-deflection' name="deflections" type="checkbox">)`;
+        dSpan.style.display = "none";
+        div.appendChild( dSpan );
         wrapper.appendChild( div );
     }
 }
@@ -80,38 +93,38 @@ function getSelectedUnits() {
 
 function displayHits() {
     currentPlayerDetails.units.forEach( u => {
-        id(`unit${u.id}Rolls`).innerText = `Roll: ${u.roll} ` + (u.hit ? "(HIT)" : "");
+        id(`unit-${u.id}-rolls`).innerText = `Roll: ${u.roll} ` + (u.hit ? "(HIT)" : "");
     } );
 
     enemyPlayerDetails.units.forEach( u => {
-        id(`unit${u.id}Rolls`).innerText = `Roll: ${u.roll} ` + (u.hit ? "(HIT)" : "");
+        id(`unit-${u.id}-rolls`).innerText = `Roll: ${u.roll} ` + (u.hit ? "(HIT)" : "");
     } );
 }
 
 function clearHits() {
     currentPlayerDetails.units.forEach( u => {
-        id(`unit${u.id}Rolls`).innerText = "";
+        id(`unit-${u.id}-rolls`).innerText = "";
     } );
 
     enemyPlayerDetails.units.forEach( u => {
-        id(`unit${u.id}Rolls`).innerText = "";
+        id(`unit-${u.id}-rolls`).innerText = "";
     } );
 }
 
 function updateUnits() {
     currentPlayerDetails.units.forEach( u => {
         if ( u.disbanded ) {
-            id(`unit${u.id}Display`).style.textDecoration = "line-through";
-            id(`unit${u.id}`).checked = false
-            id(`unit${u.id}`).disabled = "disabled";
+            id(`unit-${u.id}-display`).style.textDecoration = "line-through";
+            id(`unit-${u.id}`).checked = false
+            id(`unit-${u.id}`).disabled = "disabled";
         }
     } );
 
     enemyPlayerDetails.units.forEach( u => {
         if ( u.disbanded ) {
-            id(`unit${u.id}Display`).style.textDecoration = "line-through";
-            id(`unit${u.id}`).checked = false;
-            id(`unit${u.id}`).disabled = "disabled";
+            id(`unit-${u.id}-display`).style.textDecoration = "line-through";
+            id(`unit-${u.id}`).checked = false;
+            id(`unit-${u.id}`).disabled = "disabled";
         }
     } );
 }
@@ -121,8 +134,40 @@ function updateButtons( isRolling ) {
     show( 'disband', !isRolling );
 }
 
+function showHitDeflections( isDisband ) {
+    if ( (currentPlayerDetails.bonuses.hangingGarden ||
+        currentPlayerDetails.bonuses.menOfSteel) &&
+        isDisband ) {
+        currentPlayerDetails.units.forEach( u => {
+            if ( u.hitDeflections ) {
+                show( `unit-${u.id}-deflection` );
+            }
+        } );
+    }
+    else {
+        nm( 'deflectionSpans' ).forEach( e => hide( e.id ) );
+        nm( 'deflections' ).forEach( e => e.checked = false );
+    }
+}
+
+function showSpecialAttacks( isAttack ) {
+    if ( currentPlayerDetails.bonuses.kamikaze && isAttack ) {
+        currentPlayerDetails.units.forEach( u => {
+            if ( u.unitTypeId === UNIT_TYPES[SPEEDSTER].id ) {
+                show(`unit-${u.id}-kamikaze`);
+            }
+        } );
+    }
+    else {
+        nm('kamikazeSpans').forEach( e => hide(e.id) );
+        nm( 'kamikazes' ).forEach( e => e.checked = false );
+    }
+}
+
 function startDisbands() {
     updateButtons( false );
+    showHitDeflections( true );
+    showSpecialAttacks( false );
     if ( isAttacking ) {
         isFirstRound = false;
         updateStatus( 'D' );
@@ -132,16 +177,30 @@ function startDisbands() {
 function startAttacking() {
     clearHits();
     updateButtons( true );
+    showSpecialAttacks( true );
+    showHitDeflections( false );
     if ( isAttacking ) {
         updateStatus( 'A' );
     }
 }
 
+function getKamikazeIds() {
+    return nm('kamikazes').filter( e => e.checked ).map( e => e.id.split('-')[1] );
+}
+
+function getDeflectionIds() {
+    return nm('deflections').filter( e => e.checked ).map( e => e.id.split('-')[1] );
+}
+
 function attack() {
     const assignedUnits = getSelectedUnits();
     if ( assignedUnits && assignedUnits.length ) {
-        const rollResults = rollForUnits( assignedUnits );
+        const kamikazeIds = getKamikazeIds();
+        const rollResults = rollForUnits( assignedUnits, kamikazeIds );
         currentPlayerDetails = addRollsToDetails( currentPlayerDetails, rollResults );
+        if ( kamikazeIds ) {
+            currentPlayerDetails = addDisbandsToDetails( currentPlayerDetails, kamikazeIds.map( i => ({id: i}) ) );
+        }
 
         saveHits( currentPlayerDetails, isAttacking, function() {
             id('status').innerText = "Waiting on opponent to submit attack...";
@@ -179,7 +238,8 @@ function getHitsCallback( enemyPlayer ) {
 function disband() {
     const assignedUnits = getSelectedUnits();
     if ( assignedUnits && assignedUnits.length === countHits( enemyPlayerDetails.units ) ) {
-        currentPlayerDetails = addDisbandsToDetails( currentPlayerDetails, assignedUnits );
+        const deflectionIds = getDeflectionIds();
+        currentPlayerDetails = addDisbandsToDetails( currentPlayerDetails, assignedUnits, deflectionIds );
 
         saveDisbands( currentPlayerDetails, function() {
             id('status').innerText = "Waiting on opponent to submit disbands...";

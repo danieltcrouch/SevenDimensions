@@ -1,13 +1,16 @@
+//Differences in Online vs Board Game:
+//  Chaos Cards are always played on your turn
 //todo 1 - Battles [TEST]
-//todo 2 - Finish movement and actions
-//  Bombard
-//  Kamikaze
-//  Evang and Found validation
-//  Kill Apostles
-//  Hit Delfections
-//todo 3 - Chaos Card structure (don't have to implement all of them, just the ones that cover basic use cases; esp. Shut Up)
+//todo 3 - Chaos Card structure (just complete these ones listed) (maybe no async actions?)
+//  [make pre-phase sub-phases]
+//  [need to keep track of Chaos Cards (played and coming up)]
+//  Shut-up (prevents Chaos card from affecting you that round)
+//  Amnesia
+//  Epiphany
+//  Way of the Samurai
 //todo 4 - Clean-up Common
 //todo 7 - Initiative Tokens
+//todo X - trading
 const COLORS = ["red", "green", "blue", "purple", "orange", "teal", "gold"];
 
 let game;
@@ -41,6 +44,7 @@ function loadGameCallback( response ) {
     loadMap();
     loadUser();
 
+    loadRecurringEffects();
     popModals();
     pollForBattles();
 }
@@ -96,6 +100,16 @@ function loadUserCallback( playerId ) {
     displayUnassignedUnits();
     show( 'perform', isExpansionPhase() );
     updatePerformAbilityButton();
+}
+
+function loadRecurringEffects() {
+    if ( isExpansionPhase() && game.state.turn === 0 ) {
+        game.players.forEach( p => {
+            if ( p.advancements.gardens.includes(DOCTRINES[HANGING_GARDEN].id) ) {
+                p.units.forEach( u => u.hitDeflectionsHG = 1 );
+            }
+        } );
+    }
 }
 
 function popModals() {
@@ -266,7 +280,9 @@ function completeSubPhase() {
         }
     }
     else if ( isExpansionPhase() ) {
-        //
+        game.players.forEach( p => {
+            p.units.forEach( u => u.hitDeflections = 0 );
+        } );
     }
     else if ( isHarvestPhase() ) {
         //
@@ -438,6 +454,41 @@ function getTileDetails( id ) {
         };
     }
     return result;
+}
+
+function getEnemyPlayer( tileId, includeApostles = false ) {
+    let result = null;
+    const enemyPlayer = game.players.find( p => p.units.some( u => u.tileId === tileId && (includeApostles || u.unitTypeId !== UNIT_TYPES[APOSTLE].id) ) );
+    if ( enemyPlayer ) {
+        result = {
+            id: enemyPlayer.id,
+            units: enemyPlayer.units.filter( u => u.tileId === tileId && (includeApostles || u.unitTypeId !== UNIT_TYPES[APOSTLE].id) )
+        };
+    }
+    return result;
+}
+
+function pickPlayers( allowMultiple, callback, players = game.players ) {
+    const message = allowMultiple ? "Choose players to target:" : "Choose a player to target:";
+    showPicks(
+        "Enemy Players",
+        "Choose players to target:",
+        players.map( p => p.name ),
+        allowMultiple,
+        allowMultiple,
+        function( index ) {
+            let playerIds = index;
+            if ( index ) {
+                if ( allowMultiple ) {
+                    playerIds = index.map( i => players[i].id );
+                }
+                else {
+                    playerIds = players[index].id;
+                }
+            }
+            callback( playerIds );
+        },
+    );
 }
 
 function getPlayer( playerId ) {

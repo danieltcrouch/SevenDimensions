@@ -46,7 +46,7 @@ class Unit extends Entity {
         this.unitTypeId = unitTypeId;
         this.tileId = tileId;
         this.movesRemaining = unitType.move;
-        this.hitDeflection = 0;
+        this.hitDeflections = 0;
     }
 
     getUnitType() {

@@ -43,6 +43,120 @@ function getAdjacentTiles( tileId, checkImpassible = true, checkCombat = false )
 }
 
 
+/*** SPECIAL ABILITIES ***/
+
+
+function performUnitAbilities() {
+    if ( selectedUnits.length === 1 ) {
+        const selectedUnit = selectedUnits[0];
+        let abilities = getAbilitiesForUnit( selectedUnit );
+        if ( abilities.length > 0 ) {
+            showChoices(
+                getUnitDisplayName( selectedUnit.unitTypeId, currentPlayer.id ),
+                "",
+                abilities.map( a => a.text ),
+                function( aIndex ) { abilities[aIndex].callback( selectedUnit ); }
+            );
+        }
+        else {
+            showToaster("This unit has no current abilities.");
+        }
+    }
+    else {
+        showToaster("Must have only 1 unit selected.");
+    }
+}
+
+function getAbilitiesForUnit( unit ) {
+    let result = [];
+    const tileDetails = getTileDetails( unit.tileId );
+
+    if ( unit.unitTypeId === UNIT_TYPES[APOSTLE].id ) {
+        if ( !tileDetails.districtPlayerId && currentPlayer.districts.length < MAX_DISTRICTS ) {
+            result.push( { text: "Found District", callback: found } );
+        }
+        if ( currentPlayer.religion && tileDetails.districtPlayerId && !tileDetails.religionIds.includes( currentPlayer.religion.id ) ) {
+            result.push( { text: "Evangelize", callback: evangelize } );
+        }
+    }
+    else {
+        if ( tileDetails.districtPlayerId !== currentPlayer.id ) {
+            result.push( { text: "Conquer", callback: conquer } );
+        }
+        if ( tileDetails.unitSets.filter( us => !us.combat ).length ) {
+            result.push( { text: "Kill Apostle", callback: killApostle } );
+        }
+        if ( currentPlayer.advancements.technologies.includes( TECHNOLOGIES[LONG_RANGE_ROCKETRY].id ) && (
+            unit.unitTypeId === UNIT_TYPES[BOOMER].id ||
+            unit.unitTypeId === UNIT_TYPES[JUGGERNAUT].id ||
+            unit.unitTypeId === UNIT_TYPES[GODHAND].id
+        ) ) {
+            result.push( { text: "Bombard", callback: pickBombardTile } );
+        }
+    }
+
+    return result;
+}
+
+function found( unit ) {
+    const tileId = unit.tileId;
+    addDistrict( currentPlayer, tileId );
+    removeUnit( unit, currentPlayer );
+}
+
+function evangelize( unit ) {
+    const tileId = unit.tileId;
+    addReligion( currentPlayer, tileId );
+}
+
+function conquer( unit ) {
+    const tileId = unit.tileId;
+    const tileDetails = getTileDetails( tileId );
+    swapDistrict( tileDetails.districtPlayerId, currentPlayer, tileId );
+}
+
+function killApostle( unit ) {
+    const tileId = unit.tileId;
+    const enemyPlayers = game.players.filter( p => p.units.some( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ) );
+    if ( enemyPlayers.length > 1 ) {
+        pickPlayers(
+            true,
+            function( playerIds ) {
+                enemyPlayers.filter( p => playerIds.includes( p.id ) ).forEach( p => {
+                    p.units.filter( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ) .forEach( u => removeUnit( u, p ) );
+                } );
+            },
+            enemyPlayers
+        );
+    }
+    else {
+        const enemyPlayer = enemyPlayers[0];
+        enemyPlayer.units.filter( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ).forEach( u => removeUnit( u, enemyPlayer ) );
+    }
+}
+
+function pickBombardTile( unit ) {
+    const rootTileId = unit.tileId;
+    setSpecialAction(
+        function( tileId ) { return hasEnemyUnits( tileId ) && getAdjacentTiles( rootTileId ).includes( tileId ); },
+        function( tileId ) { bombard( unit, tileId ); }
+    );
+}
+
+function bombard( unit, tileId ) {
+    const rolls = rollForUnits( [unit] );
+    if ( rolls[0].isHit ) {
+        const enemyPlayer = getEnemyPlayer( tileId );
+        let enemyUnit = getLowestDisbands( enemyPlayer.units, 1 );
+        removeUnit( enemyUnit, enemyPlayer );
+        showToaster( "You successfully bombarded their weakest unit." );
+    }
+    else {
+        showToaster( "You missed." );
+    }
+}
+
+
 /*** HELPER ***/
 
 
@@ -96,87 +210,6 @@ function removeUnit( unit, player, updateDisplay = true ) {
         displayTileDetails( tileId );
     }
 }
-
-
-/*** SPECIAL ABILITIES ***/
-
-
-function performUnitAbilities() {
-    if ( selectedUnits.length === 1 ) {
-        const selectedUnit = selectedUnits[0];
-        let abilities = getAbilitiesForUnit( selectedUnit );
-        if ( abilities.length > 0 ) {
-            showChoices(
-                getUnitDisplayName( selectedUnit.unitTypeId, currentPlayer.id ),
-                "",
-                abilities.map( a => a.text ),
-                function( aIndex ) { abilities[aIndex].aFunction( selectedUnit ); }
-            );
-        }
-        else {
-            showToaster("This unit has no current abilities.");
-        }
-    }
-    else {
-        showToaster("Must have only 1 unit selected.");
-    }
-}
-
-function getAbilitiesForUnit( unit ) {
-    let result = [];
-    const tileDetails = getTileDetails( unit.tileId );
-
-    if ( unit.unitTypeId === UNIT_TYPES[APOSTLE].id ) {
-        if ( !tileDetails.districtPlayerId ) {
-            result.push( { text: "Found District", aFunction: found } );
-        }
-        if ( currentPlayer.religion && tileDetails.districtPlayerId && !tileDetails.religionIds.includes( currentPlayer.religion.id ) ) {
-            result.push( { text: "Evangelize", aFunction: evangelize } );
-        }
-    }
-    else {
-        if ( tileDetails.unitSets.filter( us => !us.combat ).length ) {
-            result.push( { text: "Kill Apostle", aFunction: killApostle } );
-        }
-    }
-
-    return result;
-}
-
-function found( unit ) {
-    const tileId = unit.tileId;
-    addDistrict( currentPlayer, tileId );
-    removeUnit( unit, currentPlayer );
-}
-
-function evangelize( unit ) {
-    const tileId = unit.tileId;
-    addReligion( currentPlayer, tileId );
-}
-
-function killApostle( unit ) {
-    const tileId = unit.tileId;
-    const enemyPlayer = game.players.find( p => p.units.some( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ) ); //todo 4 - build a modal for checkboxes/radio buttons; helper function in this project to pick applicable player
-    if ( enemyPlayer ) {
-        showBinaryChoice(
-            "Kill Apostle?",
-            "Would you like to kill the apostle(s) in this tile?",
-            "No",
-            "Yes",
-            function( isYes ) {
-                if ( isYes ) {
-                    enemyPlayer.units.filter( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ).forEach( u =>
-                        removeUnit( u, enemyPlayer )
-                    );
-                }
-            }
-        );
-    }
-}
-
-
-/*** OTHER ***/
-
 
 function getRandomUnitId() {
     return ( Math.floor( Math.random() * 10000 ) + "" ).padStart( 4, '0' );
