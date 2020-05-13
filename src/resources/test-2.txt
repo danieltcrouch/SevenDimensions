@@ -382,7 +382,7 @@
 		},
 		{
 			"id":"00000000000000000000000000000002",
-			"username":"michael",
+			"username":"lauren",
 			"factionId":"1",
 			"warBucks":8,
 			"resources":[],

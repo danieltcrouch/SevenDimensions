@@ -10,7 +10,7 @@ function createBattle( $gameId, $attackPlayerDetails, $defendPlayerDetails )
     $attackJson = json_encode( $attackPlayerDetails );
     $defendJson = json_encode( $defendPlayerDetails );
 
-    $query = "INSERT INTO battle (id, gameId, attackUserId, defendUserId, status, statusDate, attackDetails, defendDetails) 
+    $query = "INSERT INTO battle (id, gameId, attackUserId, defendUserId, battleStatus, battleStatusDate, attackDetails, defendDetails) 
               VALUES (:battleId, :gameId, (SELECT userId FROM player WHERE id = :attackPlayerId AND gameId = :gameId), (SELECT userId FROM player WHERE id = :defendPlayerId AND gameId = :gameId), 'A', CURRENT_TIMESTAMP(), :attackJson, :defendJson)";
 
     $connection = getConnection();
@@ -29,7 +29,16 @@ function createBattle( $gameId, $attackPlayerDetails, $defendPlayerDetails )
 
 function getCurrentBattle( $gameId, $userId )
 {
-    $query = "SELECT id, attackDetails, defendDetails FROM battle WHERE gameId = :gameId AND (attackUserId = :userId OR defendUserId = :userId)";
+    $query =
+        "SELECT
+            id,
+            attackDetails,
+            defendDetails,
+            attackStatus,
+            defendStatus,
+            battleStatus
+        FROM battle
+        WHERE gameId = :gameId AND (attackUserId = :userId OR defendUserId = :userId) AND battleStatus IS NOT NULL";
 
     $connection = getConnection();
     $statement = $connection->prepare( $query );
@@ -43,7 +52,7 @@ function getCurrentBattle( $gameId, $userId )
     return $result;
 }
 
-function saveHits( $battleId, $isAttack, $playerDetails )
+function saveAttack( $battleId, $isAttack, $playerDetails )
 {
     return saveAction( $battleId, $isAttack, $playerDetails, 'A' );
 }
@@ -59,11 +68,12 @@ function saveAction( $battleId, $isAttack, $playerDetails, $actionType )
 
     $isAttack = strcasecmp( $isAttack, "true" ) === 0;
     $detailsColumn = $isAttack ? "attackDetails" : "defendDetails";
-    $dateColumn = $isAttack ? "attackDate" : "defendDate";
+    $statusColumn = $isAttack ? "attackStatus" : "defendStatus";
     $query = "UPDATE battle 
-              SET $detailsColumn = :playerDetails, $dateColumn = CURRENT_TIMESTAMP()
-              WHERE id = :battleId AND status = :actionType";
+              SET $detailsColumn = :playerDetails, $statusColumn = 'S'
+              WHERE id = :battleId AND battleStatus = :actionType";
 
+    echo $query;
     $connection = getConnection();
     $statement = $connection->prepare( $query );
     $statement->bindParam(':battleId',      $battleId);
@@ -75,7 +85,7 @@ function saveAction( $battleId, $isAttack, $playerDetails, $actionType )
     return $battleId;
 }
 
-function getHits( $battleId, $isAttack )
+function getAttacks( $battleId, $isAttack )
 {
     return getAction( $battleId, $isAttack, 'A' );
 }
@@ -89,9 +99,10 @@ function getAction( $battleId, $isAttack, $actionType )
 {
     $isAttack = strcasecmp( $isAttack, "true" ) === 0;
     $detailsColumn = !$isAttack ? "attackDetails" : "defendDetails";
+    $statusColumn = !$isAttack ? "attackStatus" : "defendStatus";
     $query = "SELECT $detailsColumn
               FROM battle
-              WHERE id = :battleId AND attackDate > statusDate AND defendDate > statusDate AND status = :actionType";
+              WHERE id = :battleId AND battleStatus = :actionType AND $statusColumn IN ('S', 'R')";
     $connection = getConnection();
     $statement = $connection->prepare( $query );
     $statement->bindParam(':battleId',   $battleId);
@@ -101,16 +112,21 @@ function getAction( $battleId, $isAttack, $actionType )
     $result = $statement->fetch();
     if ( $result ) {
         $result = json_decode( $result[0] );
+        updatePlayerStatus( $battleId, $isAttack, 'R' );
+    }
+    else {
+        $result = getBattleStatus( $battleId );
     }
 
     $connection = null;
     return $result;
 }
 
-function updateStatus( $battleId, $statusCode )
+function updatePlayerStatus( $battleId, $isAttack, $statusCode )
 {
+    $statusColumn = $isAttack ? "attackStatus" : "defendStatus";
     $query = "UPDATE battle 
-              SET status = :statusCode, statusDate = CURRENT_TIMESTAMP()
+              SET $statusColumn = :statusCode
               WHERE id = :battleId";
 
     $connection = getConnection();
@@ -123,12 +139,58 @@ function updateStatus( $battleId, $statusCode )
     return $battleId;
 }
 
+function getPlayerStatus( $battleId )
+{
+    $query = "SELECT attackStatus, defendStatus FROM battle WHERE id = :battleId";
+
+    $connection = getConnection();
+    $statement = $connection->prepare( $query );
+    $statement->bindParam(':battleId',   $battleId);
+    $statement->execute();
+
+    $result = $statement->fetch();
+
+    $connection = null;
+    return $result;
+}
+
+function updateBattleStatus( $battleId, $statusCode )
+{
+    $query = "UPDATE battle 
+              SET battleStatus = :statusCode, battleStatusDate = CURRENT_TIMESTAMP(), attackStatus = NULL, defendStatus = NULL
+              WHERE id = :battleId";
+
+    $connection = getConnection();
+    $statement = $connection->prepare( $query );
+    $statement->bindParam(':battleId',   $battleId);
+    $statement->bindParam(':statusCode', $statusCode);
+    $statement->execute();
+
+    $connection = null;
+    return $battleId;
+}
+
+function getBattleStatus( $battleId )
+{
+    $query = "SELECT battleStatus FROM battle WHERE id = :battleId";
+
+    $connection = getConnection();
+    $statement = $connection->prepare( $query );
+    $statement->bindParam(':battleId',   $battleId);
+    $statement->execute();
+
+    $result = $statement->fetch()['status'];
+
+    $connection = null;
+    return $result;
+}
+
 function endBattle( $battleId, $battleInfo )
 {
     $battleJson = $battleInfo;
 
     $query = "UPDATE battle 
-              SET attackDetails = :battleInfo, defendDetails = NULL, status = NULL, statusDate = NULL
+              SET attackDetails = :battleInfo, defendDetails = NULL, battleStatus = NULL, battleStatusDate = NULL
               WHERE id = :battleId";
 
     $connection = getConnection();

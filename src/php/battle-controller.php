@@ -15,21 +15,29 @@ if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
         elseif ( isset($_POST['gameId']) && isset($_POST['userId']) ) {
             $result = $action( $_POST['gameId'], $_POST['userId'] );
         }
-        //saveHits, saveDisbands
+        //saveAttack, saveDisbands
         else if ( isset($_POST['battleId']) && isset($_POST['isAttack']) && isset($_POST['playerDetails']) ) {
             $result = $action( $_POST['battleId'], $_POST['isAttack'], $_POST['playerDetails'] );
+        }
+        //updatePlayerStatus
+        else if ( isset($_POST['battleId']) && isset($_POST['isAttack']) && isset($_POST['statusCode']) ) {
+            $result = $action( $_POST['battleId'], $_POST['isAttack'], $_POST['statusCode'] );
         }
         //getHits, getDisbands
         elseif ( isset($_POST['battleId']) && isset($_POST['isAttack']) ) {
             $result = $action( $_POST['battleId'], $_POST['isAttack'] );
         }
-        //updateStatus
+        //updateBattleStatus
         elseif ( isset($_POST['battleId']) && isset($_POST['statusCode']) ) {
             $result = $action( $_POST['battleId'], $_POST['statusCode'] );
         }
         //endBattle
         elseif ( isset($_POST['battleId']) && isset($_POST['battleInfo']) ) {
             $result = $action( $_POST['battleId'], $_POST['battleInfo'] );
+        }
+        //getPlayerStatus, getBattleStatus
+        elseif ( isset($_POST['battleId']) ) {
+            $result = $action( $_POST['battleId'] );
         }
         else {
             $result = $action();

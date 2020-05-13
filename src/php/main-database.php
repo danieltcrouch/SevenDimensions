@@ -8,7 +8,7 @@ function loadGame( $gameId )
     	JOIN state s  ON s.gameId = m.id
         JOIN map mp   ON mp.gameId = m.id
         JOIN player p ON p.gameId = m.id AND p.active = 1
-        LEFT OUTER JOIN battle b ON b.gameId = m.id AND b.status IS NULL
+        LEFT OUTER JOIN battle b ON b.gameId = m.id AND b.battleStatus IS NULL
     WHERE m.id = :gameId ";
 
     $connection = getConnection();
@@ -65,7 +65,7 @@ function createGame( $game )
     $insertMeta    = "INSERT INTO meta   (id, playerCount, round, phase, subPhase, turn) VALUES (:gameId, :playerCount, :round, :phase, :subPhase, :turn)";
     $insertState   = "INSERT INTO state  (gameId, stateJson) VALUES (:gameId, :stateJson)";
     $insertMap     = "INSERT INTO map    (gameId, mapJson)   VALUES (:gameId, :mapJson)";
-    $insertPlayers = "INSERT INTO player (id, userId, gameId, active, factionId, playerJson) VALUES $playerValues";
+    $insertPlayers = "INSERT INTO player (id, userId, gameId, active, playerJson) VALUES $playerValues";
 
     $query =
         "$insertMeta;\n

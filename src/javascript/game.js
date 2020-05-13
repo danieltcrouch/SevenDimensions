@@ -128,7 +128,7 @@ function popModals() {
 }
 
 function pollForBattles() {
-    window.setInterval( getCurrentBattle, 5000 );
+    window.setInterval( getCurrentBattle, PASSIVE_DELAY );
 }
 
 

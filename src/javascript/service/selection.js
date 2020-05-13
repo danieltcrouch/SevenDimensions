@@ -9,10 +9,12 @@ let specialAction;
 function tileHoverCallback( tileId ) {
     if ( specialAction ) {
         specialSuggestion( tileId );
+        //todo X - special animation for these actions
     }
     else if ( isExpansionPhase() && selectedUnits.length ) {
         moveSuggestion( tileId );
     }
+    //todo X - special "X" animation for attacking
 }
 
 function tileClickCallback( tileId ) {
@@ -32,18 +34,7 @@ function tileClickCallback( tileId ) {
     else if ( selectedUnits.length && getAdjacentTiles( selectedUnits[0].tileId ).includes( tileId ) && hasEnemyUnits( tileId ) && !isImpassibleTile( tileId, false ) ) {
         showConfirm( "Battle", "Are you sure you want to attack this player?", function( result ) {
             if ( result ) {
-                const enemyPlayer = game.players.find( p => p.units.some( u => u.tileId === tileId ) && p.id !== currentPlayer.id );
-                const enemyPlayerDetails = getPlayerBattleDetails( enemyPlayer, tileId );
-                const currentPlayerDetails = getPlayerBattleDetails( currentPlayer, selectedUnits[0].tileId );
-                createBattle( currentPlayerDetails, enemyPlayerDetails, function() {
-                    openBattleModal(
-                        currentPlayerDetails,
-                        enemyPlayerDetails,
-                        true,
-                        game.state.timeLimit * 60000, //convert minute to millisecond
-                        function() {}
-                    );
-                } );
+                launchBattle( tileId );
             }
         } );
     }

@@ -3,12 +3,35 @@
 //https://phppot.com/php/simple-php-chat-using-websocket/
 let battleId;
 
-const DELAY = 2000;
+const DELAY = 1000;
+const PASSIVE_DELAY = 5000;
 const AI_TIMEOUT = 10000;
 const NORMAL_TIMEOUT = 30000;
+const FIRST_TIMEOUT = 300000;
 const MAX_TIMEOUT = 3600000;
 
 const KAMIKAZE_HIT = 3;
+
+function launchBattle( tileId ) {
+    const enemyPlayer = game.players.find( p => p.units.some( u => u.tileId === tileId ) && p.id !== currentPlayer.id );
+    const enemyPlayerDetails = getPlayerBattleDetails( enemyPlayer, tileId );
+    const currentPlayerDetails = getPlayerBattleDetails( currentPlayer, selectedUnits[0].tileId );
+    createBattle( currentPlayerDetails, enemyPlayerDetails, function() {
+        openBattleModal(
+            currentPlayer.username,
+            enemyPlayer.username,
+            currentPlayerDetails,
+            enemyPlayerDetails,
+            true,
+            {
+                status: 'A',
+                waitingOnAttacker: null,
+                waitingOnDefender: null
+            },
+            function() {}
+        );
+    } );
+}
 
 function getPlayerBattleDetails( player, tileId ) {
     const tileUnits = player.units.filter( u => u.tileId === tileId );
@@ -25,7 +48,7 @@ function getPlayerBattleDetails( player, tileId ) {
                 menOfSteel: player.cards.chaos.includes( CHAOS[61].id )
             }
         },
-        units: tileUnits.filter( u => u.unitTypeId !== UNIT_TYPES[APOSTLE].id ).map( u => ({
+        units: tileUnits.filter( u => u.unitTypeId !== UNIT_TYPES[APOSTLE].id && u.movesRemaining > 0 ).map( u => ({
             id: u.id,
             unitTypeId: u.unitTypeId,
             roll: null,
@@ -57,11 +80,19 @@ function checkBattle( battleDetails ) {
         const attackDetails = jsonParse( battleDetails.attackDetails );
         const defendDetails = jsonParse( battleDetails.defendDetails );
         const isAttacker = attackDetails.id === currentPlayer.id;
+        let currentPlayerDetails = isAttacker ? attackDetails : defendDetails;
+        let enemyPlayerDetails = !isAttacker ? attackDetails : defendDetails;
         openBattleModal(
-            isAttacker ? attackDetails : defendDetails,
-            !isAttacker ? attackDetails : defendDetails,
+            currentPlayer.username,
+            getPlayer( enemyPlayerDetails.id ).username,
+            currentPlayerDetails,
+            enemyPlayerDetails,
             isAttacker,
-            null,
+            {
+                status: battleDetails.battleStatus,
+                waitingOnAttacker: !!battleDetails.attackStatus,
+                waitingOnDefender: !!battleDetails.defendStatus
+            },
             function() {}
         );
     }
@@ -77,6 +108,7 @@ function createBattle( attackPlayerDetails, defendPlayerDetails, callback ) {
            defendPlayerDetails: JSON.stringify( defendPlayerDetails )
        },
        function( result ) {
+           //todo X - notify defender of battle
            battleId = jsonParse( result );
            callback();
        }
@@ -116,37 +148,82 @@ function addDisbandsToDetails( playerDetails, disbands, deflections = [] ) {
     disbands.forEach( d => {
         let unit = playerDetails.units.find( u => u.id === d.id );
         if ( deflections.includes( unit.id ) ) {
-            unit.disbanded = true;
+            unit.hitDeflections--;
         }
         else {
-            unit.hitDeflections--;
+            unit.disbanded = true;
         }
     } );
     return playerDetails;
 }
 
-function countHits( units ) {
-    return units.filter( u => u.hit ).length;
+function countHits( currentUnits, enemyUnits ) {
+    const hits = enemyUnits.filter( u => u.hit ).length;
+    const livingUnits = currentUnits.filter( u => !u.disbanded ).length;
+    return Math.min( hits, livingUnits );
 }
 
 function getLowestDisbands( units, disbandCount ) {
     return units.sort( (a,b) => parseInt(a.unitTypeId) - parseInt(b.unitTypeId) ).slice(0, disbandCount);
 }
 
-function saveHits( playerDetails, isAttack, callback ) {
+function getPlayerStatusReady( callback ) {
     postCallEncoded(
         "php/battle-controller.php",
         {
-            action: "saveHits",
+            action: "getPlayerStatus",
+            battleId: battleId
+        },
+        function( response ) {
+            response = jsonParse( response );
+            callback( response.attackStatus && response.defendStatus && response.attackStatus === 'R' && response.defendStatus === 'R' );
+        }
+    );
+}
+
+function updateBattleStatus( statusCode ) {
+    if ( status.status ) {
+        postCallEncoded(
+            "php/battle-controller.php",
+            {
+                action: "updateBattleStatus",
+                battleId: battleId,
+                statusCode: statusCode
+            },
+            function() {}
+        );
+    }
+}
+
+function updatePlayerStatus( isAttacker, statusCode ) {
+    if ( status.status ) {
+        postCallEncoded(
+            "php/battle-controller.php",
+            {
+                action: "updatePlayerStatus",
+                battleId: battleId,
+                isAttack: isAttacker,
+                statusCode: statusCode
+            },
+            function() {}
+        );
+    }
+}
+
+function saveAttack( playerDetails, isAttacker, callback ) {
+    postCallEncoded(
+        "php/battle-controller.php",
+        {
+            action: "saveAttack",
             battleId: battleId,
-            isAttack: isAttack,
+            isAttack: isAttacker,
             playerDetails: JSON.stringify( playerDetails ),
         },
         callback
     );
 }
 
-function getHits( isAttack, maxTime, callback, timeOutCallback ) {
+function getAttacks( isAttacker, maxTime, callback, timeOutCallback ) {
     setLimitedInterval(
         DELAY,
         maxTime,
@@ -154,15 +231,18 @@ function getHits( isAttack, maxTime, callback, timeOutCallback ) {
             postCallEncoded(
                "php/battle-controller.php",
                {
-                   action: "getHits",
+                   action: "getAttacks",
                    battleId: battleId,
-                   isAttack: isAttack
+                   isAttack: isAttacker
                },
                function( result ) {
                    result = jsonParse( result );
-                   if ( result ) {
+                   if ( result && result.id ) {
                        window.clearInterval(intervalId);
                        callback( result );
+                   }
+                   else if ( result === 'D' ) {
+                       reset( intervalId );
                    }
                }
             );
@@ -171,32 +251,20 @@ function getHits( isAttack, maxTime, callback, timeOutCallback ) {
     );
 }
 
-function updateStatus( statusCode ) {
-    postCallEncoded(
-       "php/battle-controller.php",
-       {
-           action: "updateStatus",
-           battleId: battleId,
-           statusCode: statusCode,
-       },
-       function() {}
-    );
-}
-
-function saveDisbands( playerDetails, isAttack, callback ) {
+function saveDisbands( playerDetails, isAttacker, callback ) {
     postCallEncoded(
         "php/battle-controller.php",
         {
             action: "saveDisbands",
             battleId: battleId,
-            isAttack: isAttack,
+            isAttack: isAttacker,
             playerDetails: JSON.stringify( playerDetails ),
         },
         callback
     );
 }
 
-function getDisbands( isAttack, maxTime, callback, timeOutCallback ) {
+function getDisbands( isAttacker, maxTime, callback, timeOutCallback ) {
     setLimitedInterval(
         DELAY,
         maxTime,
@@ -206,19 +274,28 @@ function getDisbands( isAttack, maxTime, callback, timeOutCallback ) {
                {
                    action: "getDisbands",
                    battleId: battleId,
-                   isAttack: isAttack
+                   isAttack: isAttacker
                },
                function( result ) {
                    result = jsonParse( result );
-                   if ( result ) {
+                   if ( result && result.id ) {
                        window.clearInterval(intervalId);
                        callback( result );
+                   }
+                   else if ( result === 'A' ) {
+                       reset( intervalId );
                    }
                }
             );
         },
         timeOutCallback
     );
+}
+
+function reset( intervalId ) {
+    window.clearInterval(intervalId);
+    battleId = null;
+    getCurrentBattle();
 }
 
 function endBattle( attackPlayerDetails, defendPlayerDetails ) {
@@ -253,8 +330,9 @@ function endBattle( attackPlayerDetails, defendPlayerDetails ) {
 function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResult ) {
     const tileId = defendPlayerDetails.tileId;
     attackPlayerDetails.units.forEach( u => {
+        let unit = currentPlayer.units.find( du => du.id === u.id );
         if ( u.disbanded ) {
-            removeUnit( u, currentPlayer );
+            removeUnit( unit, currentPlayer );
         }
         else {
             let unit = currentPlayer.units.find( du => du.id === u.id );
@@ -267,11 +345,11 @@ function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResu
 
     const defendPlayer = game.players.find( p => p.id === defendPlayerDetails.id );
     defendPlayerDetails.units.forEach( u => {
+        let unit = defendPlayer.units.find( du => du.id === u.id );
         if ( u.disbanded ) {
-            removeUnit( u, defendPlayer );
+            removeUnit( unit, defendPlayer );
         }
         else {
-            let unit = defendPlayer.units.find( du => du.id === u.id );
             if ( defendPlayer.districts.tileIds.includes( tileId ) ) {
                 const original = (unit.hitDeflections + unit.hitDeflectionsHG);
                 const used = original - u.hitDeflections;
@@ -286,7 +364,9 @@ function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResu
 
     if ( attackResult === "W" ) {
         attackPlayerDetails.units.filter( u => u.roll && !u.disbanded ).forEach( u => {
-            currentPlayer.units.find( du => du.id === u.id ).tileId = tileId;
+            let unit = currentPlayer.units.find( du => du.id === u.id );
+            unit.tileId = tileId;
+            unit.movesRemaining--;
         } );
         if ( getTileDetails(defendPlayerDetails.tileId).districtPlayerId ) {
             swapDistrict( defendPlayerDetails.id, attackPlayerDetails.id, tileId );
