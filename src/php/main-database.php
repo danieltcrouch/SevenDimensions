@@ -53,7 +53,7 @@ function createGame( $game )
     $game = json_decode( $game );
     $stateJson = json_encode( $game->state );
     $mapJson   = json_encode( $game->board );
-    $players  = $game->players; //should work as empty if no players are sent in
+    $players = $game->players; //should work as empty if no players are sent in
     $playerCount  = count($players);
 
     $playerValues = "";

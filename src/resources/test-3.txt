@@ -9,6 +9,10 @@
         "events": {
             "office": null,
             "disaster": null
+        },
+        "cards":{
+            "chaosNext":[],
+            "chaosDiscard":[]
         }
     },
     "board": [

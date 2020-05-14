@@ -44,6 +44,10 @@ function getNewGame( testPlayers = TEST_USERS ) {
             events: {
                 office: null,
                 disaster: null
+            },
+            cards: {
+                chaosNext: [],
+                chaosDiscard: []
             }
         },
         board: newMap,
