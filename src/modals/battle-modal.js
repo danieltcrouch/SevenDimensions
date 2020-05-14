@@ -14,15 +14,13 @@ function openBattleModal( currentName, enemyName, currentPlayer, enemyPlayer, is
     status = statusValues;
     battleModalCallback = callback;
 
-    isFirstRound = status.waitingOnAttacker === null;
+    isFirstRound = status.attackStatus === null;
     isAiActivated = false;
 
     displayNames( currentName, enemyName );
     displayUnits();
     refreshDetails();
 
-    //todo 1 -
-    //todo 1 - if attacker puts in disband, defender resets, it says attacker saved but didn't pick anything
     //todo X - add link from home screen to join battle if you close it
 
     show( "battleModal", true, "block" );
@@ -101,8 +99,6 @@ function refreshDetails() {
     updateUnits();
     updateButtons();
     updateStatusDisplay();
-
-    hasSubmitted = false;
 }
 
 function updateUnits() {
@@ -183,7 +179,7 @@ function updateButtons() {
 }
 
 function updateStatusDisplay() {
-    if ( status.waitingOnAttacker !== status.waitingOnDefender && hasSubmitted ) {
+    if ( getStatus() !== null && getEnemyStatus() === null ) {
         if ( status.status === 'A' ) {
             id('status').innerText = "Waiting on opponent to submit attack...";
         }
@@ -221,29 +217,21 @@ function getDeflectionIds() {
     return nm('deflections').filter( e => e.checked ).map( e => e.id.split('-')[1] );
 }
 
-function updateStatus() {
-    if ( isAttacker ) {
-        setLimitedInterval(
-            DELAY,
-            AI_TIMEOUT,
-            function(intervalId) {
-                getPlayerStatusReady( function(isReady) {
-                    if ( isReady ) {
-                        updateBattleStatus( status.status );
-                        window.clearInterval(intervalId);
-                    }
-                } );
-            },
-            function() { updateBattleStatus( status.status ); }
-        );
+function getStatus() {
+    return isAttacker ? status.attackStatus : status.defendStatus;
+}
 
-    }
+function getEnemyStatus() {
+    return !isAttacker ? status.attackStatus : status.defendStatus;
 }
 
 function attack() {
-    if ( !hasSubmitted ) {
+    if ( getStatus() === null ) {
         const assignedUnits = getSelectedUnits();
         if ( assignedUnits.length || !isAttacker ) {
+            currentPlayerDetails.units.forEach( u => { u.roll = null; u.hit = null; } );
+            enemyPlayerDetails.units.forEach(   u => { u.roll = null; u.hit = null; } );
+
             const kamikazeIds = getKamikazeIds();
             const rollResults = rollForUnits( assignedUnits, kamikazeIds );
             currentPlayerDetails = addRollsToDetails( currentPlayerDetails, rollResults );
@@ -251,9 +239,8 @@ function attack() {
                 currentPlayerDetails = addDisbandsToDetails( currentPlayerDetails, kamikazeIds.map( i => ({id: i}) ) );
             }
 
-            hasSubmitted = true;
             saveAttack( currentPlayerDetails, isAttacker, getOpponentAttack );
-            isAttacker ? status.waitingOnAttacker = false : status.waitingOnDefender = false;
+            isAttacker ? status.attackStatus = 'S' : status.defendStatus = 'S';
             updateUnits();
             updateStatusDisplay();
         }
@@ -278,7 +265,7 @@ function getOpponentAttack() {
                 enemyPlayerDetails = addRollsToDetails( enemyPlayerDetails, rollResults );
                 saveAttack( enemyPlayerDetails, false, function() {
                     getOpponentAttackCallback( enemyPlayerDetails );
-                    updatePlayerStatus( false, 'R' );
+                    updatePlayerStatus( false, status.defendStatus );
                 } );
             }
             else {
@@ -290,13 +277,10 @@ function getOpponentAttack() {
 
 function getOpponentAttackCallback( enemyPlayer ) {
     enemyPlayerDetails = enemyPlayer;
-    status = {
-        status: 'D',
-        waitingOnAttacker: true,
-        waitingOnDefender: true,
-    };
+    status.attackStatus = 'R';
+    status.defendStatus = 'R';
 
-    updateStatus();
+    status = updateStatus( 'D' );
     refreshDetails();
 
     id('battleSelectAll').checked = false;
@@ -304,17 +288,15 @@ function getOpponentAttackCallback( enemyPlayer ) {
 }
 
 function disband() {
-    if ( !hasSubmitted ) {
+    if ( getStatus() === null ) {
         const assignedUnits = getSelectedUnits();
         if ( assignedUnits && assignedUnits.length === countHits( currentPlayerDetails.units, enemyPlayerDetails.units )  ) {
             const deflectionIds = getDeflectionIds();
             currentPlayerDetails = addDisbandsToDetails( currentPlayerDetails, assignedUnits, deflectionIds );
-            currentPlayerDetails.units.forEach( u => { u.roll = null; u.hit = null; } );
-            enemyPlayerDetails.units.forEach(   u => { u.roll = null; u.hit = null; } );
 
             hasSubmitted = true;
             saveDisbands( currentPlayerDetails, isAttacker, getOpponentDisband );
-            isAttacker ? status.waitingOnAttacker = false : status.waitingOnDefender = false;
+            isAttacker ? status.attackStatus = 'S' : status.defendStatus = 'S';
             updateUnits();
             updateStatusDisplay();
         }
@@ -339,7 +321,7 @@ function getOpponentDisband() {
                 enemyPlayerDetails = addDisbandsToDetails( enemyPlayerDetails, disbandUnits );
                 saveDisbands( enemyPlayerDetails, false, function() {
                     getOpponentDisbandCallback( enemyPlayerDetails );
-                    updatePlayerStatus( false, 'R' );
+                    updatePlayerStatus( false, status.defendStatus );
                 } );
             }
             else {
@@ -351,20 +333,17 @@ function getOpponentDisband() {
 
 function getOpponentDisbandCallback( enemyPlayer ) {
     enemyPlayerDetails = enemyPlayer;
-    status = {
-        status: 'A',
-        waitingOnAttacker: true,
-        waitingOnDefender: true,
-    };
+    status.attackStatus = 'R';
+    status.defendStatus = 'R';
 
-    displayEnd();
+    checkEnd();
 }
 
-function displayEnd() {
+function checkEnd() {
     const currentAlive = currentPlayerDetails.units.filter( u => !u.disbanded ).length;
     const enemyAlive = enemyPlayerDetails.units.filter( u => !u.disbanded ).length;
     if ( currentAlive && enemyAlive ) {
-        updateStatus();
+        status = updateStatus( 'A' );
         refreshDetails();
     }
     else {
@@ -380,33 +359,14 @@ function displayEnd() {
 
         status = {
             status: null,
-            waitingOnAttacker: false,
-            waitingOnDefender: false,
+            attackStatus: null,
+            defendStatus: null,
         };
         end();
         refreshDetails();
         hide( 'attack');
         hide( 'disband');
         hide( 'retreat');
-    }
-}
-
-function end() {
-    if ( isAttacker ) {
-        setLimitedInterval(
-            DELAY,
-            AI_TIMEOUT,
-            function(intervalId) {
-                getPlayerStatusReady( function(isReady) {
-                    if ( isReady ) {
-                        endBattle( currentPlayerDetails, enemyPlayerDetails );
-                        window.clearInterval(intervalId);
-                    }
-                } );
-            },
-            function() { endBattle( currentPlayerDetails, enemyPlayerDetails ); }
-        );
-
     }
 }
 

@@ -25,8 +25,8 @@ function launchBattle( tileId ) {
             true,
             {
                 status: 'A',
-                waitingOnAttacker: null,
-                waitingOnDefender: null
+                attackStatus: null,
+                defendStatus: null
             },
             function() {}
         );
@@ -90,8 +90,8 @@ function checkBattle( battleDetails ) {
             isAttacker,
             {
                 status: battleDetails.battleStatus,
-                waitingOnAttacker: !!battleDetails.attackStatus,
-                waitingOnDefender: !!battleDetails.defendStatus
+                attackStatus: battleDetails.attackStatus,
+                defendStatus: battleDetails.defendStatus
             },
             function() {}
         );
@@ -181,18 +181,40 @@ function getPlayerStatusReady( callback ) {
     );
 }
 
-function updateBattleStatus( statusCode ) {
-    if ( status.status ) {
-        postCallEncoded(
-            "php/battle-controller.php",
-            {
-                action: "updateBattleStatus",
-                battleId: battleId,
-                statusCode: statusCode
+function updateStatus( statusCode ) {
+    if ( isAttacker ) {
+        setLimitedInterval(
+            DELAY,
+            AI_TIMEOUT,
+            function(intervalId) {
+                getPlayerStatusReady( function(isReady) {
+                    if ( isReady ) {
+                        updateBattleStatus( statusCode );
+                        window.clearInterval(intervalId);
+                    }
+                } );
             },
-            function() {}
+            function() { updateBattleStatus( statusCode ); }
         );
     }
+
+    return {
+        status: statusCode,
+        attackStatus: null,
+        defendStatus: null,
+    };
+}
+
+function updateBattleStatus( statusCode ) {
+    postCallEncoded(
+        "php/battle-controller.php",
+        {
+            action: "updateBattleStatus",
+            battleId: battleId,
+            statusCode: statusCode
+        },
+        function() {}
+    );
 }
 
 function updatePlayerStatus( isAttacker, statusCode ) {
@@ -296,6 +318,25 @@ function reset( intervalId ) {
     window.clearInterval(intervalId);
     battleId = null;
     getCurrentBattle();
+}
+
+function end() {
+    if ( isAttacker ) {
+        setLimitedInterval(
+            DELAY,
+            AI_TIMEOUT,
+            function(intervalId) {
+                getPlayerStatusReady( function(isReady) {
+                    if ( isReady ) {
+                        endBattle( currentPlayerDetails, enemyPlayerDetails );
+                        window.clearInterval(intervalId);
+                    }
+                } );
+            },
+            function() { endBattle( currentPlayerDetails, enemyPlayerDetails ); }
+        );
+
+    }
 }
 
 function endBattle( attackPlayerDetails, defendPlayerDetails ) {

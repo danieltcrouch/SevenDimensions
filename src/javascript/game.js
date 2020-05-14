@@ -1,8 +1,6 @@
 //Differences in Online vs Board Game:
 //  Chaos Cards are always played on your turn
-//todo 1 - Battles [TEST]
 //todo 3 - Chaos Card structure (just complete these ones listed) (maybe no async actions?)
-//  [make pre-phase sub-phases]
 //  [need to keep track of Chaos Cards (played and coming up)]
 //  Shut-up (prevents Chaos card from affecting you that round)
 //  Amnesia
@@ -138,7 +136,7 @@ function pollForBattles() {
 function submit() {
     let isValidToSubmit = true;
 
-    const isAsyncTurn = isMarketAuctionPhase() || isHarvestPhase() || isDoomsdayClockPhase();
+    const isAsyncTurn = isMarketAuctionPhase() || isPreExpansionPhase() || isHarvestPhase() || isCouncilPhase();
     if ( !isAsyncTurn && !isCurrentPlayerTurn() ) {
         isValidToSubmit = false;
         showToaster( "It is not your turn." );
@@ -235,7 +233,8 @@ function incrementTurn() {
         completeSubPhase();
         game.state.turn = 0;
         game.state.subPhase++;
-        if ( (isMarketPhase() && game.state.subPhase > SUBPHASE_MARKET) || isExpansionPhase() || isHarvestPhase() || (isCouncilPhase() && game.state.subPhase > SUBPHASE_COUNCIL_DOOMSDAY) ) {
+        const MAX_SUB_PHASES = 2;
+        if ( isHarvestPhase() || game.state.subPhase > MAX_SUB_PHASES ) {
             game.state.subPhase = 0;
             game.state.phase++;
             if ( game.state.phase > PHASE_COUNCIL ) {
@@ -280,15 +279,20 @@ function completeSubPhase() {
         }
     }
     else if ( isExpansionPhase() ) {
-        game.players.forEach( p => {
-            p.units.forEach( u => u.hitDeflections = 0 );
-        } );
+        if ( isPreExpansionPhase() ) {
+            //
+        }
+        else {
+            game.players.forEach( p => {
+                p.units.forEach( u => u.hitDeflections = 0 );
+            } );
+        }
     }
     else if ( isHarvestPhase() ) {
         //
     }
     else if ( isCouncilPhase() ) {
-        if ( !isDoomsdayClockPhase() ) {
+        if ( isCouncilSubPhase() ) {
             //
         }
         else {
@@ -503,6 +507,8 @@ function isMarketPhase() { return game.state.phase === PHASE_MARKET; }
 function isMarketAuctionPhase() { return game.state.phase === PHASE_MARKET && game.state.subPhase === SUBPHASE_MARKET_AUCTION; }
 function isMarketSubPhase() { return game.state.phase === PHASE_MARKET && game.state.subPhase === SUBPHASE_MARKET; }
 function isExpansionPhase() { return game.state.phase === PHASE_EXPANSION; }
+function isPreExpansionPhase() { return game.state.phase === PHASE_EXPANSION && game.state.subPhase === SUBPHASE_PRE_EXPANSION; }
+function isExpansionSubPhase() { return game.state.phase === PHASE_EXPANSION && game.state.subPhase === SUBPHASE_EXPANSION; }
 function isHarvestPhase() { return game.state.phase === PHASE_HARVEST; }
 function isCouncilPhase() { return game.state.phase === PHASE_COUNCIL; }
 function isCouncilSubPhase() { return game.state.phase === PHASE_COUNCIL && game.state.subPhase === SUBPHASE_COUNCIL; }
@@ -512,6 +518,9 @@ function getTurn( index ) {
     let result;
     if ( isMarketAuctionPhase() ) {
         result = "All (Auction)";
+    }
+    else if ( isPreExpansionPhase() ) {
+        result = "All";
     }
     else if ( isHarvestPhase() ) {
         result = "All";

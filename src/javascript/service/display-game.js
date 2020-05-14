@@ -17,13 +17,18 @@ function showActions() {
         }
     }
     else if ( isExpansionPhase() ) {
-        showExpansionActions();
+        if ( isPreExpansionPhase() ) {
+            showPreExpansionActions();
+        }
+        else {
+            showExpansionActions();
+        }
     }
     else if ( isHarvestPhase() ) {
         showHarvestActions();
     }
     else if ( isCouncilPhase() ) {
-        if ( !isDoomsdayClockPhase() ) {
+        if ( isCouncilSubPhase() ) {
             showCouncilActions();
         }
         else {
@@ -74,6 +79,10 @@ function showMarketActions() {
 }
 
 /* EXPANSION */
+
+function showPreExpansionActions() {
+    showMessage( "Pre-Expansion", "Use this time to trade and play Chaos Cards. When done, submit turn." );
+}
 
 function showExpansionActions() {
     showMessage( "Expansion", "Click on a tile, then click on the units you would like to move." );
