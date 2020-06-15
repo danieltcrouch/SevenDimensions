@@ -130,7 +130,7 @@ function loadUserCallback( playerId ) {
 }
 
 function loadRecurringEffects() {
-    if ( isExpansionPhase() && game.state.turn === 0 ) {
+    if ( isExpansionSubPhase() && game.state.turn === 0 ) {
         game.players.forEach( p => {
             if ( p.advancements.gardens.includes(DOCTRINES[HANGING_GARDEN].id) ) {
                 p.units.forEach( u => u.hitDeflectionsHG = 1 );
@@ -266,7 +266,7 @@ function incrementTurn() {
         game.state.turn = 0;
         game.state.subPhase++;
         const MAX_SUB_PHASES = 2;
-        if ( !isGameOver() && (isHarvestPhase() || game.state.subPhase > MAX_SUB_PHASES) ) {
+        if ( !isGameOver() && (isHarvestPhase() || game.state.subPhase >= MAX_SUB_PHASES) ) {
             game.state.subPhase = 0;
             game.state.phase++;
             if ( game.state.phase > PHASE_COUNCIL ) {
@@ -350,37 +350,39 @@ function completeSubPhase() {
                 }
             }
         }
-        else if ( game.state.event >= 0 ) {
-            const event = EVENTS[game.state.event];
-            if ( event.id === EVENTS[EVENT_ELECTION].id ) {
-                getElectionWinner().cards.offices.push(game.state.events.office);
-                game.players.forEach( p => p.selects.votePlayerId = null );
-            }
-            else if ( event.id === EVENTS[EVENT_MIDTERM].id ) {
-                getElectionWinner().cards.offices.push(game.state.events.office);
-                game.players.forEach( p => p.selects.votePlayerId = null );
-            }
-            else if ( event.id === EVENTS[EVENT_MARS].id ) {
-                const combinedStrength = game.players.reduce( (result, p) => {return result + p.selects.liquify.value}, 0 );
-                if ( combinedStrength >= game.state.events.marsStrength ) {
-                    game.players.filter( p => p.selects.liquify.value ).forEach( p => p.warBucks += EVENT_MARS_REWARD );
-                    const winners = game.players.reduce( (w, p) => {
-                        let currentValue = w[0].selects.liquify.value;
-                        return currentValue > p.selects.liquify.value ? w : ( currentValue < p.selects.liquify.value ? [p] : w.concat(p) )
-                    }, [] );
-                    winners.forEach( p => p.warBucks += (EVENT_MARS_GRAND_REWARD / winners.length) );
+        else {
+            if ( game.state.event >= 0 ) {
+                const event = EVENTS[game.state.event];
+                if ( event.id === EVENTS[EVENT_ELECTION].id ) {
+                    getElectionWinner().cards.offices.push(game.state.events.office);
+                    game.players.forEach( p => p.selects.votePlayerId = null );
                 }
-                else {
-                    game.players.forEach( p => p.warBucks = Math.max( (p.warBucks - EVENT_MARS_COST), 0 ) );
-                    //todo X - helper function to charge money
-                    //liquify units - helper function
+                else if ( event.id === EVENTS[EVENT_MIDTERM].id ) {
+                    getElectionWinner().cards.offices.push(game.state.events.office);
+                    game.players.forEach( p => p.selects.votePlayerId = null );
                 }
-                game.players.forEach( p => p.selects.liquify = null );
-            }
+                else if ( event.id === EVENTS[EVENT_MARS].id ) {
+                    const combinedStrength = game.players.reduce( (result, p) => {return result + p.selects.liquify.value}, 0 );
+                    if ( combinedStrength >= game.state.events.marsStrength ) {
+                        game.players.filter( p => p.selects.liquify.value ).forEach( p => p.warBucks += EVENT_MARS_REWARD );
+                        const winners = game.players.reduce( (w, p) => {
+                            let currentValue = w[0].selects.liquify.value;
+                            return currentValue > p.selects.liquify.value ? w : ( currentValue < p.selects.liquify.value ? [p] : w.concat(p) )
+                        }, [] );
+                        winners.forEach( p => p.warBucks += (EVENT_MARS_GRAND_REWARD / winners.length) );
+                    }
+                    else {
+                        game.players.forEach( p => p.warBucks = Math.max( (p.warBucks - EVENT_MARS_COST), 0 ) );
+                        //todo X - helper function to charge money
+                        //liquify units - helper function
+                    }
+                    game.players.forEach( p => p.selects.liquify = null );
+                }
 
-            game.state.events.office = null;
-            game.state.events.disaster = null;
-            game.state.events.marsStrength = null;
+                game.state.events.office = null;
+                game.state.events.disaster = null;
+                game.state.events.marsStrength = null;
+            }
         }
     }
 

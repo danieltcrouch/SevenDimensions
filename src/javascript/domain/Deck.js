@@ -1,6 +1,6 @@
 class Deck {
     constructor( cards ) {
-        this.cards = cards || [];
+        this.cards = Array.isArray( cards ) ? cards.slice() : [];
     }
 
     static getCurrentDeck( deck, playerHands ) {

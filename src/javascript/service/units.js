@@ -72,7 +72,7 @@ function getAbilitiesForUnit( unit ) {
     const tileDetails = getTileDetails( unit.tileId );
 
     if ( unit.unitTypeId === UNIT_TYPES[APOSTLE].id ) {
-        if ( !tileDetails.districtPlayerId && currentPlayer.districts.length < MAX_DISTRICTS ) {
+        if ( !tileDetails.districtPlayerId && currentPlayer.districts.tileIds.length < MAX_DISTRICTS ) {
             result.push( { text: "Found District", callback: found } );
         }
         if ( currentPlayer.religion && tileDetails.districtPlayerId && !tileDetails.religionIds.includes( currentPlayer.religion.id ) ) {

@@ -13,7 +13,7 @@ function displayTileDetails( tileId ) {
     show( 'tileUnits', tileDetails.unitSets.length );
     tileDetails.unitSets.forEach( us => {
         const player = getPlayer( us.id );
-        const isExpansionPlayer = isExpansionPhase() && us.id === currentPlayer.id;
+        const isExpansionPlayer = isExpansionSubPhase() && us.id === currentPlayer.id;
         const spanTitleAttributes = isExpansionPlayer ? " id='units-all-selected' class='link' onclick='selectAllUnits(\"selected\")'" : "";
         tileUnitsHTML += `<div><span${spanTitleAttributes}>Units (${player.username}): </span></div>`;
 
@@ -39,8 +39,8 @@ function showTileDetails( isShow = true ) {
 
 
 function updateExpansionButtons() {
-    show( 'ability', isExpansionPhase() );
-    show( 'annex', isExpansionPhase() );
+    show( 'ability', isExpansionSubPhase() );
+    show( 'annex', isExpansionSubPhase() );
 
     if ( selectedUnits.length === 1 ) {
         id('ability').classList.remove( "staticInverseButton" );

@@ -11,7 +11,7 @@ function tileHoverCallback( tileId ) {
         specialSuggestion( tileId );
         //todo X - special animation for these actions
     }
-    else if ( isExpansionPhase() && selectedUnits.length ) {
+    else if ( isExpansionSubPhase() && selectedUnits.length ) {
         moveSuggestion( tileId );
     }
     //todo X - special "X" animation for attacking
@@ -23,7 +23,7 @@ function tileClickCallback( tileId ) {
         specialAction = null;
     }
     else if ( selectedUnits.length &&  (
-            ( isExpansionPhase() && ( suggestedPath.includes( tileId ) || (selectedUnits.every( u => u.tileId === "unassigned" ) && !isImpassibleTile( tileId )) ) ) ||
+            ( isExpansionSubPhase() && ( suggestedPath.includes( tileId ) || (selectedUnits.every( u => u.tileId === "unassigned" ) && !isImpassibleTile( tileId )) ) ) ||
             ( isMarketPhase() && selectedUnits.every( u => u.tileId === "unassigned" ) && currentPlayer.districts.tileIds.includes( tileId ) )
         ) ) {
         moveUnits( tileId );
@@ -51,7 +51,7 @@ function selectTile( tileId ) {
 
     highlightSelectedTile( tileId );
     displayTileDetails( tileId );
-    if ( isExpansionPhase() && isTileChange ) {
+    if ( isExpansionSubPhase() && isTileChange ) {
         unselectUnits();
         clearMoveSuggestion();
         updateExpansionButtons();
@@ -102,7 +102,7 @@ function selectUnits( tileSelectType, unitId ) {
 
     if ( selectedUnits.length && SelectClass.isUnitSelected( unitId ) ) {
         SelectClass.highlightUnit( unitId, false );
-        selectedUnits = selectedUnits.filter( u => u.unitTypeId !== unitId );
+        selectedUnits = selectedUnits.filter( u => u.id !== unitId );
         if ( !selectedUnits.length ) {
             SelectClass.highlightAll( false );
             unselectUnits();
@@ -126,7 +126,7 @@ function unselectUnits() {
 
 
 function moveSuggestion( tileId ) {
-    if ( isExpansionPhase() && selectedUnits.length ) {
+    if ( isExpansionSubPhase() && selectedUnits.length ) {
         highlightSuggestedTiles( null, false );
 
         const rootTileId = selectedTile.id;
