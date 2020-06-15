@@ -1,14 +1,44 @@
 //Differences in Online vs Board Game:
+//  "Midnight" rather than continuing events
+//  Festival of Fairies must choose one type
+//  Scandal Disaster removes tokens evenly (no choice)
 //  Chaos Cards are always played on your turn
-//todo 3 - Chaos Card structure (just complete these ones listed) (maybe no async actions?)
-//  [need to keep track of Chaos Cards (played and coming up)]
-//  Shut-up (prevents Chaos card from affecting you that round)
-//  Amnesia
-//  Epiphany
-//  Way of the Samurai
+//todo 3 - Abilities
+//  Advancements
+//      Tech
+//      Doctrine
+//      Garden
+//      Auction
+//  Chaos (start with the below)
+//      Amnesia
+//      Epiphany
+//      Way of the Samurai
+//      Shut-up (prevents Chaos card from affecting you that round; or choose a player to prevent playing any cards that phase)
+//      [the rest]
+//  Faction
+//  Office
 //todo 4 - Clean-up Common
-//todo 7 - Initiative Tokens
+//todo 7 - Liquify Modal
+//  Units (in tile?), money, initiative tokens, chaos cards, resources -- it uses whatever is passed in -> if (details.money) {}
+//      Organize units by tile and tile description
+//  parameters so it is useful for Mars (all units), Inquisitions (all the above), Annex (units in tile, civil resist, money)
+//  Needs to return all things liquified, including an array of unit IDs, as well as the total value of all things liquified
+//todo X - some stuff is set-up for "Midnight" while other stuff is not
+//todo X - clean up test files; clean up player/state JSON to consolidate where flags are (make "global" object on each player and state?)
+//todo X - need a place to purchase Wonders
+//todo X - admin page for after game has started; shows who hasn't submitted
+//todo X - Can't start battle while battleId is present
+//todo X - convert modals so that purchase button is at the bottom beside "Close"
+//todo X - settings per player to automatically use AI for defense
 //todo X - trading
+//  Options: Accept, Counter, Decline
+//  Use polling
+//todo X - Action button should only be abilities
+//  Market to buttons in display-player (units in display-tile)
+//      This does slightly nerf MMC, but I think it's fine as long as they get the refund from the total, not the individual buys
+//  Where does Auction go?
+//  Where does Council/Dimensions go?
+//  Where do Elections/Doomsday go?
 const COLORS = ["red", "green", "blue", "purple", "orange", "teal", "gold"];
 
 let game;
@@ -96,8 +126,7 @@ function loadUserCallback( playerId ) {
     populatePlayerDisplay();
 
     displayUnassignedUnits();
-    show( 'perform', isExpansionPhase() );
-    updatePerformAbilityButton();
+    updateExpansionButtons();
 }
 
 function loadRecurringEffects() {
@@ -121,7 +150,7 @@ function popModals() {
         showHarvestActions();
     }
     else if ( isDoomsdayClockPhase() && game.state.event <= EVENT_MARS && !currentPlayer.turn.hasSubmitted ) {
-        showToaster("Time is slipping...");
+        showDoomsdayActions();
     }
 }
 
@@ -173,7 +202,10 @@ function submit() {
             //
         }
         else {
-            //
+            if ( !currentPlayer.turn.hasConvened ) {
+                isValidToSubmit = false;
+                showToaster( "Must participate in Doomsday Event." );
+            }
         }
     }
 
@@ -234,7 +266,7 @@ function incrementTurn() {
         game.state.turn = 0;
         game.state.subPhase++;
         const MAX_SUB_PHASES = 2;
-        if ( isHarvestPhase() || game.state.subPhase > MAX_SUB_PHASES ) {
+        if ( !isGameOver() && (isHarvestPhase() || game.state.subPhase > MAX_SUB_PHASES) ) {
             game.state.subPhase = 0;
             game.state.phase++;
             if ( game.state.phase > PHASE_COUNCIL ) {
@@ -285,6 +317,8 @@ function completeSubPhase() {
         else {
             game.players.forEach( p => {
                 p.units.forEach( u => u.hitDeflections = 0 );
+                p.initiatives.politicalActive = [];
+                p.initiatives.culturalActive = [];
             } );
         }
     }
@@ -293,15 +327,88 @@ function completeSubPhase() {
     }
     else if ( isCouncilPhase() ) {
         if ( isCouncilSubPhase() ) {
-            //
+            let winners = getWinners();
+            if ( winners.length ) {
+                game.state.winners = winners;
+                endGame();
+            }
+            else if ( game.state.event >= 0 ) {
+                const event = EVENTS[game.state.event];
+                if ( event.id === EVENTS[EVENT_ELECTION].id ) {
+                    game.players.forEach( p => {p.cards.offices = []; p.selects.highPriestReward = false; p.selects.highPriestReward = false;} );
+                    game.state.events.office = (new Deck(OFFICES)).getRandomCards( 1 ).map( c => c.id )[0];
+                }
+                else if ( event.id === EVENTS[EVENT_DISASTER].id ) {
+                    game.state.events.disaster = (new Deck(DISASTERS)).getRandomCards( 1 ).map( c => c.id )[0];
+                }
+                else if ( event.id === EVENTS[EVENT_MIDTERM].id ) {
+                    game.state.events.office = Deck.getCurrentDeck( OFFICES, game.players.map( p => p.cards.offices.map( c => c.id ) ) ).getRandomCards( 1 ).map( c => c.id )[0];
+                }
+                else if ( event.id === EVENTS[EVENT_MARS].id ) {
+                    const multiplier = roll( 6 );
+                    game.state.events.marsStrength = multiplier * game.players.reduce( (total, p) => total + p.districts.tileIds.length, 0 );
+                }
+            }
         }
-        else {
-            //Doomsday stuff?
-            //check for winner
+        else if ( game.state.event >= 0 ) {
+            const event = EVENTS[game.state.event];
+            if ( event.id === EVENTS[EVENT_ELECTION].id ) {
+                getElectionWinner().cards.offices.push(game.state.events.office);
+                game.players.forEach( p => p.selects.votePlayerId = null );
+            }
+            else if ( event.id === EVENTS[EVENT_MIDTERM].id ) {
+                getElectionWinner().cards.offices.push(game.state.events.office);
+                game.players.forEach( p => p.selects.votePlayerId = null );
+            }
+            else if ( event.id === EVENTS[EVENT_MARS].id ) {
+                const combinedStrength = game.players.reduce( (result, p) => {return result + p.selects.liquify.value}, 0 );
+                if ( combinedStrength >= game.state.events.marsStrength ) {
+                    game.players.filter( p => p.selects.liquify.value ).forEach( p => p.warBucks += EVENT_MARS_REWARD );
+                    const winners = game.players.reduce( (w, p) => {
+                        let currentValue = w[0].selects.liquify.value;
+                        return currentValue > p.selects.liquify.value ? w : ( currentValue < p.selects.liquify.value ? [p] : w.concat(p) )
+                    }, [] );
+                    winners.forEach( p => p.warBucks += (EVENT_MARS_GRAND_REWARD / winners.length) );
+                }
+                else {
+                    game.players.forEach( p => p.warBucks = Math.max( (p.warBucks - EVENT_MARS_COST), 0 ) );
+                    //todo X - helper function to charge money
+                    //liquify units - helper function
+                }
+                game.players.forEach( p => p.selects.liquify = null );
+            }
+
+            game.state.events.office = null;
+            game.state.events.disaster = null;
+            game.state.events.marsStrength = null;
         }
     }
 
-    game.players.forEach( p => p.turn.hasSubmitted = false );
+    if ( !isGameOver() ) {
+        game.players.forEach( p => p.turn.hasSubmitted = false );
+    }
+}
+
+function getElectionWinner() {
+    let votePlayerIds = game.players.map( p => p.selects.votePlayerId );
+    let maxVoteCount = 0;
+    let playerVoteCounts = votePlayerIds.reduce( (result, p) => {
+        let voteCount = result.find( r => r.playerId === p );
+        if ( voteCount ) {
+            voteCount.count++;
+        }
+        else {
+            voteCount = {playerId: p, count: 1};
+            result.push( voteCount );
+        }
+        maxVoteCount = ( voteCount.count > maxVoteCount ) ? voteCount.count : maxVoteCount;
+    }, [] );
+
+    let ambassador = game.players[game.state.ambassador];
+    let ambassadorVote = ambassador.selects.votePlayerId;
+    let maxVotePlayerIds = playerVoteCounts.filter( c => c.count === maxVoteCount ).map( p => p.playerId );
+    let winner = ( maxVotePlayerIds.length === 1 ) ? maxVotePlayerIds[0] : ( maxVotePlayerIds.includes( ambassadorVote ) ? ambassadorVote : ambassador.id );
+    return getPlayer(winner)
 }
 
 function updateGame() {
@@ -339,6 +446,18 @@ function reloadPage( internal = false ) {
     }
 }
 
+function endGame() {
+    postCallEncoded(
+       "php/main-controller.php",
+       {
+           action: "endGame",
+           id:     gameId,
+           state:  JSON.stringify( game.state )
+       },
+       loadGameCallback
+    );
+}
+
 
 /*** VICTORY POINTS ***/
 
@@ -349,25 +468,44 @@ function calculateVP( player ) {
     result += player.dimensions.length;
     result += player.dimensions.filter( d => !!d.wonderTileId ).length * 2;
     result += hasHero( player.units ) ? 1 : 0;
-    result += player.cards.offices.includes( "0" ) ? 1 : 0; //High Priest
+    result += player.selects.highPriestReward ? 1 : 0;
     result -= player.selects.highPriestVictim ? 1 : 0;
     result += player.cards.chaos.filter( c => isHeavensGate( c ) ).length;
-    result -= getInsurrectionVictim() === player.id ? 1 : 0;
-    return result;
-}
-
-function getInsurrectionVictim() {
-    let result = null;
-    if ( game.state.events.disaster === INSURRECTION ) {
-        game.state.events.disaster = null;
-        result = game.players.reduce( (prev, current) => ( calculateVP(prev) > calculateVP(current) ) ? prev : current ).id;
-        game.state.events.disaster = INSURRECTION;
-    }
+    result -= player.selects.insurrection ? 1 : 0;
     return result;
 }
 
 function hasHero( units ) {
     return units.some( u => u.unitTypeId === UNIT_TYPES[HERO].id );
+}
+
+function getLeadPlayers( mustBeOverWinCondition = false ) {
+    let playerIds = [];
+    let maxScore = 0;
+    for ( let i = 0; i < game.players.length; i++ ) {
+        let player = game.players[i];
+        let score = calculateVP( player );
+        if ( score >= maxScore && (!mustBeOverWinCondition || score >= MAX_VP) ) {
+            if ( score > maxScore ) {
+                playerIds = [];
+            }
+            maxScore = score;
+            playerIds.push( player.id );
+        }
+    }
+    if ( playerIds.length > 1 ) {
+        const maxDimensions = Math.max( ...playerIds.map( p => getPlayer( p ).dimensions.length ) );
+        playerIds = playerIds.filter( p => getPlayer( p ).dimensions.length === maxDimensions );
+        if ( playerIds.length > 1 ) {
+            const maxWonders = Math.max( ...playerIds.map( p => getPlayer( p ).dimensions.filter( d => d.wonderTileId ).length ) );
+            playerIds = playerIds.filter( p => getPlayer( p ).dimensions.filter( d => d.wonderTileId ).length === maxWonders );
+        }
+    }
+    return playerIds;
+}
+
+function getWinners() {
+    return getLeadPlayers( true );
 }
 
 
@@ -400,7 +538,7 @@ function calculateWarBuckHarvestReward() {
 function calculateResourceHarvestReward() {
     return currentPlayer.districts.tileIds.reduce( ( result, tileId ) => {
         const tileResourceIds = game.board.find( t => t.id === tileId ).resourceIds;
-        if ( tileResourceIds.length ) {
+        if ( tileResourceIds.length && !game.state.events.shortage ) {
             tileResourceIds.forEach( id => {
                 const currentResource = result.find( cr => cr.id === id );
                 if ( currentResource ) {
@@ -452,7 +590,7 @@ function getTileDetails( id ) {
             controlPlayerId: controlPlayerId,
             wonderId: wonderId,
             religionIds: religionIds,
-            culturalInitiatives: culturalInitiatives,
+            culturalInitiatives: culturalInitiatives, //reaperCount
             politicalInitiatives: politicalInitiatives,
             unitSets: unitSets
         };
@@ -472,14 +610,14 @@ function getEnemyPlayer( tileId, includeApostles = false ) {
     return result;
 }
 
-function pickPlayers( allowMultiple, callback, players = game.players ) {
-    const message = allowMultiple ? "Choose players to target:" : "Choose a player to target:";
+function pickPlayers( allowMultiple, allowNone, callback, players = game.players, message = "" ) {
+    message = message || (allowMultiple ? "Choose players to target:" : "Choose a player to target:");
     showPicks(
         "Enemy Players",
-        "Choose players to target:",
+        message,
         players.map( p => p.name ),
         allowMultiple,
-        allowMultiple,
+        allowMultiple, //todo 4 - allow "None" for radio buttons
         function( index ) {
             let playerIds = index;
             if ( index ) {
@@ -497,6 +635,10 @@ function pickPlayers( allowMultiple, callback, players = game.players ) {
 
 function getPlayer( playerId ) {
     return game.players.find( p => p.id === playerId );
+}
+
+function isGameOver() {
+    return game.state.winners && game.state.winners.length;
 }
 
 function getPhase( index ) {

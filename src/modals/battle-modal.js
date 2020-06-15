@@ -98,6 +98,7 @@ function refreshDetails() {
 
     updateUnits();
     updateButtons();
+    updateLinks();
     updateStatusDisplay();
 }
 
@@ -175,6 +176,13 @@ function updateButtons() {
 
     if ( isAttacker ) {
         show( 'retreat', isAttackPhase );
+    }
+}
+
+function updateLinks() {
+    const isAttackPhase = status.status === 'A';
+    if ( isAttackPhase ) {
+        show( 'resistance', currentPlayerDetails.bonuses.potential.culturalTokens > 0 );
     }
 }
 
@@ -368,6 +376,38 @@ function checkEnd() {
         hide( 'disband');
         hide( 'retreat');
     }
+}
+
+function addResistance() {
+    const tokenMax = currentPlayerDetails.bonuses.potential.culturalTokens;
+    showPrompt(
+        "Civil Resistance",
+        `Enter the number of Cultural Initiative Tokens (out of ${tokenMax}) to use:`,
+        function( response ) {
+            const isCancel = response === undefined;
+            if ( !isCancel ) {
+                const tokenCount = parseInt( response );
+                if ( Number.isInteger( tokenCount ) ) {
+                    if ( tokenCount <= tokenMax ) {
+                        addResistanceCallback( tokenCount );
+                    }
+                    else {
+                        showToaster( "Token count too high." );
+                    }
+                }
+                else {
+                    showToaster( "Invalid Token count." );
+                }
+            }
+        },
+        "1"
+    );
+}
+
+function addResistanceCallback( tokenCount ) {
+    addUnitGroup( tokenCount * REAPERS_IN_CR, UNIT_TYPES[REAPER].id, currentPlayerDetails, false );
+    currentPlayerDetails.bonuses.potential.culturalTokens = (tokenCount * -1);
+    hide('resistance');
 }
 
 function retreat() {

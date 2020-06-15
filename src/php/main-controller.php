@@ -27,6 +27,10 @@ if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
             elseif ( isset($_POST['gameId']) && isset($_POST['userId']) ) {
                 $result = $action( $_POST['gameId'], $_POST['userId'] );
             }
+            //endGame
+            elseif ( isset($_POST['id']) && isset($_POST['state']) ) {
+                $result = $action( $_POST['id'], $_POST['state'] );
+            }
             //createGame
             elseif ( isset($_POST['game']) ) {
                 $result = $action( $_POST['game'] );

@@ -127,24 +127,202 @@ function showHarvestActions() {
 /* COUNCIL */
 
 function showCouncilActions() {
-    openCouncilModal(
-        currentPlayer,
-        function( response ) {
-            currentPlayer = response;
+    showPicks(
+        "Council",
+        "Claim any dimensions you meet the requirements for:",
+        DIMENSIONS.map( d => {
+            return {
+                value:    `<strong>${d.name}</strong> &ndash; ${d.description}`,
+                disabled: currentPlayer.dimensions.map( dim => dim.id ).includes( d.id ) || !validateDimension( d.id, currentPlayer ),
+                checked:  currentPlayer.dimensions.map( dim => dim.id ).includes( d.id )
+            };
+        } ),
+        true,
+        true,
+        function( indexes ) {
+            indexes.forEach( i => { currentPlayer.dimensions.push( {id: DIMENSIONS[i].id, wonderTileId: null } ); } );
         }
     );
 }
 
 function showDoomsdayActions() {
-    game.state.events.office = OFFICES[Math.floor(Math.random() * OFFICES.length)].id;
-    openEventModal(
-        currentPlayer,
-        game.state.event,
-        game.state.events,
+    const event = EVENTS[game.state.event];
+    if ( event.id === EVENTS[EVENT_ELECTION].id ) {
+        performElection();
+    }
+    else if ( event.id === EVENTS[EVENT_GAMBIT].id ) {
+        showPrompt(
+            event.name,
+            event.description,
+            function( response ) {
+                if ( response && Number.isInteger(response) ) {
+                    if ( response <= currentPlayer.warBucks ) {
+                        currentPlayer.warBucks -= response;
+                        currentPlayer.selects.gambitBet = response;
+                    }
+                    else {
+                        showToaster("Cannot afford.");
+                    }
+                }
+                currentPlayer.turn.hasConvened = true;
+            }
+        ); //todo 4 - Allow making it a number field ad hoc
+    }
+    else if ( event.id === EVENTS[EVENT_FESTIVAL].id ) {
+        let tokenCount = ( currentPlayer.units.length > EVENT_FF_UNITS_1 ) ? EVENT_FF_AWARD_1 :
+            ( ( currentPlayer.units.length > EVENT_FF_UNITS_2 ) ? EVENT_FF_AWARD_2 : EVENT_FF_AWARD_3 );
+        showBinaryChoice(
+            event.name,
+            `Based on your number of units, you have been awarded ${tokenCount} initiative token(s). Choose the type you would like:`,
+            "Culture",
+            "Politics",
+            function( response ) {
+                if ( response && Number.isInteger(response) ) {
+                    if ( response === 1 ) {
+                        currentPlayer.initiatives.politicalTokens += tokenCount;
+                    }
+                    else {
+                        currentPlayer.initiatives.culturalTokens += tokenCount;
+                    }
+                    currentPlayer.turn.hasConvened = true;
+                }
+            }
+        );
+    }
+    else if ( event.id === EVENTS[EVENT_DISASTER].id ) {
+        performDisaster();
+    }
+    else if ( event.id === EVENTS[EVENT_MIDTERM].id ) {
+        game.state.events.shortage = false;
+        game.state.events.inflation = false;
+
+        performElection();
+    }
+    else if ( event.id === EVENTS[EVENT_RESTOCK].id ) {
+        showConfirm(
+            event.name,
+            event.description,
+            function() {
+                currentPlayer.cards.chaos = [];
+                getChaosCardsAsync( game.players.indexOf( currentPlayer ), EVENT_RESTOCK_CARDS );
+
+                currentPlayer.warBucks += currentPlayer.selects.gambitBet * EVENT_GG_RETURN;
+                currentPlayer.selects.gambitBet = null;
+            }
+        );
+    }
+    else if ( event === EVENTS[EVENT_MARS].id ) {
+        game.players.forEach( p => p.selects.insurrection = false );
+        //todo 7 - liquify
+    }
+
+    showToaster("Time is slipping...");
+}
+
+function performElection() {
+    const office = getOfficeCard(game.state.events.office);
+    pickPlayers(
+        false,
+        true,
         function( response ) {
-            //
+            if ( response && Number.isInteger(response) ) {
+                currentPlayer.selects.votePlayerId = game.players[response].id;
+            }
+            currentPlayer.turn.hasConvened = true;
+        },
+        game.players,
+        `Elect a player as ${office.name}:`
+    );
+}
+
+function performDisaster() {
+    const disaster = getDisasterCard(game.state.events.disaster);
+    if ( disaster.id === DISASTERS[PAYDAY].id ) {
+        performPayDayDisaster();
+    }
+    else {
+        showConfirm(
+            EVENTS[EVENT_DISASTER].name,
+            `<strong>${disaster.name}</strong> &ndash; ${disaster.description}`,
+            function() {
+                if ( disaster.id === DISASTERS[ERUPTION].id ) {
+                    const volcanoAdjacentTileIds = game.board.filter( t => t.name === TILE_TYPES[VOLCANO].name ).reduce( (result, t) => result.concat( t.id ).concat( getAdjacentTiles( t.id, false ) ), [] );
+                    game.players.forEach( p => p.units.forEach( u => {
+                        if ( volcanoAdjacentTileIds.includes( u.tileId ) ) {
+                            removeUnit( u, currentPlayer );
+                        }
+                    } ) );
+                }
+                else if ( disaster.id === DISASTERS[SCANDAL].id ) {
+                    game.players.forEach( p => {
+                        const districtCount = p.districts.tileIds.length;
+                        const currentCTokenCount = p.initiatives.culturalTokens;
+                        const currentPTokenCount = p.initiatives.politicalTokens;
+                        const cTokenOverCount = Math.max( currentCTokenCount - currentPTokenCount, 0 );
+                        const pTokenOverCount = Math.max( currentPTokenCount - currentCTokenCount, 0 );
+                        const remainingCount = districtCount - (cTokenOverCount + pTokenOverCount);
+                        const remainder = (remainingCount % 2 === 0) ? 0 : 1;
+                        p.initiatives.culturalTokens  = Math.max( Math.trunc( (remainingCount / 2) + cTokenOverCount + remainder ), 0 );
+                        p.initiatives.politicalTokens = Math.max( Math.trunc( (remainingCount / 2) + pTokenOverCount ), 0 );
+                    } );
+                }
+                else if ( disaster.id === DISASTERS[THE_COST_OF_DISCIPLESHIP].id ) {
+                    game.players.forEach( p => p.units.forEach( u => {
+                        if ( u.unitTypeId === UNIT_TYPES[JUGGERNAUT].id || u.unitTypeId === UNIT_TYPES[ROBOT].id ) {
+                            removeUnit( u, currentPlayer );
+                        }
+                    } ) );
+                }
+                else if ( disaster.id === DISASTERS[SHORTAGE].id ) {
+                    game.state.events.shortage = true;
+                }
+                else if ( disaster.id === DISASTERS[INSURRECTION].id ) {
+                    getLeadPlayers().map( id => getPlayer(id) ).forEach( p => p.selects.insurrection = true );
+                }
+                else if ( disaster.id === DISASTERS[INFLATION].id ) {
+                    game.state.events.inflation = true;
+                }
+                currentPlayer.turn.hasConvened = true;
+            }
+        );
+    }
+}
+
+function performPayDayDisaster() {
+    showPicks(
+        DISASTERS[PAYDAY].name,
+        DISASTERS[PAYDAY].description,
+        currentPlayer.units.map( u => `${getUnitType(u.unitTypeId).name} (${u.tileId})` ), //todo X - instead of displaying tileId, sort units by tileId (which should be top-down, left-right)
+        true,
+        true,
+        function( response ) {
+            if ( response ) {
+                const cost = response.length * EVENT_DISASTER_PAYDAY_COST;
+                if ( cost <= currentPlayer.warBucks ) {
+                    currentPlayer.warBucks -= cost;
+                    for ( let i = 0; i < currentPlayer.units; i++ ) {
+                        if ( !response.includes( i ) ) {
+                            currentPlayer.units[i].disbanded = true;
+                        }
+                    }
+                    currentPlayer.units.filter( u => u.disbanded ).forEach( u => removeUnit( u, currentPlayer ) );
+                    currentPlayer.turn.hasConvened = true;
+                }
+                else {
+                    performPayDayDisaster();
+                    showToaster("Cannot afford");
+                }
+            }
         }
     );
+}
+
+
+/*** ABILITY ***/
+
+
+function showAbilities() {
+    showMessage( "Abilities", "TODO" ); //cannot open during Council Phase
 }
 
 

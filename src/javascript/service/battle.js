@@ -12,6 +12,8 @@ const MAX_TIMEOUT = 3600000;
 
 const KAMIKAZE_HIT = 3;
 
+//todo X - refactor this file as "Conflict" instead of battle
+
 function launchBattle( tileId ) {
     const enemyPlayer = game.players.find( p => p.units.some( u => u.tileId === tileId ) && p.id !== currentPlayer.id );
     const enemyPlayerDetails = getPlayerBattleDetails( enemyPlayer, tileId );
@@ -37,15 +39,23 @@ function getPlayerBattleDetails( player, tileId ) {
     const tileUnits = player.units.filter( u => u.tileId === tileId );
     const isPlayerDistrict = player.districts.tileIds.includes( tileId );
     const isDefending = player.id !== currentPlayer.id;
+    if ( isDefending && player.initiatives.culturalActive ) {
+        let currentCR = player.initiatives.culturalActive.find( i => i.tileId === tileId );
+        for ( let i = 0; currentCR && i < currentCR.reaperCount; i++ ) {
+            tileUnits.push( new Unit( getRandomUnitId(), UNIT_TYPES[REAPER].id, tileId ) );
+        }
+    }
     return {
         id: player.id,
         tileId: tileId,
         bonuses: {
             kamikaze: player.advancements.doctrines.includes(DOCTRINES[HUMAN_SACRIFICE].id),
+            militaryTactics: player.advancements.technologies.includes(TECHNOLOGIES[MILITARY_TACTICS].id),
             hangingGardens: false,
             menOfSteel: false,
             potential: {
-                menOfSteel: player.cards.chaos.includes( CHAOS[61].id )
+                menOfSteel: player.cards.chaos.includes( CHAOS[61].id ),
+                culturalTokens: player.initiatives.culturalActive.find( i => i.tileId === tileId ) ? player.initiatives.culturalTokens : 0
             }
         },
         units: tileUnits.filter( u => u.unitTypeId !== UNIT_TYPES[APOSTLE].id && u.movesRemaining > 0 ).map( u => ({
@@ -82,30 +92,44 @@ function checkBattle( battleDetails ) {
         const isAttacker = attackDetails.id === currentPlayer.id;
         let currentPlayerDetails = isAttacker ? attackDetails : defendDetails;
         let enemyPlayerDetails = !isAttacker ? attackDetails : defendDetails;
-        openBattleModal(
-            currentPlayer.username,
-            getPlayer( enemyPlayerDetails.id ).username,
-            currentPlayerDetails,
-            enemyPlayerDetails,
-            isAttacker,
-            {
-                status: battleDetails.battleStatus,
-                attackStatus: battleDetails.attackStatus,
-                defendStatus: battleDetails.defendStatus
-            },
-            function() {}
-        );
+
+        const isInitiative = battleDetails.battleStatus === "I";
+        if ( isInitiative ) {
+            openAnnexDisplay(
+                currentPlayer.username,
+                getPlayer( enemyPlayerDetails.id ).username,
+                currentPlayerDetails,
+                enemyPlayerDetails,
+                isAttacker
+            );
+        }
+        else {
+            openBattleModal(
+                currentPlayer.username,
+                getPlayer( enemyPlayerDetails.id ).username,
+                currentPlayerDetails,
+                enemyPlayerDetails,
+                isAttacker,
+                {
+                    status: battleDetails.battleStatus,
+                    attackStatus: battleDetails.attackStatus,
+                    defendStatus: battleDetails.defendStatus
+                },
+                function() {}
+            );
+        }
     }
 }
 
-function createBattle( attackPlayerDetails, defendPlayerDetails, callback ) {
+function createBattle( attackPlayerDetails, defendPlayerDetails, callback, battleStatus = 'A' ) {
     postCallEncoded(
        "php/battle-controller.php",
        {
            action: "createBattle",
            gameId: gameId,
            attackPlayerDetails: JSON.stringify( attackPlayerDetails ),
-           defendPlayerDetails: JSON.stringify( defendPlayerDetails )
+           defendPlayerDetails: JSON.stringify( defendPlayerDetails ),
+           battleStatus: battleStatus
        },
        function( result ) {
            //todo X - notify defender of battle
@@ -401,6 +425,11 @@ function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResu
                 unit.hitDeflections = u.hitDeflections;
             }
         }
+        if ( defendPlayerDetails.bonuses.potential.culturalTokens < 0 ) {
+            defendPlayer.initiatives.culturalTokens += defendPlayerDetails.bonuses.potential.culturalTokens;
+            const remainingReaperCount = defendPlayerDetails.units.filter( u => u.unitTypeId === UNIT_TYPES[REAPER].id && !defendPlayer.units.some( un => un.id === u.id ) ).length;
+            defendPlayer.initiatives.culturalActive.push( {tileId: tileId, reaperCount: remainingReaperCount} );
+        }
     } );
 
     if ( attackResult === "W" ) {
@@ -409,7 +438,7 @@ function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResu
             unit.tileId = tileId;
             unit.movesRemaining--;
         } );
-        if ( getTileDetails(defendPlayerDetails.tileId).districtPlayerId ) {
+        if ( getTileDetails(tileId).districtPlayerId ) {
             swapDistrict( defendPlayerDetails.id, attackPlayerDetails.id, tileId );
         }
     }

@@ -11,7 +11,7 @@ class Deck {
     getRandomCards( count ) {
         let result = [];
         for ( let i = 0; i < count; i++ ) {
-            const card = this.removeCardIndex( Math.floor(Math.random() * this.cards.length) );
+            const card = this.removeCardByIndex( Math.floor(Math.random() * this.cards.length) );
             if ( card ) {
                 result.push( card );
             }
@@ -19,15 +19,33 @@ class Deck {
         return result;
     }
 
-    removeCard( card ) {
-        const index = this.cards.map( c => c.id ).indexOf( card.id );
-        return !!this.removeCardIndex( index );
+    hasCard( card ) {
+        return this.getCardIndex( card ) !== -1;
     }
 
-    removeCardIndex( cardIndex ) {
-        const card = this.cards[cardIndex];
-        if ( typeof card !== "undefined" ) {
-            this.cards.splice( cardIndex, 1 );
+    getCardIndex( card ) {
+        return this.cards.map( c => c.id ).indexOf( card.id );
+    }
+
+    getCardByIndex( cardIndex ) {
+        let card = undefined;
+        if ( cardIndex >= 0 && cardIndex < this.getCount() ) {
+            card = this.cards[cardIndex];
+        }
+        return card;
+    }
+
+    removeCard( card ) {
+        return !!this.removeCardByIndex( this.getCardIndex( card ) );
+    }
+
+    removeCardByIndex( cardIndex ) {
+        let card = undefined;
+        if ( cardIndex >= 0 && cardIndex < this.getCount() ) {
+            card = this.cards[cardIndex];
+            if ( typeof card !== "undefined" ) {
+                this.cards.splice( cardIndex, 1 );
+            }
         }
         return card;
     }
@@ -57,7 +75,7 @@ class Deck {
         if ( count <= this.getCount() ) {
             for ( let i = 0; i < count; i++ ) {
                 cards.push( this.cards[0] );
-                this.removeCardIndex( 0 );
+                this.removeCardByIndex( 0 );
             }
         }
         return cards;

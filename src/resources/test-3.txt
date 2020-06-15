@@ -8,12 +8,14 @@
         "event": 0,
         "events": {
             "office": null,
-            "disaster": null
+            "disaster": null,
+            "marsStrength":null
         },
         "cards":{
             "chaosNext":[],
             "chaosDiscard":[]
-        }
+        },
+         "winners":[]
     },
     "board": [
         {
@@ -330,6 +332,7 @@
             },
             "cards": {
                 "chaos": [],
+                "chaosPlayed":[],
                 "offices": []
             },
             "units": [
@@ -408,6 +411,7 @@
             },
             "cards": {
                 "chaos": [],
+                "chaosPlayed":[],
                 "offices": []
             },
             "units": [
@@ -481,6 +485,7 @@
             },
             "cards": {
                 "chaos": [],
+                "chaosPlayed":[],
                 "offices": []
             },
             "units": [

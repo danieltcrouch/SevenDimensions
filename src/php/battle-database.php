@@ -1,6 +1,6 @@
 <?php
 
-function createBattle( $gameId, $attackPlayerDetails, $defendPlayerDetails )
+function createBattle( $gameId, $attackPlayerDetails, $defendPlayerDetails, $battleStatus )
 {
     $battleId = getGUID();
     $attackPlayerDetails = json_decode( $attackPlayerDetails );
@@ -11,7 +11,7 @@ function createBattle( $gameId, $attackPlayerDetails, $defendPlayerDetails )
     $defendJson = json_encode( $defendPlayerDetails );
 
     $query = "INSERT INTO battle (id, gameId, attackUserId, defendUserId, battleStatus, battleStatusDate, attackDetails, defendDetails) 
-              VALUES (:battleId, :gameId, (SELECT userId FROM player WHERE id = :attackPlayerId AND gameId = :gameId), (SELECT userId FROM player WHERE id = :defendPlayerId AND gameId = :gameId), 'A', CURRENT_TIMESTAMP(), :attackJson, :defendJson)";
+              VALUES (:battleId, :gameId, (SELECT userId FROM player WHERE id = :attackPlayerId AND gameId = :gameId), (SELECT userId FROM player WHERE id = :defendPlayerId AND gameId = :gameId), :battleStatus, CURRENT_TIMESTAMP(), :attackJson, :defendJson)";
 
     $connection = getConnection();
     $statement = $connection->prepare( $query );
@@ -19,6 +19,7 @@ function createBattle( $gameId, $attackPlayerDetails, $defendPlayerDetails )
     $statement->bindParam(':gameId',         $gameId);
     $statement->bindParam(':attackPlayerId', $attackPlayerId);
     $statement->bindParam(':defendPlayerId', $defendPlayerId);
+    $statement->bindParam(':battleStatus',   $battleStatus);
     $statement->bindParam(':attackJson',     $attackJson);
     $statement->bindParam(':defendJson',     $defendJson);
     $statement->execute();
@@ -62,6 +63,11 @@ function saveDisbands( $battleId, $isAttack, $playerDetails )
     return saveAction( $battleId, $isAttack, $playerDetails, 'D' );
 }
 
+function saveInitiative( $battleId, $isAttack, $playerDetails )
+{
+    return saveAction( $battleId, $isAttack, $playerDetails, 'I' );
+}
+
 function saveAction( $battleId, $isAttack, $playerDetails, $actionType )
 {
     $playerJson = $playerDetails;
@@ -93,6 +99,11 @@ function getAttacks( $battleId, $isAttack )
 function getDisbands( $battleId, $isAttack )
 {
     return getAction( $battleId, $isAttack, 'D' );
+}
+
+function getInitiative( $battleId, $isAttack )
+{
+    return getAction( $battleId, $isAttack, 'I' );
 }
 
 function getAction( $battleId, $isAttack, $actionType )

@@ -15,3 +15,6 @@ const RESOURCES = [
     new Resource( "1", "Chronotine" ),
     new Resource( "2", "Aether" )
 ];
+
+const RESOURCE_EXCHANGE = 4;
+const RESOURCE_EXCHANGE_VALUE = 8;

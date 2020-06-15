@@ -221,6 +221,28 @@ function getPlayer( $gameId, $userId )
     return $result;
 }
 
+function endGame( $gameId, $state )
+{
+    $state = json_decode( $state );
+    $stateJson = json_encode( $state );
+
+    $updateMeta  = "UPDATE meta SET isOver = TRUE WHERE id = :gameId";
+    $updateState = "UPDATE state SET stateJson = :stateJson WHERE gameId = :gameId";
+
+    $query =
+        "$updateMeta;\n
+         $updateState";
+
+    $connection = getConnection();
+    $statement = $connection->prepare( $query );
+    $statement->bindParam(':gameId',    $gameId);
+    $statement->bindParam(":stateJson", $stateJson);
+    $statement->execute();
+
+    $connection = null;
+    return true;
+}
+
 function getConnection()
 {
     $servername = "localhost";

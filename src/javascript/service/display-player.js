@@ -14,8 +14,6 @@ function populatePlayerDisplay( player = currentPlayer, idSuffix = "" ) {
 }
 
 function viewVP( player = currentPlayer ) {
-    const insurrectionPlayerId = getInsurrectionVictim();
-    const isHighPriestActive = player.cards.offices.includes( "0" ) || player.selects.highPriestVictim;
     let message =
         `<div><span style='font-weight: bold'>Victory Points Total:</span> ${id('victoryPointsValue').innerText}</div>
          <div>Districts: ${player.districts.tileIds.length}</div>
@@ -23,10 +21,10 @@ function viewVP( player = currentPlayer ) {
          <div>Wonders: ${(player.dimensions.filter( d => !!d.wonderTileId ).length * 2)}</div>
          <div>Hero: ${(hasHero( player.units ) ? "1" : "0")}</div>
          <div>Chaos Cards: ${player.cards.chaos.filter( c => isHeavensGate( c ) ).length}</div>`;
-    if ( isHighPriestActive ) {
-        message += `<div>High Priest: ${player.cards.offices.includes( "0" ) ? "1" : ( player.selects.highPriestVictim ? "-1" : "0" )}</div>`;
+    if ( player.selects.highPriestReward || player.selects.highPriestVictim ) {
+        message += `<div>High Priest: ${player.selects.highPriestReward ? "1" : "-1"}</div>`;
     }
-    if ( insurrectionPlayerId && insurrectionPlayerId === player.id ) {
+    if ( player.selects.insurrection ) {
         message += "<div>Insurrection Event: -1</div>";
     }
     showMessage( "Victory Points", message );
@@ -101,11 +99,13 @@ function viewInitiatives( player = currentPlayer ) {
 }
 
 function viewCards( player = currentPlayer ) {
-    //tod 6 - if not currentPLayer, just give card count
-    let message = getCardTable(
-        CHAOS,
-        player.cards.chaos
-    );
+    let message = player.cards.chaos.length + " Cards";
+    if ( player.id === currentPlayer.id ) {
+        message = getCardTable(
+            CHAOS,
+            player.cards.chaos
+        );
+    }
     showMessage( "Cards", message, {padding: ".5em 20%"} );
 }
 
@@ -118,6 +118,9 @@ function getCardTable( data, userData ) {
                 `<tr><td>${item.name}</td>
                  <td>${item.description}</td></tr>`;
         }
+    }
+    if ( !userData.length ) {
+        resultHTML += "<tr><td>There are no cards to display.</td></tr>"
     }
     resultHTML += "</tbody></table>";
     return resultHTML;

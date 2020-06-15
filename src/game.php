@@ -52,8 +52,8 @@
                     <div id="tileUnits" style="margin-top: 1em"></div>
                 </div>
             </div>
-            <div><button id="perform" class="button" style="width: 100%; margin-top: .5em; display: none" onclick="performUnitAbilities()">Use Ability</button></div>
-            <div><button id="killApostle" class="button" style="width: 100%; margin-top: .5em; display: none" onclick="killApostle()">Kill Apostle</button></div>
+            <div><button id="ability" class="button" style="width: 100%; margin-top: .5em; display: none" onclick="performUnitAbilities()">Use Ability</button></div>
+            <div><button id="annex"   class="button" style="width: 100%; margin-top: .5em; display: none" onclick="performAnnex()">Annex</button></div>
         </div>
         <div class="col-6">
             <div id="mapDiv" class="center">
@@ -66,6 +66,7 @@
             <div id="playerDiv" class="center">
                 <div><button id="submit" class="button" style="width: 7em; margin-bottom: .5em" onclick="submit()">Submit</button></div>
                 <div><button id="phase"  class="button" style="width: 7em; margin-bottom: .5em" onclick="showActions()">Actions</button></div>
+                <div><button id="phase"  class="button" style="width: 7em; margin-bottom: .5em" onclick="showAbilities()">Abilities</button></div>
                 <div><button id="trade"  class="button" style="width: 7em; margin-bottom: .5em" onclick="showTrade()">Trade</button></div>
                 <div><button id="help"   class="button" style="width: 7em; margin-bottom: .5em" onclick="showHelp()">Help</button></div>
             </div>
@@ -77,7 +78,6 @@
 <?php include("modals/capital-modal.html"); ?>
 <?php include("modals/market-modal.html"); ?>
 <?php include("modals/battle-modal.html"); ?>
-<?php include("modals/council-modal.html"); ?>
 <?php include("modals/event-modal.html"); ?>
 <?php includeModals(); ?>
 

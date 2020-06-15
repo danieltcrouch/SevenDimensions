@@ -28,21 +28,37 @@ const EVENT_RESTOCK = 5;
 const EVENT_MARS = 6;
 
 const EVENTS = [
-    { id: "0", name: "Continental Elections" },
-    { id: "1", name: "Gambler’s Gambit" },
-    { id: "2", name: "Festival of Fairies" },
-    { id: "3", name: "Global Disasters" },
-    { id: "4", name: "Midterm Elections" },
-    { id: "5", name: "Annual Restock" },
-    { id: "6", name: "Mars Attack!" }
+    { id: "0", name: "Continental Elections", description: "Reveal an office and elect a player to that office." },
+    { id: "1", name: "Gambler’s Gambit",      description: "Players may invest War-Bucks to be paid back at a later time with interest." },
+    { id: "2", name: "Festival of Fairies",   description: "Players are awarded Initiative Tokens based on their number of units: 1 for more than 7 units, 3 for more than 3 units, 5 otherwise." },
+    { id: "3", name: "Global Disasters",      description: "Draw a Global Disaster card and follow its instructions." },
+    { id: "4", name: "Midterm Elections",     description: "Perform another election." },
+    { id: "5", name: "Annual Restock",        description: "Players exchange Chaos Cards for 3 new cards. All investments are paid back 2x." },
+    { id: "6", name: "Mars Attack!",          description: "Aliens attack with power determined by the number of districts. Defeat them by donating units. If successful, donating players receives 5WB, otherwise all players lose 15WB and donated units die. The player that donates the most receives 50WB." }
 ];
 
 
 /*** MISCELLANEOUS ***/
 
 
-const REAPERS_IN_CR = 5; //Civil Resistance
+const MAX_VP = 14;
 
 const MAX_ADVANCEMENTS = 7;
 const MAX_DISTRICTS = 7;
 const MAX_CARDS = 7;
+
+const VALUE_OF_ANNEX = 5;
+const REAPERS_IN_CR = 5;
+
+const EVENT_GG_RETURN = 2;
+const EVENT_GG_RETURN_ATLANTIS = 7;
+const EVENT_FF_UNITS_1 = 7;
+const EVENT_FF_UNITS_2 = 3;
+const EVENT_FF_AWARD_1 = 1;
+const EVENT_FF_AWARD_2 = 3;
+const EVENT_FF_AWARD_3 = 5;
+const EVENT_DISASTER_PAYDAY_COST = 2;
+const EVENT_RESTOCK_CARDS = 3;
+const EVENT_MARS_REWARD = 5;
+const EVENT_MARS_GRAND_REWARD = 50;
+const EVENT_MARS_COST = 15;

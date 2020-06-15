@@ -121,6 +121,7 @@ function killApostle( unit ) {
     if ( enemyPlayers.length > 1 ) {
         pickPlayers(
             true,
+            false,
             function( playerIds ) {
                 enemyPlayers.filter( p => playerIds.includes( p.id ) ).forEach( p => {
                     p.units.filter( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ) .forEach( u => removeUnit( u, p ) );
@@ -187,6 +188,17 @@ function swapUnit( unit, fromPlayer, toPlayer ) {
     updateUnitIconsFromId( unit.tileId );
 }
 
+function addUnitGroup( count, unitTypeId, tileId, player, updateDisplay = true ) {
+    for ( let j = 0; j < count; j++ ) {
+        addUnit( new Unit( getRandomUnitId(), unitTypeId, tileId ), player, false );
+    }
+
+    if ( updateDisplay ) {
+        updateUnitIconsFromId( tileId );
+        displayTileDetails( tileId );
+    }
+}
+
 function addUnit( unit, player, updateDisplay = true ) {
     const tileId = unit.tileId;
     player.units.push( unit );
@@ -198,14 +210,15 @@ function addUnit( unit, player, updateDisplay = true ) {
 }
 
 function removeUnit( unit, player, updateDisplay = true ) {
-    const tileId = unit.tileId;
-    player.units.splice( player.units.findIndex( u => u.id === unit.id ), 1 );
-
+    if ( player.units.some( u => u.id === unit.id ) ) {
+        player.units.splice( player.units.findIndex( u => u.id === unit.id ), 1 );
+    }
     if ( selectedUnits.some( u => u.id === unit.id ) ) {
         selectedUnits.splice( selectedUnits.findIndex( u => u.id === unit.id ), 1 );
     }
 
     if ( updateDisplay ) {
+        const tileId = unit.tileId;
         updateUnitIconsFromId( tileId );
         displayTileDetails( tileId );
     }

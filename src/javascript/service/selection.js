@@ -22,13 +22,10 @@ function tileClickCallback( tileId ) {
         specialAction.callback( tileId );
         specialAction = null;
     }
-    else if ( selectedUnits.length && ( isExpansionPhase() && suggestedPath.includes( tileId ) ) ) {
-        moveUnits( tileId );
-    }
-    else if ( selectedUnits.length && isExpansionPhase() && selectedUnits.every( u => u.tileId === "unassigned" ) && !isImpassibleTile( tileId ) ) {
-        moveUnits( tileId );
-    }
-    else if ( selectedUnits.length && isMarketPhase() && selectedUnits.every( u => u.tileId === "unassigned" ) && currentPlayer.districts.tileIds.includes( tileId ) ) {
+    else if ( selectedUnits.length &&  (
+            ( isExpansionPhase() && ( suggestedPath.includes( tileId ) || (selectedUnits.every( u => u.tileId === "unassigned" ) && !isImpassibleTile( tileId )) ) ) ||
+            ( isMarketPhase() && selectedUnits.every( u => u.tileId === "unassigned" ) && currentPlayer.districts.tileIds.includes( tileId ) )
+        ) ) {
         moveUnits( tileId );
     }
     else if ( selectedUnits.length && getAdjacentTiles( selectedUnits[0].tileId ).includes( tileId ) && hasEnemyUnits( tileId ) && !isImpassibleTile( tileId, false ) ) {
@@ -57,6 +54,7 @@ function selectTile( tileId ) {
     if ( isExpansionPhase() && isTileChange ) {
         unselectUnits();
         clearMoveSuggestion();
+        updateExpansionButtons();
     }
 }
 
@@ -94,7 +92,7 @@ function selectAllUnits( tileSelectType ) {
         SelectClass.highlightAll();
         selectedUnits = currentPlayer.units.filter( u => u.tileId === tileId );
     }
-    updatePerformAbilityButton();
+    updateExpansionButtons();
     clearMoveSuggestion();
 }
 
@@ -109,12 +107,13 @@ function selectUnits( tileSelectType, unitId ) {
             SelectClass.highlightAll( false );
             unselectUnits();
         }
+        //todo X - not working properly (I unselected all units but it still thought there was one)
     }
     else {
         SelectClass.highlightUnit( unitId );
         selectedUnits = selectedUnits.concat( currentPlayer.units.filter( u => u.id === unitId ) );
     }
-    updatePerformAbilityButton();
+    updateExpansionButtons();
     clearMoveSuggestion();
 }
 
@@ -143,6 +142,11 @@ function moveSuggestion( tileId ) {
 
 function hasEnemyUnits( tileId, includeApostles = false ) {
     return !!getEnemyPlayer( tileId, includeApostles );
+}
+
+function hasEnemyDistrict( tileId ) {
+    const districtPlayers = game.players.filter( p => p.districts.tileIds.includes( tileId ) ).map( p => p.id );
+    return districtPlayers.length && districtPlayers[0] !== currentPlayer.id;
 }
 
 function isImpassibleTile( tileId, checkCombat = true ) {

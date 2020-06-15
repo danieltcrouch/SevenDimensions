@@ -11,6 +11,7 @@ const TEST_USERS = [
 
 function readTestFile( callbackFunction ) {
     //todo 5 - move this functionality (js and php) to Common
+    //todo X - divide testing and "setup" code
     postCallEncoded(
         "php/main-controller.php",
         {
@@ -43,12 +44,16 @@ function getNewGame( testPlayers = TEST_USERS ) {
             event: 0,
             events: {
                 office: null,
-                disaster: null
+                disaster: null,
+                marsStrength: null,
+                shortage: false,
+                inflation: false
             },
-            cards: {
-                chaosNext: [],
-                chaosDiscard: []
-            }
+            selects: {
+                //
+            },
+            chaosDiscard: [],
+            winners: []
         },
         board: newMap,
         players: newPlayers
@@ -96,11 +101,12 @@ function generateNewPlayers( testPlayers ) {
                 initiatives: {
                     politicalTokens: faction.startingSupplies.politicalTokens,
                     culturalTokens: faction.startingSupplies.culturalTokens,
-                    politicalActive: [], //see getScenarioGame
-                    culturalActive: [], //see getScenarioGame
+                    politicalActive: [], //{from: tileId, to: tileId}
+                    culturalActive: [], //{tileId: tileId, reaperCount: 0}
                 },
                 cards: {
                     chaos: chaosCards,
+                    chaosPlayed: [],
                     offices: [], //["1"]
                 },
                 units: units,
@@ -108,17 +114,22 @@ function generateNewPlayers( testPlayers ) {
                     capital: p.tileId,
                     tileIds: [p.tileId]
                 },
-                dimensions: [], //see getScenarioGame
+                dimensions: [], //{id: null, wonderTileId: null}
                 religion: religion,
                 turn: {
                     hasSubmitted: false,
                     purchasedAdvancementCount: 0,
                     purchasedCardCount: 0,
                     auctionBid: null, //WB value (0 if passed)
-                    hasReaped: false
+                    hasReaped: false,
+                    hasConvened: false
                 },
                 selects: {
-                    highPriestVictim: null //playerId
+                    votePlayerId: null,
+                    highPriestReward: false,
+                    highPriestVictim: false,
+                    gambitBet: 0,
+                    insurrection: false
                 }
             };
         }

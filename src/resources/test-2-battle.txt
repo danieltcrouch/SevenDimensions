@@ -15,7 +15,7 @@
             "chaosNext":[],
             "chaosDiscard":[]
         },
-         "winners":[]
+        "winners":[]
 	},
 	"board":[
 		{
@@ -418,27 +418,27 @@
 				{
 					"id":"0000",
 					"unitTypeId":"0",
-					"tileId":"7-5"
+					"tileId":"2-3"
 				},
 				{
 					"id":"0001",
 					"unitTypeId":"1",
-					"tileId":"7-5"
+					"tileId":"2-3"
 				},
 				{
 					"id":"0002",
 					"unitTypeId":"2",
-					"tileId":"7-5"
+					"tileId":"2-3"
 				},
 				{
 					"id":"0003",
 					"unitTypeId":"3",
-					"tileId":"7-5"
+					"tileId":"2-3"
 				},
 				{
 					"id":"0004",
 					"unitTypeId":"7",
-					"tileId":"7-5"
+					"tileId":"2-3"
 				}
 			],
 			"districts":{

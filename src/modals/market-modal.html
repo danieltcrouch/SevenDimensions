@@ -16,6 +16,10 @@
                     <button class="button" style="margin-top: .4em; padding: .1em .5em" onclick="convert()">Convert</button>
                 </div>
                 <div style="margin-bottom: 1em">
+                    <div><label for="cInitTokenCount" style="display: inline-block; width: 6em">Cultural Initiative Token</label><input  id="cInitTokenCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0" onchange="cInitTokenChange()"> (<span id="cInitTokenCost">0</span>WB)</div>
+                    <div><label for="pInitTokenCount" style="display: inline-block; width: 6em">Political Initiative Token</label><input id="pInitTokenCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0" onchange="pInitTokenChange()"> (<span id="pInitTokenCost">0</span>WB)</div>
+                </div>
+                <div style="margin-bottom: 1em">
                     Units (<span id="unitsCost">0</span>WB):
                     <div id="unitsWrapper"></div>
                 </div>

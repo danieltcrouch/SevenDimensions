@@ -1,17 +1,19 @@
 class Wonder extends Entity {
     constructor( id, name ) {
-        super( id, "WONDER", name, function() { return 20; } );
+        super( id, "WONDER", name, Wonder.getCost );
     }
+
+    static getCost() { return 20; }
 }
 
 function getWonder( id ) { return getEntity( id, WONDERS ); }
 
-const ARCH_OF_BEAUTY       = 0;
-const GREAT_SENATEHOUSE    = 1;
-const SPACE_ANTENNA        = 2;
-const SACRED_TEMPLE        = 3;
-const WORLD_MONEY_EXCHANGE = 4;
-const SPIRAL_GARDEN        = 5;
+const SPACE_ANTENNA        = 0;
+const SACRED_TEMPLE        = 1;
+const SPIRAL_GARDEN        = 2;
+const WORLD_MONEY_EXCHANGE = 3;
+const ARCH_OF_BEAUTY       = 4;
+const GREAT_SENATEHOUSE    = 5;
 const BLOOD_ALTAR          = 6;
 
 const WONDERS = [

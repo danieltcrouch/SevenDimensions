@@ -1,10 +1,12 @@
 let marketModalValues;
 let marketModalCallback;
 let marketTotal;
+let currentVP;
 
 function openMarketModal( currentPlayer, callback ) {
     marketModalValues = currentPlayer;
     marketModalCallback = callback;
+    currentVP = calculateVP( currentPlayer );
 
     populateUnits();
     populateAdvancements();
@@ -26,7 +28,7 @@ function populateUnits() {
         label.htmlFor = id;
         label.style.display = "inline-block";
         label.style.width = "10em";
-        label.innerText = unit.name + " (" + unit.cost + "WB) ";
+        label.innerText = unit.name + " (" + unit.getAdjustedCost( game.state.events.inflation ) + "WB) ";
         let input = document.createElement( "INPUT" );
         input.id = id;
         input.name = "unitCounts";
@@ -87,21 +89,33 @@ function populateData() {
     const aetherCount     = getAetherCount(     marketModalValues.resources );
     const chronotineCount = getChronotineCount( marketModalValues.resources );
     const unobtaniumCount = getUnobtaniumCount( marketModalValues.resources );
-    id('resourceAMax').max       = aetherCount;
+    id('resourceACount').max     = aetherCount;
     id('resourceAMax').innerText = aetherCount + "";
-    id('resourceCMax').max       = chronotineCount;
+    id('resourceCCount').max     = chronotineCount;
     id('resourceCMax').innerText = chronotineCount + "";
-    id('resourceUMax').max       = unobtaniumCount;
+    id('resourceUCount').max     = unobtaniumCount;
     id('resourceUMax').innerText = unobtaniumCount + "";
 
     id('currentFunds').innerText = marketModalValues.warBucks;
+}
+
+function cInitTokenChange() {
+    let total = id( 'cInitTokenCount' ).value * currentVP;
+    id('cInitTokenCost').innerText = total + "";
+    updateTotal();
+}
+
+function pInitTokenChange() {
+    let total = id( 'pInitTokenCount' ).value * currentVP;
+    id('pInitTokenCost').innerText = total + "";
+    updateTotal();
 }
 
 function unitChange() {
     let total = 0;
     let unitCounts = nm('unitCounts');
     for ( let i = 0; i < unitCounts.length; i++ ) {
-        total += UNIT_TYPES[i].cost * unitCounts[i].value;
+        total += UNIT_TYPES[i].getAdjustedCost( game.state.events.inflation ) * unitCounts[i].value;
     }
     id('unitsCost').innerText = total + "";
     updateTotal();
@@ -138,12 +152,59 @@ function chaosChange() {
 }
 
 function updateTotal() {
-    marketTotal = parseInt( id('unitsCost').innerText ) + parseInt( id('technologyCost').innerText ) + parseInt( id('doctrineCost').innerText ) + parseInt( id('gardensCost').innerText ) + parseInt( id('auctionsCost').innerText ) + parseInt( id('cardCost').innerText );
+    marketTotal =
+        parseInt( id('cInitTokenCount').innerText ) +
+        parseInt( id('pInitTokenCount').innerText ) +
+        parseInt( id('unitsCost').innerText ) +
+        parseInt( id('technologyCost').innerText ) +
+        parseInt( id('doctrineCost').innerText ) +
+        parseInt( id('gardensCost').innerText ) +
+        parseInt( id('auctionsCost').innerText ) +
+        parseInt( id('cardCost').innerText );
     id('totalCost').innerText = marketTotal + "";
 }
 
 function convert() {
-    //todo
+    let isValid = true;
+
+    let totalResourceCount = 0;
+    const allowResourceMixing = marketModalValues.advancements.doctrines.includes( DOCTRINES[IDOL_WORSHIP].id );
+    const setSize = marketModalValues.advancements.technologies.includes( TECHNOLOGIES[ORE_PROCESSING].id ) ? (RESOURCE_EXCHANGE - 1) : RESOURCE_EXCHANGE;
+    for ( let i = 0; i < RESOURCES.length; i++ ) {
+        const resource = RESOURCES[i];
+        const resourceInput = id(`resource${resource.name.charAt(0)}Count`);
+        const resourceCount = parseInt( resourceInput.value );
+        if ( Number.isInteger( resourceCount ) && resourceCount >= 0 && resourceCount <= resourceInput.max ) {
+            showToaster( `${resource.name} count is invalid.` );
+            isValid = false;
+            break;
+        }
+
+        if ( !allowResourceMixing ) {
+            if ( resourceCount % setSize !== 0 ) {
+                showToaster( `${resource.name} count is not a multiple of ${setSize}.` );
+                isValid = false;
+                break;
+            }
+        }
+    }
+
+    if ( isValid && allowResourceMixing ) {
+        if ( totalResourceCount % setSize !== 0 ) {
+            showToaster( `Resource count is not a multiple of ${setSize}.` );
+            isValid = false;
+        }
+    }
+
+    if ( isValid ) {
+        marketModalValues.warBucks += ( totalResourceCount / setSize ) * RESOURCE_EXCHANGE_VALUE;
+        for ( let i = 0; i < RESOURCES.length; i++ ) {
+            const resource = RESOURCES[i];
+            const resourceInput = id(`resource${resource.name.charAt(0)}Count`);
+            const resourceCount = parseInt( resourceInput.value );
+            marketModalValues.resources.find( r => r.id === resource.id ).count -= resourceCount;
+        }
+    }
 }
 
 function purchase() {
@@ -184,14 +245,15 @@ function purchase() {
 }
 
 function assignPurchases() {
+    marketModalValues.initiatives.culturalTokens +=  id('cInitTokenCount').value;
+    marketModalValues.initiatives.politicalTokens += id('pInitTokenCount').value;
+
     const unitInputs = nm('unitCounts');
     for ( let i = 0; i < unitInputs.length; i++ ) {
         const unitInput = unitInputs[i];
         const unitTypeId = unitInput.id.split('-')[1];
         const count = unitInput.value || 0;
-        for ( let j = 0; j < count; j++ ) {
-            addUnit( new Unit( getRandomUnitId(), unitTypeId, DEFAULT_TILE ), marketModalValues, false );
-        }
+        addUnitGroup( count, unitTypeId, DEFAULT_TILE, marketModalValues, false );
     }
 
     const newTechnologyCount = getSelectedOption( "technologySelect" ).index;

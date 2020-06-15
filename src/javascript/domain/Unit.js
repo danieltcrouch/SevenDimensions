@@ -8,6 +8,10 @@ class UnitType {
         this.cost = cost;
         this.max = max;
     }
+
+    getAdjustedCost( isInflation ) {
+        return this.cost + ( isInflation ? 1 : 0 );
+    }
 }
 
 function getUnitType( id ) { return UNIT_TYPES.find( u => u.id === id ); }
@@ -42,7 +46,7 @@ const UNIT_TYPES = [
 class Unit extends Entity {
     constructor( id, unitTypeId, tileId ) {
         const unitType = getUnitType( unitTypeId );
-        super( id, unitType.type, unitType.name, function() { return unitType.cost; } );
+        super( id, unitType.type, unitType.name, unitType.getAdjustedCost );
         this.unitTypeId = unitTypeId;
         this.tileId = tileId;
         this.movesRemaining = unitType.move;
@@ -51,6 +55,10 @@ class Unit extends Entity {
 
     getUnitType() {
         return getUnitType( this.tileTypeId );
+    }
+
+    getCost() {
+        return getUnitType( this.tileTypeId ).cost;
     }
 }
 

@@ -38,12 +38,22 @@ function showTileDetails( isShow = true ) {
 /*** UNIT SELECTION ***/
 
 
-function updatePerformAbilityButton() {
+function updateExpansionButtons() {
+    show( 'ability', isExpansionPhase() );
+    show( 'annex', isExpansionPhase() );
+
     if ( selectedUnits.length === 1 ) {
-        id('perform').classList.remove( "staticInverseButton" );
+        id('ability').classList.remove( "staticInverseButton" );
     }
     else {
-        id('perform').classList.add( "staticInverseButton" );
+        id('ability').classList.add( "staticInverseButton" );
+    }
+
+    if ( selectedTile && selectedUnits.length === 0 && currentPlayer.initiatives.politicalTokens > 0 ) {
+        id('annex').classList.remove( "staticInverseButton" );
+    }
+    else {
+        id('annex').classList.add( "staticInverseButton" );
     }
 }
 
