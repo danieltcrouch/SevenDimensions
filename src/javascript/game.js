@@ -404,6 +404,7 @@ function getElectionWinner() {
             result.push( voteCount );
         }
         maxVoteCount = ( voteCount.count > maxVoteCount ) ? voteCount.count : maxVoteCount;
+        return result;
     }, [] );
 
     let ambassador = game.players[game.state.ambassador];
@@ -617,12 +618,12 @@ function pickPlayers( allowMultiple, allowNone, callback, players = game.players
     showPicks(
         "Enemy Players",
         message,
-        players.map( p => p.name ),
+        players.map( p => p.username ),
         allowMultiple,
         allowMultiple, //todo 4 - allow "None" for radio buttons
         function( index ) {
             let playerIds = index;
-            if ( index ) {
+            if ( Number.isInteger( index ) || Array.isArray( index ) ) {
                 if ( allowMultiple ) {
                     playerIds = index.map( i => players[i].id );
                 }

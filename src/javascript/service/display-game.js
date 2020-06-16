@@ -155,7 +155,7 @@ function showDoomsdayActions() {
             event.name,
             event.description,
             function( response ) {
-                if ( response && Number.isInteger(response) ) {
+                if ( Number.isInteger(response) ) {
                     if ( response <= currentPlayer.warBucks ) {
                         currentPlayer.warBucks -= response;
                         currentPlayer.selects.gambitBet = response;
@@ -177,7 +177,7 @@ function showDoomsdayActions() {
             "Culture",
             "Politics",
             function( response ) {
-                if ( response && Number.isInteger(response) ) {
+                if ( Number.isInteger(response) ) {
                     if ( response === 1 ) {
                         currentPlayer.initiatives.politicalTokens += tokenCount;
                     }
@@ -225,9 +225,7 @@ function performElection() {
         false,
         true,
         function( response ) {
-            if ( response && Number.isInteger(response) ) {
-                currentPlayer.selects.votePlayerId = game.players[response].id;
-            }
+            currentPlayer.selects.votePlayerId = response || null;
             currentPlayer.turn.hasConvened = true;
         },
         game.players,
