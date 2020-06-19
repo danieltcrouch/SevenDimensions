@@ -4,6 +4,7 @@
 //  Scandal Disaster removes tokens evenly (no choice)
 //  Chaos Cards are always played on your turn
 //todo 3 - Abilities
+//      make helper methods to check if player has advancement
 //  Advancements
 //      Tech
 //      Doctrine
@@ -132,8 +133,14 @@ function loadUserCallback( playerId ) {
 function loadRecurringEffects() {
     if ( isExpansionSubPhase() && game.state.turn === 0 ) {
         game.players.forEach( p => {
-            if ( p.advancements.gardens.includes(DOCTRINES[HANGING_GARDEN].id) ) {
+            if ( hasGarden( HANGING_GARDEN, p ) ) {
                 p.units.forEach( u => u.hitDeflectionsHG = 1 );
+            }
+            if ( hasTechnology( SUBTERRANEAN_RAILS, p ) ) {
+                p.units.forEach( u => u.movesRemaining++ );
+            }
+            if ( hasTechnology( WARP_DRIVES, p ) ) {
+                p.units.filter( u => u.unitTypeId === UNIT_TYPES[SPEEDSTER].id || u.unitTypeId === UNIT_TYPES[GODHAND].id ).forEach( u => u.movesRemaining++ );
             }
         } );
     }
@@ -319,6 +326,18 @@ function completeSubPhase() {
                 p.units.forEach( u => u.hitDeflections = 0 );
                 p.initiatives.politicalActive = [];
                 p.initiatives.culturalActive = [];
+
+                //todo X - enforce unit cap
+
+                if ( hasTechnology( GENETIC_RESURRECTION, p ) && p.special.disbandedUnits.length ) {
+                    const unit = p.special.disbandedUnits.sort( (a,b) => parseInt(b.unitTypeId) - parseInt(a.unitTypeId) ).slice(0, 1);
+                    const controlPlayerId = getTileDetails( unit.tileId ).controlPlayerId;
+                    if ( controlPlayerId !== p.id ) {
+                        unit.tileId = p.districts.capital;
+                    }
+                    p.units.push( unit );
+                }
+                p.special.disbandedUnits = [];
             } );
         }
     }
@@ -335,7 +354,7 @@ function completeSubPhase() {
             else if ( game.state.event >= 0 ) {
                 const event = EVENTS[game.state.event];
                 if ( event.id === EVENTS[EVENT_ELECTION].id ) {
-                    game.players.forEach( p => {p.cards.offices = []; p.selects.highPriestReward = false; p.selects.highPriestReward = false;} );
+                    game.players.forEach( p => {p.cards.offices = []; p.special.highPriestReward = false; p.special.highPriestReward = false;} );
                     game.state.events.office = (new Deck(OFFICES)).getRandomCards( 1 ).map( c => c.id )[0];
                 }
                 else if ( event.id === EVENTS[EVENT_DISASTER].id ) {
@@ -355,19 +374,19 @@ function completeSubPhase() {
                 const event = EVENTS[game.state.event];
                 if ( event.id === EVENTS[EVENT_ELECTION].id ) {
                     getElectionWinner().cards.offices.push(game.state.events.office);
-                    game.players.forEach( p => p.selects.votePlayerId = null );
+                    game.players.forEach( p => p.special.votePlayerId = null );
                 }
                 else if ( event.id === EVENTS[EVENT_MIDTERM].id ) {
                     getElectionWinner().cards.offices.push(game.state.events.office);
-                    game.players.forEach( p => p.selects.votePlayerId = null );
+                    game.players.forEach( p => p.special.votePlayerId = null );
                 }
                 else if ( event.id === EVENTS[EVENT_MARS].id ) {
-                    const combinedStrength = game.players.reduce( (result, p) => {return result + p.selects.liquify.value}, 0 );
+                    const combinedStrength = game.players.reduce( (result, p) => {return result + p.special.liquify.value}, 0 );
                     if ( combinedStrength >= game.state.events.marsStrength ) {
-                        game.players.filter( p => p.selects.liquify.value ).forEach( p => p.warBucks += EVENT_MARS_REWARD );
+                        game.players.filter( p => p.special.liquify.value ).forEach( p => p.warBucks += EVENT_MARS_REWARD );
                         const winners = game.players.reduce( (w, p) => {
-                            let currentValue = w[0].selects.liquify.value;
-                            return currentValue > p.selects.liquify.value ? w : ( currentValue < p.selects.liquify.value ? [p] : w.concat(p) )
+                            let currentValue = w[0].special.liquify.value;
+                            return currentValue > p.special.liquify.value ? w : ( currentValue < p.special.liquify.value ? [p] : w.concat(p) )
                         }, [] );
                         winners.forEach( p => p.warBucks += (EVENT_MARS_GRAND_REWARD / winners.length) );
                     }
@@ -376,7 +395,7 @@ function completeSubPhase() {
                         //todo X - helper function to charge money
                         //liquify units - helper function
                     }
-                    game.players.forEach( p => p.selects.liquify = null );
+                    game.players.forEach( p => p.special.liquify = null );
                 }
 
                 game.state.events.office = null;
@@ -392,7 +411,7 @@ function completeSubPhase() {
 }
 
 function getElectionWinner() {
-    let votePlayerIds = game.players.map( p => p.selects.votePlayerId );
+    let votePlayerIds = game.players.map( p => p.special.votePlayerId );
     let maxVoteCount = 0;
     let playerVoteCounts = votePlayerIds.reduce( (result, p) => {
         let voteCount = result.find( r => r.playerId === p );
@@ -408,7 +427,7 @@ function getElectionWinner() {
     }, [] );
 
     let ambassador = game.players[game.state.ambassador];
-    let ambassadorVote = ambassador.selects.votePlayerId;
+    let ambassadorVote = ambassador.special.votePlayerId;
     let maxVotePlayerIds = playerVoteCounts.filter( c => c.count === maxVoteCount ).map( p => p.playerId );
     let winner = ( maxVotePlayerIds.length === 1 ) ? maxVotePlayerIds[0] : ( maxVotePlayerIds.includes( ambassadorVote ) ? ambassadorVote : ambassador.id );
     return getPlayer(winner)
@@ -471,10 +490,10 @@ function calculateVP( player ) {
     result += player.dimensions.length;
     result += player.dimensions.filter( d => !!d.wonderTileId ).length * 2;
     result += hasHero( player.units ) ? 1 : 0;
-    result += player.selects.highPriestReward ? 1 : 0;
-    result -= player.selects.highPriestVictim ? 1 : 0;
+    result += player.special.highPriestReward ? 1 : 0;
+    result -= player.special.highPriestVictim ? 1 : 0;
     result += player.cards.chaos.filter( c => isHeavensGate( c ) ).length;
-    result -= player.selects.insurrection ? 1 : 0;
+    result -= player.special.insurrection ? 1 : 0;
     return result;
 }
 
@@ -692,6 +711,38 @@ function isCurrentPlayerTurn() {
 
 function isPlayerTurn( id ) {
     return game.players[game.state.turn].id === id;
+}
+
+function hasTechnology( index, player = currentPlayer ) {
+    return hasAdvancement( index, player.advancements.technologies, TECHNOLOGIES );
+}
+
+function hasDoctrine( index, player = currentPlayer ) {
+    return hasAdvancement( index, player.advancements.doctrines, DOCTRINES );
+}
+
+function hasGarden( index, player = currentPlayer ) {
+    return hasAdvancement( index, player.advancements.gardens, GARDENS );
+}
+
+function hasAuctionLot( index, player = currentPlayer ) {
+    return hasAdvancement( index, player.advancements.auctions, AUCTIONS );
+}
+
+function hasAdvancement( index, playerAdvancements, advancementSet ) {
+    return playerAdvancements.includes( advancementSet[index].id );
+}
+
+function hasChaos( index, player = currentPlayer ) {
+    return hasCard( index, player.cards.chaos, CHAOS );
+}
+
+function hasOffice( index, player = currentPlayer ) {
+    return hasCard( index, player.cards.offices, OFFICES );
+}
+
+function hasCard( index, playerCards, cardSet ) {
+    return playerCards.includes( cardSet[index].id );
 }
 
 function getPlayerNumber( id ) {

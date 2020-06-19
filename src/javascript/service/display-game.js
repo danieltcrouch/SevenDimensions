@@ -158,7 +158,7 @@ function showDoomsdayActions() {
                 if ( Number.isInteger(response) ) {
                     if ( response <= currentPlayer.warBucks ) {
                         currentPlayer.warBucks -= response;
-                        currentPlayer.selects.gambitBet = response;
+                        currentPlayer.special.gambitBet = response;
                     }
                     else {
                         showToaster("Cannot afford.");
@@ -206,13 +206,13 @@ function showDoomsdayActions() {
                 currentPlayer.cards.chaos = [];
                 getChaosCardsAsync( game.players.indexOf( currentPlayer ), EVENT_RESTOCK_CARDS );
 
-                currentPlayer.warBucks += currentPlayer.selects.gambitBet * EVENT_GG_RETURN;
-                currentPlayer.selects.gambitBet = null;
+                currentPlayer.warBucks += currentPlayer.special.gambitBet * EVENT_GG_RETURN;
+                currentPlayer.special.gambitBet = null;
             }
         );
     }
     else if ( event === EVENTS[EVENT_MARS].id ) {
-        game.players.forEach( p => p.selects.insurrection = false );
+        game.players.forEach( p => p.special.insurrection = false );
         //todo 7 - liquify
     }
 
@@ -225,7 +225,7 @@ function performElection() {
         false,
         true,
         function( response ) {
-            currentPlayer.selects.votePlayerId = response || null;
+            currentPlayer.special.votePlayerId = response || null;
             currentPlayer.turn.hasConvened = true;
         },
         game.players,
@@ -244,7 +244,7 @@ function performDisaster() {
             `<strong>${disaster.name}</strong> &ndash; ${disaster.description}`,
             function() {
                 if ( disaster.id === DISASTERS[ERUPTION].id ) {
-                    const volcanoAdjacentTileIds = game.board.filter( t => t.name === TILE_TYPES[VOLCANO].name ).reduce( (result, t) => result.concat( t.id ).concat( getAdjacentTiles( t.id, false ) ), [] );
+                    const volcanoAdjacentTileIds = game.board.filter( t => t.name === TILE_TYPES[VOLCANO].name ).reduce( (result, t) => result.concat( t.id ).concat( getAdjacentTiles( t.id ) ), [] );
                     game.players.forEach( p => p.units.forEach( u => {
                         if ( volcanoAdjacentTileIds.includes( u.tileId ) ) {
                             removeUnit( u, currentPlayer );
@@ -275,7 +275,7 @@ function performDisaster() {
                     game.state.events.shortage = true;
                 }
                 else if ( disaster.id === DISASTERS[INSURRECTION].id ) {
-                    getLeadPlayers().map( id => getPlayer(id) ).forEach( p => p.selects.insurrection = true );
+                    getLeadPlayers().map( id => getPlayer(id) ).forEach( p => p.special.insurrection = true );
                 }
                 else if ( disaster.id === DISASTERS[INFLATION].id ) {
                     game.state.events.inflation = true;

@@ -28,7 +28,9 @@ function populateUnits() {
         label.htmlFor = id;
         label.style.display = "inline-block";
         label.style.width = "10em";
-        label.innerText = unit.name + " (" + unit.getAdjustedCost( game.state.events.inflation ) + "WB) ";
+        label.innerText = unit.name + " (" + unit.getAdjustedCost(
+            game.state.events.inflation, hasTechnology( MODIFIED_PLASTICS, marketModalValues )
+        ) + "WB) ";
         let input = document.createElement( "INPUT" );
         input.id = id;
         input.name = "unitCounts";
@@ -58,7 +60,7 @@ function populateAdvancements() {
     //todo 4 - Add "None" option to Common?
     addAllToSelect( 'technologySelect', [{text: "None", value: null}].concat( availableTechnologies.map( (t) => ({text: t.name, value: t.id}) ) ) );
     addAllToSelect( 'doctrineSelect', [{text: "None", value: null}].concat( availableDoctrines.map( (d) => ({text: d.name, value: d.id}) ) ) );
-    populateAdvancementCheckboxes( availableGardens, "gardens", function( item ) { return item.getCostOrLocked( currentPlayer.districts.tileIds.length ); } );
+    populateAdvancementCheckboxes( availableGardens, "gardens", function( item ) { return item.getCostOrLocked( marketModalValues.districts.tileIds.length, hasTechnology( BIODOMES, marketModalValues ) ); } );
     populateAdvancementCheckboxes( availableAuctions, "auctions", function( item ) { return item.getCostOrLocked( game.players ); } );
 }
 
@@ -115,7 +117,9 @@ function unitChange() {
     let total = 0;
     let unitCounts = nm('unitCounts');
     for ( let i = 0; i < unitCounts.length; i++ ) {
-        total += UNIT_TYPES[i].getAdjustedCost( game.state.events.inflation ) * unitCounts[i].value;
+        total += UNIT_TYPES[i].getAdjustedCost(
+            game.state.events.inflation, hasTechnology( MODIFIED_PLASTICS, marketModalValues )
+        ) * unitCounts[i].value;
     }
     id('unitsCost').innerText = total + "";
     updateTotal();
@@ -168,8 +172,8 @@ function convert() {
     let isValid = true;
 
     let totalResourceCount = 0;
-    const allowResourceMixing = marketModalValues.advancements.doctrines.includes( DOCTRINES[IDOL_WORSHIP].id );
-    const setSize = marketModalValues.advancements.technologies.includes( TECHNOLOGIES[ORE_PROCESSING].id ) ? (RESOURCE_EXCHANGE - 1) : RESOURCE_EXCHANGE;
+    const allowResourceMixing = hasDoctrine( IDOL_WORSHIP, marketModalValues );
+    const setSize = hasTechnology( ORE_PROCESSING, marketModalValues ) ? (RESOURCE_EXCHANGE - 1) : RESOURCE_EXCHANGE;
     for ( let i = 0; i < RESOURCES.length; i++ ) {
         const resource = RESOURCES[i];
         const resourceInput = id(`resource${resource.name.charAt(0)}Count`);
@@ -217,18 +221,20 @@ function purchase() {
             getSelectedOption( "doctrineSelect" ).index +
             nm('gardens').filter( c => c.checked ).length +
             nm('auctions').filter( c => c.checked ).length;
-        if ( advancementsInCartCount + marketModalValues.turn.purchasedAdvancementCount > MAX_ADVANCEMENTS ) {
-            showToaster( "Cannot purchase more than " + MAX_ADVANCEMENTS + " advancements" );
+        const advancementMax = hasTechnology( GLOBAL_NETWORKING, marketModalValues ) ? GLOBAL_NETWORKING_ADVANCEMENT_MAX : MAX_ADVANCEMENTS;
+        const cardMax = hasTechnology( GLOBAL_NETWORKING, marketModalValues ) ? GLOBAL_NETWORKING_CARD_MAX : MAX_CARDS;
+        if ( advancementsInCartCount + marketModalValues.turn.purchasedAdvancementCount > advancementMax ) {
+            showToaster( "Cannot purchase more than " + advancementMax + " advancements" );
         }
-        else if ( parseInt( id('cardCount').value ) + marketModalValues.turn.purchasedCardCount > MAX_CARDS ) {
-            showToaster( "Cannot purchase more than " + MAX_CARDS + " cards" );
+        else if ( parseInt( id('cardCount').value ) + marketModalValues.turn.purchasedCardCount > cardMax ) {
+            showToaster( "Cannot purchase more than " + cardMax + " cards" );
         }
         else {
             let isValid = true;
             let unitCounts = nm('unitCounts');
             for ( let i = 0; i < unitCounts.length; i++ ) {
                 const unitInput = unitCounts[i];
-                const currentCount = marketModalValues.units.filter( u => u.id === (i + "") ).length + unitInput.value;
+                const currentCount = marketModalValues.units.filter( u => u.unitTypeId === UNIT_TYPES[i].id ).length + unitInput.value;
                 if ( unitInput.max && currentCount > unitInput.max ) {
                     isValid = false;
                     showToaster( "Too many units of a type" );
@@ -267,7 +273,19 @@ function assignPurchases() {
     marketModalValues.advancements.gardens      = marketModalValues.advancements.gardens.concat( newGardenIds );
     marketModalValues.advancements.auctions     = marketModalValues.advancements.auctions.concat( newAuctionIds );
 
-    //todo 9 - assign bonuses and religion
+    let religionDoctrineIds = newDoctrineIds.filter( id => id === DOCTRINES[WHISPERS_IN_THE_DESERT].id || id === DOCTRINES[WHISPERS_IN_THE_MOUNTAINS].id || id === DOCTRINES[WHISPERS_IN_DISTANT_LANDS].id );
+    if ( religionDoctrineIds.length && !marketModalValues.religion ) {
+        const currentReligionIds = game.players.map( p => p.religion ? p.religion.id : null ).filter( Boolean );
+        for ( let i = 0; i < religionDoctrineIds.length; i++ ) {
+            if ( !currentReligionIds.includes( religionDoctrineIds[i] ) ) {
+                marketModalValues.religion = {
+                    id: religionDoctrineIds[i],
+                    tileIds: [marketModalValues.districts.capital]
+                };
+                break;
+            }
+        }
+    }
 
     const newCards = Deck.getCurrentDeck( CHAOS, game.players.map( p => p.cards.chaos.map( c => c.id ) ) ).getRandomCards( parseInt( id('cardCount').value ) ).map( c => c.id );
     marketModalValues.cards.chaos = marketModalValues.cards.chaos.concat( newCards );
@@ -287,4 +305,20 @@ function closeOutMarketModal() {
     clearTotals();
     closeModalJS( "marketModal" );
     marketModalCallback( marketModalValues );
+}
+
+//********************************** TODO X - Convert market modal to action modal
+
+function performInquisition() {
+    pickPlayers(
+        false,
+        false,
+        function( response ) {
+            if ( response ) {
+                //todo 7 - Liquify
+                //todo 3
+            }
+        },
+        game.players.filter( p => !hasTechnology( CENTRALIZED_CURRICULUM, p ) )
+    );
 }

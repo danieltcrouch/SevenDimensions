@@ -1,6 +1,6 @@
 class Entity {
-    constructor( index, type, name, costFunction ) {
-        this.id = index + "";
+    constructor( id, type, name, costFunction ) {
+        this.id = id;
         this.type = type;
         this.name = name;
         this.costFunction = costFunction;

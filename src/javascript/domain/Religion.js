@@ -7,7 +7,7 @@ class Religion extends Entity {
 
 function getReligion( id ) { return getEntity( id, RELIGIONS ); }
 
-function getReligionFromDoctrine( id ) { return RELIGIONS.find( r => ( r.doctrineIndex + "" ) === id ); }
+function getReligionFromDoctrine( id ) { return RELIGIONS.find( r => id === DOCTRINES[r.doctrineIndex].id ); }
 
 const RELIGIONS = [
     new Religion( "0", "Cult of Secrets",       WHISPERS_IN_THE_DESERT ),

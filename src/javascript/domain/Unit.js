@@ -9,8 +9,8 @@ class UnitType {
         this.max = max;
     }
 
-    getAdjustedCost( isInflation ) {
-        return this.cost + ( isInflation ? 1 : 0 );
+    getAdjustedCost( isInflation, hasModifiedPlastics ) {
+        return this.cost + ( isInflation ? 1 : 0 ) + ( hasModifiedPlastics && this.id === UNIT_TYPES[BOOMER].id ? -1 : 0 );
     }
 }
 
@@ -73,7 +73,7 @@ class Hero extends Unit {
         this.name = name;
         this.description = description;
 
-        if ( id === (ULTRA_MAN+"") ) {
+        if ( id === HEROES[ULTRA_MAN].id ) {
             this.hit = 4;
             this.move = 3;
         }

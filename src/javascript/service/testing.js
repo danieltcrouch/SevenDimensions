@@ -49,9 +49,6 @@ function getNewGame( testPlayers = TEST_USERS ) {
                 shortage: false,
                 inflation: false
             },
-            selects: {
-                //
-            },
             chaosDiscard: [],
             winners: []
         },
@@ -124,12 +121,13 @@ function generateNewPlayers( testPlayers ) {
                     hasReaped: false,
                     hasConvened: false
                 },
-                selects: {
+                special: {
                     votePlayerId: null,
                     highPriestReward: false,
                     highPriestVictim: false,
                     gambitBet: 0,
-                    insurrection: false
+                    insurrection: false,
+                    disbandedUnits: []
                 }
             };
         }

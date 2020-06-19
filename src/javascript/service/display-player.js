@@ -21,10 +21,10 @@ function viewVP( player = currentPlayer ) {
          <div>Wonders: ${(player.dimensions.filter( d => !!d.wonderTileId ).length * 2)}</div>
          <div>Hero: ${(hasHero( player.units ) ? "1" : "0")}</div>
          <div>Chaos Cards: ${player.cards.chaos.filter( c => isHeavensGate( c ) ).length}</div>`;
-    if ( player.selects.highPriestReward || player.selects.highPriestVictim ) {
-        message += `<div>High Priest: ${player.selects.highPriestReward ? "1" : "-1"}</div>`;
+    if ( player.special.highPriestReward || player.special.highPriestVictim ) {
+        message += `<div>High Priest: ${player.special.highPriestReward ? "1" : "-1"}</div>`;
     }
-    if ( player.selects.insurrection ) {
+    if ( player.special.insurrection ) {
         message += "<div>Insurrection Event: -1</div>";
     }
     showMessage( "Victory Points", message );
@@ -62,7 +62,7 @@ function viewGardens( player = currentPlayer ) {
     let message = getAdvancementTable(
         GARDENS,
         player.advancements.gardens,
-        function( item ) { return item.getCostOrLocked( player.districts.tileIds.length ); }
+        function( item ) { return item.getCostOrLocked( player.districts.tileIds.length, hasTechnology( BIODOMES, player ) ); }
     );
     message += "<div style='margin-top: .5em'>(Cost calculated by 7WB times the number of districts; must have at least 2 districts.)</div>";
     showMessage( "Gardens", message, {padding: ".5em 20%"} );

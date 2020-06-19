@@ -383,7 +383,7 @@
                 "attendedCouncil": false,
                 "attendedDoomsdayClock": false
             },
-            "selects": {
+            "special": {
                 "highPriestVictim": null
             }
         },
@@ -457,7 +457,7 @@
                 "attendedCouncil": false,
                 "attendedDoomsdayClock": false
             },
-            "selects": {
+            "special": {
                 "highPriestVictim": null
             }
         },
@@ -531,7 +531,7 @@
                 "attendedCouncil": false,
                 "attendedDoomsdayClock": false
             },
-            "selects": {
+            "special": {
                 "highPriestVictim": null
             }
         }

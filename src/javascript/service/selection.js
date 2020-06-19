@@ -18,17 +18,18 @@ function tileHoverCallback( tileId ) {
 }
 
 function tileClickCallback( tileId ) {
+    //todo X - some of these checks below could be abstracted to constants at the top of the file? Or is that to much less efficient?
     if ( specialAction && specialAction.isValidTile( tileId ) ) {
         specialAction.callback( tileId );
         specialAction = null;
     }
     else if ( selectedUnits.length &&  (
-            ( isExpansionSubPhase() && ( suggestedPath.includes( tileId ) || (selectedUnits.every( u => u.tileId === "unassigned" ) && !isImpassibleTile( tileId )) ) ) ||
+            ( isExpansionSubPhase() && ( suggestedPath.includes( tileId ) || (selectedUnits.every( u => u.tileId === "unassigned" ) && !isImpassibleTile( tileId, !hasTechnology( ADAPTIVE_MAPPING ) )) ) ) ||
             ( isMarketPhase() && selectedUnits.every( u => u.tileId === "unassigned" ) && currentPlayer.districts.tileIds.includes( tileId ) )
         ) ) {
         moveUnits( tileId );
     }
-    else if ( selectedUnits.length && getAdjacentTiles( selectedUnits[0].tileId ).includes( tileId ) && hasEnemyUnits( tileId ) && !isImpassibleTile( tileId, false ) ) {
+    else if ( selectedUnits.length && getAdjacentTiles( selectedUnits[0].tileId, true, !hasTechnology( ADAPTIVE_MAPPING ) ).includes( tileId ) && hasEnemyUnits( tileId ) ) {
         showConfirm( "Battle", "Are you sure you want to attack this player?", function( result ) {
             if ( result ) {
                 launchBattle( tileId );
@@ -132,12 +133,36 @@ function moveSuggestion( tileId ) {
         const rootTileId = selectedTile.id;
         const destinationTileId = tileId;
         const allTiles = game.board.map( t => t.id );
-        const impassableTiles = allTiles.filter( t => isImpassibleTile( t ) );
-        const maxMove = Math.min( ...selectedUnits.map( u => u.movesRemaining ) );
-        suggestedPath = calculateShortestNonCombatPath( rootTileId, destinationTileId, allTiles, impassableTiles, maxMove );
+        const impassableTiles = allTiles.filter( t => isImpassibleTile( t, !hasTechnology( ADAPTIVE_MAPPING ) ) );
+        const maxMove = getMaxMovesForUnits( selectedUnits, hasTechnology( ADVANCED_FLIGHT ) );
+        const bonuses = {
+            hasGlobalTravel: hasTechnology( GLOBAL_TRAVEL ),
+            districtTileIds: currentPlayer.districts.tileIds
+        };
+        suggestedPath = calculateShortestNonCombatPath( rootTileId, destinationTileId, allTiles, impassableTiles, maxMove, bonuses );
 
         highlightSuggestedTiles( suggestedPath );
     }
+}
+
+function getMaxMovesForUnits( units, hasAdvancedFlight ) {
+    return Math.min( ...getMovingUnits( units, hasAdvancedFlight ).map( u => u.movesRemaining ) );
+}
+
+function getMovingUnits( units, hasAdvancedFlight ) {
+    let unitsToCheck = units.slice();
+    if ( hasAdvancedFlight ) {
+        const speedsterCount = unitsToCheck.filter( u => u.unitTypeId === UNIT_TYPES[SPEEDSTER].id ).length;
+        for ( let i = 0; i < speedsterCount; i++ ) {
+            for ( let j = 0; j < ADVANCED_FLIGHT_CAPACITY; j++ ) {
+                const unit = unitsToCheck.find( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id || u.unitTypeId === UNIT_TYPES[REAPER].id );
+                if ( unit ) {
+                    removeObject( unitsToCheck, (u => u.id === unit.id) );
+                }
+            }
+        }
+    }
+    return unitsToCheck;
 }
 
 function hasEnemyUnits( tileId, includeApostles = false ) {
@@ -149,12 +174,12 @@ function hasEnemyDistrict( tileId ) {
     return districtPlayers.length && districtPlayers[0] !== currentPlayer.id;
 }
 
-function isImpassibleTile( tileId, checkCombat = true ) {
+function isImpassibleTile( tileId, checkVolcano = true, checkCombat = true ) { //todo 3
     const tileDetails = getTileDetails( tileId );
     return !tileDetails ||
-        tileDetails.type === TILE_TYPES[VOLCANO].name ||
         /*( Check for Camelot ) ||*/
         ( tileDetails.type === TILE_TYPES[CAPITAL].name && tileDetails.districtPlayerId !== currentPlayer.id ) ||
+        ( checkVolcano && tileDetails.type === TILE_TYPES[VOLCANO].name ) ||
         ( checkCombat && tileDetails.unitSets.filter( s => s.id !== currentPlayer.id ).some( s => s.combat ) );
 }
 
@@ -167,8 +192,11 @@ function moveUnits( tileId ) {
     const rootTileId = selectedUnits[0].tileId;
     const destinationTileId = tileId;
 
+    const hasAdvancedFlight = hasTechnology( ADVANCED_FLIGHT );
     selectedUnits.forEach( unit => {
-        unit.movesRemaining -= suggestedPath.length;
+        if ( getMovingUnits( selectedUnits, hasAdvancedFlight ).includes( unit ) ) {
+            unit.movesRemaining -= suggestedPath.length;
+        }
         unit.tileId = destinationTileId;
     } );
 

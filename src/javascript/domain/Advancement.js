@@ -23,6 +23,11 @@ class Technology extends Advancement {
 
 function getTechnology( id ) { return getEntity( id, TECHNOLOGIES ); }
 
+const ADVANCED_FLIGHT_CAPACITY = 4;
+const GLOBAL_NETWORKING_CARD_MAX = 10;
+const GLOBAL_NETWORKING_ADVANCEMENT_MAX = 10;
+const BIODOMES_GARDEN_MULTIPLIER = 4;
+
 const ORE_PROCESSING         = 0;
 const MILITARY_TACTICS       = 1;
 const SUBTERRANEAN_RAILS     = 2;
@@ -106,10 +111,11 @@ class Garden extends Advancement {
         super( id, "Garden", name, Garden.getCost, description );
     }
 
-    static getCost( districtCount ) { return 7 * districtCount; }
+    //todo X - standardize cost functions for advancements, units, etc.
+    static getCost( districtCount, hasBioDomes = false ) { return (hasBioDomes ? BIODOMES_GARDEN_MULTIPLIER : GARDEN_MULTIPLIER) * districtCount; }
 
-    getCostOrLocked( districtCount ) {
-        return this.isLocked( districtCount ) ? LOCKED_SPAN : (this.costFunction() + "WB");
+    getCostOrLocked( districtCount, hasBioDomes = false ) {
+        return this.isLocked( districtCount ) ? LOCKED_SPAN : (this.costFunction( districtCount, hasBioDomes ) + "WB");
     }
 
     isLocked( districtCount ) {
@@ -120,6 +126,8 @@ class Garden extends Advancement {
 function getGarden( id ) { return getEntity( id, GARDENS ); }
 
 const LOCKED_SPAN = "<span style='font-style: italic'>Locked</span>";
+
+const GARDEN_MULTIPLIER = 7;
 
 const WATER_GARDEN     = 0;
 const VEGETABLE_GARDEN = 1;

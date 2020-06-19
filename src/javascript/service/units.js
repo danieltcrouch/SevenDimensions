@@ -1,7 +1,7 @@
 /*** CALCULATE ***/
 
 
-function calculateShortestNonCombatPath( rootTileId, destinationTileId, allTileIds, impassableTileIds, maxMove = 100 ) {
+function calculateShortestNonCombatPath( rootTileId, destinationTileId, allTileIds, impassableTileIds, maxMove, bonuses ) {
     let result = [];
 
     if ( getHexFromId( rootTileId ).calculateDistance( getHexFromId( destinationTileId ) ) <= maxMove ) {
@@ -12,7 +12,11 @@ function calculateShortestNonCombatPath( rootTileId, destinationTileId, allTileI
 
         while ( !destinationTile.visited ) {
             let currentTile = allTiles.filter( t => !t.visited ).reduce((a, b) => a.distance < b.distance ? a : b );
-            let adjacentHexes = getAllAdjacentHexes( getHexFromId( currentTile.id ) ).filter( h => allTiles.some( t => t.id === h.id && !t.visited ) ).filter( h => !impassableTileIds.some( tileId => tileId === h.id ) );
+            let adjacentHexes = getAllAdjacentHexes( getHexFromId( currentTile.id ) );
+            if ( bonuses.hasGlobalTravel && bonuses.districtTileIds.includes( currentTile.id ) ) {
+                adjacentHexes.push( bonuses.districtTileIds.filter( t => t !== currentTile.id ).map( t => getHexFromId( t ) ) );
+            }
+            adjacentHexes = adjacentHexes.filter( h => allTiles.some( t => t.id === h.id && !t.visited ) ).filter( h => !impassableTileIds.some( tileId => tileId === h.id ) );
             allTiles.filter( t => adjacentHexes.some( h => h.id === t.id ) ).forEach( t => {
                 if ( currentTile.distance + 1 < t.distance) {
                     t.distance = currentTile.distance + 1;
@@ -38,8 +42,8 @@ function calculateShortestNonCombatPath( rootTileId, destinationTileId, allTileI
     return result;
 }
 
-function getAdjacentTiles( tileId, checkImpassible = true, checkCombat = false ) {
-    return getRelevantAdjacentHexes( getHexFromId( tileId ) ).map( h => h.id ).filter( t => !(checkImpassible && isImpassibleTile( t, checkCombat ) ) );
+function getAdjacentTiles( tileId, checkImpassible = false, checkVolcano = true, checkCombat = false ) {
+    return getRelevantAdjacentHexes( getHexFromId( tileId ) ).map( h => h.id ).filter( t => !(checkImpassible && isImpassibleTile( t, checkVolcano, checkCombat ) ) );
 }
 
 
@@ -86,7 +90,7 @@ function getAbilitiesForUnit( unit ) {
         if ( tileDetails.unitSets.filter( us => !us.combat ).length ) {
             result.push( { text: "Kill Apostle", callback: killApostle } );
         }
-        if ( currentPlayer.advancements.technologies.includes( TECHNOLOGIES[LONG_RANGE_ROCKETRY].id ) && (
+        if ( hasTechnology( LONG_RANGE_ROCKETRY ) && (
             unit.unitTypeId === UNIT_TYPES[BOOMER].id ||
             unit.unitTypeId === UNIT_TYPES[JUGGERNAUT].id ||
             unit.unitTypeId === UNIT_TYPES[GODHAND].id
@@ -211,7 +215,8 @@ function addUnit( unit, player, updateDisplay = true ) {
 
 function removeUnit( unit, player, updateDisplay = true ) {
     if ( player.units.some( u => u.id === unit.id ) ) {
-        player.units.splice( player.units.findIndex( u => u.id === unit.id ), 1 );
+        player.units.splice( p.units.findIndex( u => u.id === unit.id ), 1 );
+        player.special.disbandedUnits.push( unit );
     }
     if ( selectedUnits.some( u => u.id === unit.id ) ) {
         selectedUnits.splice( selectedUnits.findIndex( u => u.id === unit.id ), 1 );

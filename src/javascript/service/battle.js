@@ -49,12 +49,13 @@ function getPlayerBattleDetails( player, tileId ) {
         id: player.id,
         tileId: tileId,
         bonuses: {
-            kamikaze: player.advancements.doctrines.includes(DOCTRINES[HUMAN_SACRIFICE].id),
-            militaryTactics: player.advancements.technologies.includes(TECHNOLOGIES[MILITARY_TACTICS].id),
+            kamikaze: hasDoctrine( HUMAN_SACRIFICE, player ),
+            militaryTactics: hasTechnology( MILITARY_TACTICS, player ),
+            timeTravel: hasTechnology( TIME_TRAVEL, player ),
             hangingGardens: false,
             menOfSteel: false,
             potential: {
-                menOfSteel: player.cards.chaos.includes( CHAOS[61].id ),
+                menOfSteel: hasChaos( 61, player ),
                 culturalTokens: player.initiatives.culturalActive.find( i => i.tileId === tileId ) ? player.initiatives.culturalTokens : 0
             }
         },
@@ -62,7 +63,7 @@ function getPlayerBattleDetails( player, tileId ) {
             id: u.id,
             unitTypeId: u.unitTypeId,
             roll: null,
-            hit: false,
+            hits: 0,
             hitDeflections: u.hitDeflections + ((isPlayerDistrict && isDefending) ? u.hitDeflectionsHG : 0),
             disbanded: false
         }) )
@@ -139,17 +140,32 @@ function createBattle( attackPlayerDetails, defendPlayerDetails, callback, battl
     );
 }
 
-function rollForUnits( units, kamikazes = [] ) {
+function rollForUnits( units, bonuses ) {
     let result = [];
+    const kamikazes = bonuses ? (bonuses.kamikaze || []) : [];
+    const militaryTactics = bonuses ? bonuses.militaryTactics : false;
+    const timeTravel = bonuses ? bonuses.timeTravel : false;
     units.forEach( u => {
         if ( !u.disbanded ) {
-            const hitValue = kamikazes.includes( u.id ) ? KAMIKAZE_HIT : getUnitType( u.unitTypeId ).hit;
-            const rollResult = roll();
+            let hitValue = kamikazes.includes( u.id ) ? KAMIKAZE_HIT : getUnitType( u.unitTypeId ).hit;
+            if ( u.unitTypeId === UNIT_TYPES[REAPER].id && militaryTactics ) {
+                hitValue++;
+            }
+
+            let rollResult = roll();
             result.push( {
                 id: u.id,
                 roll: rollResult,
                 isHit: rollResult >= hitValue,
             } );
+            if ( timeTravel && u.unitTypeId === UNIT_TYPES[ROBOT].id ) {
+                rollResult = roll();
+                result.push( {
+                    id: u.id,
+                    roll: rollResult,
+                    isHit: rollResult >= hitValue,
+                } );
+            }
         }
     } );
     return result;
@@ -162,8 +178,10 @@ function roll( dieMax = 12 ) {
 function addRollsToDetails( playerDetails, rolls ) {
     rolls.forEach( r => {
         let unit = playerDetails.units.find( u => u.id === r.id );
-        unit.roll = r.roll;
-        unit.hit = r.isHit;
+        const hasRolled = !!unit.roll;
+        const hitValue = r.isHit ? 1 : 0;
+        unit.roll = hasRolled ? Math.min(unit.roll, r.roll) : r.roll;
+        unit.hits = hasRolled ? (unit.hits + hitValue) : hitValue;
     } );
     return playerDetails;
 }
@@ -182,7 +200,7 @@ function addDisbandsToDetails( playerDetails, disbands, deflections = [] ) {
 }
 
 function countHits( currentUnits, enemyUnits ) {
-    const hits = enemyUnits.filter( u => u.hit ).length;
+    const hits = enemyUnits.filter( (total, u) => total + u.hits, 0 );
     const livingUnits = currentUnits.filter( u => !u.disbanded ).length;
     return Math.min( hits, livingUnits );
 }

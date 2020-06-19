@@ -121,12 +121,8 @@ function updateUnitDisplay( unit ) {
         }
     }
 
-    if ( unit.roll ) {
-        id(`unit-${unit.id}-rolls`).innerText = unit.roll ? (`Roll: ${unit.roll} ` + (unit.hit ? "(HIT)" : "")) : "";
-    }
-    else {
-        id(`unit-${unit.id}-rolls`).innerText = "";
-    }
+    const hitText = unit.hits > 0 ? (unit.hits > 1 ? `(${unit.hits} HITS)` : "(HIT)") : "";
+    id(`unit-${unit.id}-rolls`).innerText = unit.roll ? `Roll: ${unit.roll} ${hitText}` : "";
 }
 
 function showSpecialAttacks() {
@@ -145,7 +141,7 @@ function showSpecialAttacks() {
 
 function showHitDeflections() {
     const isDisbandPhase = status.status === 'D';
-    if ( (currentPlayerDetails.bonuses.hangingGarden || currentPlayerDetails.bonuses.menOfSteel) && isDisbandPhase ) {
+    if ( (currentPlayerDetails.bonuses.hangingGardens || currentPlayerDetails.bonuses.menOfSteel) && isDisbandPhase ) {
         currentPlayerDetails.units.forEach( u => {
             if ( u.hitDeflections ) {
                 show( `unit-${u.id}-deflection` );
@@ -237,14 +233,18 @@ function attack() {
     if ( getStatus() === null ) {
         const assignedUnits = getSelectedUnits();
         if ( assignedUnits.length || !isAttacker ) {
-            currentPlayerDetails.units.forEach( u => { u.roll = null; u.hit = null; } );
-            enemyPlayerDetails.units.forEach(   u => { u.roll = null; u.hit = null; } );
+            currentPlayerDetails.units.forEach( u => { u.roll = null; u.hits = null; } );
+            enemyPlayerDetails.units.forEach(   u => { u.roll = null; u.hits = null; } );
 
-            const kamikazeIds = getKamikazeIds();
-            const rollResults = rollForUnits( assignedUnits, kamikazeIds );
+            const bonuses = {
+                kamikaze: getKamikazeIds(),
+                militaryTactics: currentPlayerDetails.bonuses.militaryTactics,
+                timeTravel: currentPlayerDetails.bonuses.timeTravel
+            };
+            const rollResults = rollForUnits( assignedUnits, bonuses );
             currentPlayerDetails = addRollsToDetails( currentPlayerDetails, rollResults );
-            if ( kamikazeIds.length ) {
-                currentPlayerDetails = addDisbandsToDetails( currentPlayerDetails, kamikazeIds.map( i => ({id: i}) ) );
+            if ( bonuses.kamikaze.length ) {
+                currentPlayerDetails = addDisbandsToDetails( currentPlayerDetails, bonuses.kamikaze.map( i => ({id: i}) ) );
             }
 
             saveAttack( currentPlayerDetails, isAttacker, getOpponentAttack );
@@ -269,7 +269,7 @@ function getOpponentAttack() {
         function() {
             if ( isAttacker ) {
                 updateAI( true );
-                const rollResults = rollForUnits( enemyPlayerDetails.units );
+                const rollResults = rollForUnits( enemyPlayerDetails.units ); //todo X - does the AI need to be able to use bonus abilities?
                 enemyPlayerDetails = addRollsToDetails( enemyPlayerDetails, rollResults );
                 saveAttack( enemyPlayerDetails, false, function() {
                     getOpponentAttackCallback( enemyPlayerDetails );
@@ -290,6 +290,7 @@ function getOpponentAttackCallback( enemyPlayer ) {
 
     status = updateStatus( 'D' );
     refreshDetails();
+    //todo 3 - time
 
     id('battleSelectAll').checked = false;
     selectAllBattleUnits();
@@ -298,7 +299,7 @@ function getOpponentAttackCallback( enemyPlayer ) {
 function disband() {
     if ( getStatus() === null ) {
         const assignedUnits = getSelectedUnits();
-        if ( assignedUnits && assignedUnits.length === countHits( currentPlayerDetails.units, enemyPlayerDetails.units )  ) {
+        if ( assignedUnits && assignedUnits.length === countHits( currentPlayerDetails.units, enemyPlayerDetails.units )  ) { //todo 3 - time
             const deflectionIds = getDeflectionIds();
             currentPlayerDetails = addDisbandsToDetails( currentPlayerDetails, assignedUnits, deflectionIds );
 
