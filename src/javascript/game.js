@@ -3,19 +3,10 @@
 //  Festival of Fairies must choose one type
 //  Scandal Disaster removes tokens evenly (no choice)
 //  Chaos Cards are always played on your turn
+//  Epiphany is only during the Market Phase
+//  Shut-up has choice of block or protect
 //todo 3 - Abilities
-//      make helper methods to check if player has advancement
-//  Advancements
-//      Tech
-//      Doctrine
-//      Garden
-//      Auction
-//  Chaos (start with the below)
-//      Amnesia
-//      Epiphany
-//      Way of the Samurai
-//      Shut-up (prevents Chaos card from affecting you that round; or choose a player to prevent playing any cards that phase)
-//      [the rest]
+//  Chaos
 //  Faction
 //  Office
 //todo 4 - Clean-up Common
@@ -37,6 +28,8 @@
 //todo X - Action button should only be abilities
 //  Market to buttons in display-player (units in display-tile)
 //      This does slightly nerf MMC, but I think it's fine as long as they get the refund from the total, not the individual buys
+//      Basically add items to cart
+//      Lauren says not to do this; that Market modal is better (it just needs to look nicer)
 //  Where does Auction go?
 //  Where does Council/Dimensions go?
 //  Where do Elections/Doomsday go?
@@ -88,6 +81,7 @@ function loadGameState() {
     id('phaseValue').innerText = getPhase(game.state.phase);
     id('turnValue').innerText = getTurn(game.state.turn);
     id('eventValue').innerText = getEvent(game.state.event);
+    id('phase').innerText = getPhaseButtonText();
 }
 
 function loadMap() {
@@ -126,12 +120,12 @@ function loadUserCallback( playerId ) {
     id('playerName').innerText = currentPlayer.username;
     populatePlayerDisplay();
 
-    displayUnassignedUnits();
+    displayUnassignedAssets();
     updateExpansionButtons();
 }
 
 function loadRecurringEffects() {
-    if ( isExpansionSubPhase() && game.state.turn === 0 ) {
+    if ( isExpansionSubPhase() && isFirstTurn() ) {
         game.players.forEach( p => {
             if ( hasGarden( HANGING_GARDEN, p ) ) {
                 p.units.forEach( u => u.hitDeflectionsHG = 1 );
@@ -173,7 +167,7 @@ function submit() {
     let isValidToSubmit = true;
 
     const isAsyncTurn = isMarketAuctionPhase() || isPreExpansionPhase() || isHarvestPhase() || isCouncilPhase();
-    if ( !isAsyncTurn && !isCurrentPlayerTurn() ) {
+    if ( !isAsyncTurn && !isPlayerTurn() ) {
         isValidToSubmit = false;
         showToaster( "It is not your turn." );
     }
@@ -192,6 +186,18 @@ function submit() {
             if ( currentPlayer.units.some( u => u.tileId === DEFAULT_TILE ) ) {
                 isValidToSubmit = false;
                 showToaster( "Must assign purchased units." );
+            }
+            else if ( currentPlayer.dimensions.some( d => d.wonderTileId === DEFAULT_TILE ) ) {
+                isValidToSubmit = false;
+                showToaster( "Must assign purchased Wonders." );
+            }
+            else if ( currentPlayer.special.free.technologiesOrDoctrines ) {
+                isValidToSubmit = false;
+                showToaster( "Must pick free advancements." );
+            }
+            else if ( currentPlayer.special.free.initiativeTokens ) {
+                isValidToSubmit = false;
+                showToaster( "Must pick free initiative tokens." );
             }
         }
     }
@@ -267,10 +273,10 @@ function updatePlayerCallback() {
 }
 
 function incrementTurn() {
-    game.state.turn++;
+    incrementTurnIndex();
     if ( game.players.every( p => p.turn.hasSubmitted ) ) {
         completeSubPhase();
-        game.state.turn = 0;
+        game.state.turn = game.state.ambassador;
         game.state.subPhase++;
         const MAX_SUB_PHASES = 2;
         if ( !isGameOver() && (isHarvestPhase() || game.state.subPhase >= MAX_SUB_PHASES) ) {
@@ -279,15 +285,8 @@ function incrementTurn() {
             if ( game.state.phase > PHASE_COUNCIL ) {
                 game.state.phase = 0;
                 game.state.round++;
-                game.state.event++;
-                if ( game.state.event >= EVENTS.length ) {
-                    game.state.event = 0;
-                }
-
-                game.state.ambassador++;
-                if ( game.state.ambassador >= game.players.length ) {
-                   game.state.ambassador = 0;
-                }
+                incrementEventIndex();
+                incrementAmbassadorIndex();
             }
         }
     }
@@ -373,12 +372,16 @@ function completeSubPhase() {
             if ( game.state.event >= 0 ) {
                 const event = EVENTS[game.state.event];
                 if ( event.id === EVENTS[EVENT_ELECTION].id ) {
-                    getElectionWinner().cards.offices.push(game.state.events.office);
+                    const winner = getElectionWinner();
+                    winner.cards.offices.push(game.state.events.office);
                     game.players.forEach( p => p.special.votePlayerId = null );
+                    assignOracleOffices( winner.id );
                 }
                 else if ( event.id === EVENTS[EVENT_MIDTERM].id ) {
-                    getElectionWinner().cards.offices.push(game.state.events.office);
+                    const winner = getElectionWinner();
+                    winner.cards.offices.push(game.state.events.office);
                     game.players.forEach( p => p.special.votePlayerId = null );
+                    assignOracleOffices( winner.id );
                 }
                 else if ( event.id === EVENTS[EVENT_MARS].id ) {
                     const combinedStrength = game.players.reduce( (result, p) => {return result + p.special.liquify.value}, 0 );
@@ -402,6 +405,11 @@ function completeSubPhase() {
                 game.state.events.disaster = null;
                 game.state.events.marsStrength = null;
             }
+
+            //Round End
+            game.players.forEach( p => {
+                p.special.scourge = false;
+            } );
         }
     }
 
@@ -431,6 +439,20 @@ function getElectionWinner() {
     let maxVotePlayerIds = playerVoteCounts.filter( c => c.count === maxVoteCount ).map( p => p.playerId );
     let winner = ( maxVotePlayerIds.length === 1 ) ? maxVotePlayerIds[0] : ( maxVotePlayerIds.includes( ambassadorVote ) ? ambassadorVote : ambassador.id );
     return getPlayer(winner)
+}
+
+function assignOracleOffices( winningPlayerId ) {
+    let currentOffices = Deck.getCurrentDeck( OFFICES, game.players.map( pl => pl.cards.offices.map( o => o.id ) ) );
+    currentOffices.shuffle();
+    game.players.forEach( p => {
+        if ( p.id !== winningPlayerId && hasDoctrine( DIVINE_ORACLES, p ) ) {
+            //todo X - make a helper method that returns players in order (and then TODO to use it elsewhere)
+            const unusedOffice = currentOffices.getTopCard();
+            if ( unusedOffice ) {
+                p.cards.offices.push( unusedOffice );
+            }
+        }
+    } );
 }
 
 function updateGame() {
@@ -551,10 +573,15 @@ function getNextAuction( players ) {
 
 function calculateWarBuckHarvestReward() {
     const districts = currentPlayer.districts.tileIds.reduce( ( total, tileId ) => {
-        return total + game.board.find( t => t.id === tileId ).getTileType().value;
+        total += game.board.find( t => t.id === tileId ).getTileType().value;
+        total += hasGarden( FLOWER_GARDEN ) ? 1 : 0;
+        return total;
     }, 0 );
-    const religion = 0;
-    return districts + religion;
+    const internalReligion = game.players.map( p => p.religion.tileIds ).reduce( ( total, r ) => ( total + r.filter( t => currentPlayer.districts.tileIds.includes( t ) ).length ), 0 );
+    const externalReligion = currentPlayer.religion ? currentPlayer.religion.tileIds.filter( t => !currentPlayer.districts.tileIds.includes( t ) ).length : 0;
+    const coastalProperty = hasAuctionLot( COASTAL_PROPERTY ) ? currentPlayer.districts.tileIds.filter( t => t !== currentPlayer.districts.capital ).reduce( ( max, tileId ) => Math.max( max, game.board.find( t => t.id === tileId ).getTileType().value ), 0 ) : 0;
+    const multiLevel = hasAuctionLot( MULTI_LEVEL_MARKET ) ? (Math.min(MULTI_LEVEL_MARKET_VALUE, getAdjacentPlayer().warBucks) + Math.min(MULTI_LEVEL_MARKET_VALUE, getAdjacentPlayer( currentPlayer, false ).warBucks)) : 0;
+    return districts + internalReligion + externalReligion + coastalProperty + multiLevel;
 }
 
 function calculateResourceHarvestReward() {
@@ -563,11 +590,12 @@ function calculateResourceHarvestReward() {
         if ( tileResourceIds.length && !game.state.events.shortage ) {
             tileResourceIds.forEach( id => {
                 const currentResource = result.find( cr => cr.id === id );
+                const resourceCount = hasGarden( VEGETABLE_GARDEN ) ? VEGETABLE_GARDEN_VALUE : 1;
                 if ( currentResource ) {
-                    currentResource.count++;
+                    currentResource.count += resourceCount;
                 }
                 else {
-                    result.push( {id: id, count: 1} );
+                    result.push( {id: id, count: resourceCount} );
                 }
             } );
         }
@@ -639,7 +667,7 @@ function pickPlayers( allowMultiple, allowNone, callback, players = game.players
         message,
         players.map( p => p.username ),
         allowMultiple,
-        allowMultiple, //todo 4 - allow "None" for radio buttons
+        allowMultiple, //todo 4 - allow "None" for radio buttons; maybe return -1?
         function( index ) {
             let playerIds = index;
             if ( Number.isInteger( index ) || Array.isArray( index ) ) {
@@ -661,6 +689,29 @@ function getPlayer( playerId ) {
 
 function isGameOver() {
     return game.state.winners && game.state.winners.length;
+}
+
+function getPhaseButtonText() {
+    let result = "Phase";
+    if ( isMarketAuctionPhase() ) {
+        result = "Auction";
+    }
+    else if ( isMarketSubPhase() ) {
+        result = "Market";
+    }
+    else if ( isExpansionPhase() ) {
+        result = "Expansion";
+    }
+    else if ( isHarvestPhase() ) {
+        result = "Harvest";
+    }
+    else if ( isCouncilSubPhase() ) {
+        result = "Council";
+    }
+    else if ( isDoomsdayClockPhase() ) {
+        result = "Doomsday";
+    }
+    return result;
 }
 
 function getPhase( index ) {
@@ -705,12 +756,32 @@ function getEvent( index ) {
     return Number.isInteger( index ) ? EVENTS[index].name : POST_EVENT;
 }
 
-function isCurrentPlayerTurn() {
-    return isPlayerTurn( currentPlayer.id );
+function isPlayerTurn( id = currentPlayer.id ) {
+    return game.players[game.state.turn].id === id;
 }
 
-function isPlayerTurn( id ) {
-    return game.players[game.state.turn].id === id;
+function isFirstTurn() {
+    return game.state.turn === game.state.ambassador;
+}
+
+function incrementTurnIndex() {
+    game.state.turn = incrementIndex( game.state.turn, game.players.length );
+}
+
+function incrementAmbassadorIndex() {
+    game.state.ambassador = incrementIndex( game.state.ambassador, game.players.length );
+}
+
+function incrementEventIndex() {
+    game.state.event = incrementIndex( game.state.event, EVENTS.length );
+}
+
+function incrementIndex( index, max ) {
+    index++;
+    if ( index === max ) {
+        index = 0;
+    }
+    return index;
 }
 
 function hasTechnology( index, player = currentPlayer ) {
@@ -743,6 +814,18 @@ function hasOffice( index, player = currentPlayer ) {
 
 function hasCard( index, playerCards, cardSet ) {
     return playerCards.includes( cardSet[index].id );
+}
+
+function getAdjacentPlayer( player = currentPlayer, next = true ) {
+    let playerIndex = game.players.findIndex( p => p.id === player.id );
+    playerIndex += next ? 1 : -1;
+    if ( playerIndex >= game.players.length ) {
+        playerIndex = 0;
+    }
+    else if ( playerIndex < 0 ) {
+        playerIndex = game.players.length - 1;
+    }
+    return game.players[playerIndex];
 }
 
 function getPlayerNumber( id ) {

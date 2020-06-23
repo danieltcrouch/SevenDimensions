@@ -24,8 +24,8 @@ function tileClickCallback( tileId ) {
         specialAction = null;
     }
     else if ( selectedUnits.length &&  (
-            ( isExpansionSubPhase() && ( suggestedPath.includes( tileId ) || (selectedUnits.every( u => u.tileId === "unassigned" ) && !isImpassibleTile( tileId, !hasTechnology( ADAPTIVE_MAPPING ) )) ) ) ||
-            ( isMarketPhase() && selectedUnits.every( u => u.tileId === "unassigned" ) && currentPlayer.districts.tileIds.includes( tileId ) )
+            ( isExpansionSubPhase() && ( suggestedPath.includes( tileId ) || (selectedUnits.every( u => u.tileId === DEFAULT_TILE ) && !isImpassibleTile( tileId, !hasTechnology( ADAPTIVE_MAPPING ) )) ) ) ||
+            ( isMarketPhase() && selectedUnits.every( u => u.tileId === DEFAULT_TILE ) && currentPlayer.districts.tileIds.includes( tileId ) )
         ) ) {
         moveUnits( tileId );
     }
@@ -81,8 +81,8 @@ class SelectUnits {
 }
 
 function selectAllUnits( tileSelectType ) {
-    const isUnassigned = tileSelectType === "unassigned";
-    const tileId = isUnassigned ? "unassigned" : selectedTile.id;
+    const isUnassigned = tileSelectType === DEFAULT_TILE;
+    const tileId = isUnassigned ? DEFAULT_TILE : selectedTile.id;
     const SelectClass = isUnassigned ? SelectUnassignedUnits : SelectTileUnits;
 
     if ( selectedUnits.length && SelectClass.isAllSelected() ) {
@@ -98,7 +98,7 @@ function selectAllUnits( tileSelectType ) {
 }
 
 function selectUnits( tileSelectType, unitId ) {
-    const isUnassigned = tileSelectType === "unassigned";
+    const isUnassigned = tileSelectType === DEFAULT_TILE;
     const SelectClass = isUnassigned ? SelectUnassignedUnits : SelectTileUnits;
 
     if ( selectedUnits.length && SelectClass.isUnitSelected( unitId ) ) {
@@ -174,7 +174,7 @@ function hasEnemyDistrict( tileId ) {
     return districtPlayers.length && districtPlayers[0] !== currentPlayer.id;
 }
 
-function isImpassibleTile( tileId, checkVolcano = true, checkCombat = true ) { //todo 3
+function isImpassibleTile( tileId, checkVolcano = true, checkCombat = true ) {
     const tileDetails = getTileDetails( tileId );
     return !tileDetails ||
         /*( Check for Camelot ) ||*/
@@ -202,7 +202,7 @@ function moveUnits( tileId ) {
 
     updateUnitIconsFromId( destinationTileId );
     selectTile( destinationTileId );
-    if ( rootTileId !== "unassigned" ) {
+    if ( rootTileId !== DEFAULT_TILE ) {
         updateUnitIconsFromId( rootTileId );
     }
     else {

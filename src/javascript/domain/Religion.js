@@ -1,6 +1,6 @@
 class Religion extends Entity {
     constructor( id, name, doctrineIndex ) {
-        super( id, "RELIGION", name, function() { return null; } );
+        super( id, "RELIGION", name );
         this.doctrineIndex = doctrineIndex;
     }
 }

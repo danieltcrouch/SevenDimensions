@@ -1,12 +1,31 @@
-class Wonder extends Entity {
+class Wonder extends Purchasable {
     constructor( id, name ) {
-        super( id, "WONDER", name, Wonder.getCost );
+        super( id, "WONDER", name, Wonder.getCost, Wonder.getAdjustedCost );
     }
 
-    static getCost() { return 20; }
+    static getCost() { return WONDER_COST; }
+
+    static getAdjustedCost( hasMonuments ) { return hasMonuments ? 0 : Wonder.getCost(); }
+
+    getCostOrLocked( currentPlayer, allPlayers, hasMonuments ) {
+        return Purchasable.displayCostLocked( this.isLocked( currentPlayer, allPlayers ), Wonder.getAdjustedCost( hasMonuments ) );
+    }
+
+    isLocked( currentPlayer, allPlayers = [] ) {
+        const dimensionId = this.getDimensionId();
+        return !currentPlayer.dimensions.some( d => d.id === dimensionId ) || allPlayers.map( p => p.dimensions ).flat().filter( d => d.wonderTileId ).map( d => d.id ).some( d => d === dimensionId );
+    }
+
+    getDimensionId() {
+        return DIMENSIONS.find( d => WONDERS[d.wonderIndex].id === this.id ).id;
+    }
 }
 
 function getWonder( id ) { return getEntity( id, WONDERS ); }
+
+function getWonderFromDimension( id ) { return WONDERS[getDimension( id ).wonderIndex]; }
+
+const WONDER_COST = 20;
 
 const SPACE_ANTENNA        = 0;
 const SACRED_TEMPLE        = 1;

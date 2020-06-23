@@ -1,6 +1,6 @@
 class Faction extends Entity {
     constructor( id, name, dimensionType, heroIndex, startingSupplies, description ) {
-        super( id, "FACTION", name, function() { return null; } );
+        super( id, "FACTION", name );
         this.dimensionType = dimensionType;
         this.heroIndex = heroIndex;
         this.startingSupplies = startingSupplies;

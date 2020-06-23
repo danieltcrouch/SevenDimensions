@@ -62,3 +62,5 @@ const EVENT_RESTOCK_CARDS = 3;
 const EVENT_MARS_REWARD = 5;
 const EVENT_MARS_GRAND_REWARD = 50;
 const EVENT_MARS_COST = 15;
+
+const DEFAULT_TILE = "unassigned";

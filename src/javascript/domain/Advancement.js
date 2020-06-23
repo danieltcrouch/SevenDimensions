@@ -1,6 +1,6 @@
-class Advancement extends Entity {
-    constructor( id, type, name, costFunction, description ) {
-        super( id, "ADV-" + type, name, costFunction );
+class Advancement extends Purchasable {
+    constructor( id, type, name, description, costFunction, adjustedCostFunction ) {
+        super( id, "ADV-" + type, name, costFunction, adjustedCostFunction );
         this.description = description;
     }
 }
@@ -13,12 +13,12 @@ function getAdvancement( id, list ) { return getEntity( id, list ); }
 
 class Technology extends Advancement {
     constructor( id, name, description ) {
-        super( id, "Technology", name, Technology.getCost, description );
+        super( id, "Technology", name, description, Technology.getCost, Technology.getAdjustedCost );
     }
 
     static getCost() { return 7; }
 
-    static getCostDisplay() { return Technology.getCost() + "WB"; }
+    static getAdjustedCost( edenCount ) { return Math.max(7 - edenCount, 1); }
 }
 
 function getTechnology( id ) { return getEntity( id, TECHNOLOGIES ); }
@@ -66,15 +66,18 @@ const TECHNOLOGIES = [
 
 class Doctrine extends Advancement {
     constructor( id, name, description ) {
-        super( id, "Doctrine", name, Doctrine.getCost, description );
+        super( id, "Doctrine", name, description, Doctrine.getCost, Doctrine.getAdjustedCost );
     }
 
     static getCost() { return 7; }
 
-    static getCostDisplay() { return Doctrine.getCost() + "WB"; }
+    static getAdjustedCost( edenCount ) { return Math.max(7 - edenCount, 1); }
 }
 
 function getDoctrine( id ) { return getEntity( id, DOCTRINES ); }
+
+const CRUSADE_HIT = 2;
+const INQUISITION_VALUE = 20;
 
 const HUMAN_SACRIFICE           = 0;
 const WHISPERS_IN_THE_DESERT    = 1;
@@ -108,26 +111,29 @@ const DOCTRINES = [
 
 class Garden extends Advancement {
     constructor( id, name, description ) {
-        super( id, "Garden", name, Garden.getCost, description );
+        super( id, "Garden", name, description, Garden.getCost, Garden.getAdjustedCost );
     }
 
-    //todo X - standardize cost functions for advancements, units, etc.
-    static getCost( districtCount, hasBioDomes = false ) { return (hasBioDomes ? BIODOMES_GARDEN_MULTIPLIER : GARDEN_MULTIPLIER) * districtCount; }
+    static getCost( districtCount ) { return GARDEN_MULTIPLIER * districtCount; }
 
-    getCostOrLocked( districtCount, hasBioDomes = false ) {
-        return this.isLocked( districtCount ) ? LOCKED_SPAN : (this.costFunction( districtCount, hasBioDomes ) + "WB");
+    static getAdjustedCost( districtCount, hasBioDomes, edenCount ) {
+        let cost = (hasBioDomes ? BIODOMES_GARDEN_MULTIPLIER : GARDEN_MULTIPLIER) * districtCount;
+        cost = Math.max(cost - edenCount, 1);
+        return cost;
     }
 
-    isLocked( districtCount ) {
-        return districtCount < 2;
+    static isLocked( districtCount ) { return districtCount < 2; }
+
+    getCostOrLocked( districtCount, hasBioDomes, edenCount ) {
+        return Purchasable.displayCostLocked( Garden.isLocked( districtCount ), Garden.getAdjustedCost( districtCount, hasBioDomes, edenCount ) );
     }
 }
 
 function getGarden( id ) { return getEntity( id, GARDENS ); }
 
-const LOCKED_SPAN = "<span style='font-style: italic'>Locked</span>";
-
 const GARDEN_MULTIPLIER = 7;
+const WATER_GARDEN_HIT = 2;
+const VEGETABLE_GARDEN_VALUE = 2;
 
 const WATER_GARDEN     = 0;
 const VEGETABLE_GARDEN = 1;
@@ -148,12 +154,16 @@ const GARDENS = [
 
 
 class Auction extends Advancement {
-    constructor( id, name, costFunction, description ) {
-        super( id, "Auction Lot", name, costFunction, description );
+    constructor( id, name, cost, description ) {
+        super( id, "Auction Lot", name, description, function() { return cost; }, function( edenCount ) { Auction.getAdjustedCost( cost, edenCount ); } );
     }
 
-    getCostOrLocked( players ) {
-        return this.isLocked( players ) ? LOCKED_SPAN : (this.costFunction() + "WB");
+    static getAdjustedCost( cost, edenCount ) {
+        return Math.max(cost - edenCount, 1);
+    }
+
+    getCostOrLocked( players, edenCount ) {
+        return Purchasable.displayCostLocked( this.isLocked( players ), Auction.getAdjustedCost( this.defaultCost(), edenCount ) );
     }
 
     isLocked( players ) {
@@ -162,6 +172,13 @@ class Auction extends Advancement {
 }
 
 function getAuctionLot( id ) { return getEntity( id, AUCTIONS ); }
+
+const MULTI_LEVEL_MARKET_VALUE = 3;
+const PROFESSIONAL_ATHLETICS_VALUE = 3;
+const SUPER_DELEGATES_VALUE = 7;
+const THINK_TANK_VALUE = 4;
+const ATLANTIS_STOCK_VALUE = 7;
+const WEAPONS_MANUFACTURER_VALUE = 3;
 
 const COASTAL_PROPERTY       = 0;
 const MULTI_LEVEL_MARKET     = 1;
@@ -172,11 +189,11 @@ const ATLANTIS_STOCK         = 5;
 const WEAPONS_MANUFACTURER   = 6;
 
 const AUCTIONS = [
-    new Auction( "0", "Coastal Property",       function() { return 7;  }, "Every Harvest Phase, receive double the War-Bucks from 1 non-Capital district" ),
-    new Auction( "1", "Multi-Level Market",     function() { return 14; }, "Every Harvest Phase, take 3WB from the players to either side" ),
-    new Auction( "2", "Professional Athletics", function() { return 21; }, "Receive 3x as many Initiative Tokens for the Festival of Fairies" ),
-    new Auction( "3", "Super-Delegates",        function() { return 28; }, "Upon purchase, receive 7 Initiative Tokens" ),
-    new Auction( "4", "Think Tank",             function() { return 35; }, "Upon purchase, receive 4 Technologies or Doctrines and 4 Chaos Cards" ),
-    new Auction( "5", "Atlantis Stock",         function() { return 49; }, "Your investment for the Gambler’s Gambit is paid back 7x" ),
-    new Auction( "6", "Weapons Manufacturer",   function() { return 70; }, "All units cost a maximum of 3WB" )
+    new Auction( "0", "Coastal Property",        7, "Every Harvest Phase, receive double the War-Bucks from 1 non-Capital district" ),
+    new Auction( "1", "Multi-Level Market",     14, "Every Harvest Phase, take 3WB from the players to either side" ),
+    new Auction( "2", "Professional Athletics", 21, "Receive 3x as many Initiative Tokens for the Festival of Fairies" ),
+    new Auction( "3", "Super-Delegates",        28, "Upon purchase, receive 7 Initiative Tokens" ),
+    new Auction( "4", "Think Tank",             35, "Upon purchase, receive 4 Technologies or Doctrines and 4 Chaos Cards" ),
+    new Auction( "5", "Atlantis Stock",         49, "Your investment for the Gambler’s Gambit is paid back 7x" ),
+    new Auction( "6", "Weapons Manufacturer",   70, "All units cost a maximum of 3WB" )
 ];

@@ -44,7 +44,7 @@ function viewTechnologies( player = currentPlayer ) {
     let message = getAdvancementTable(
         TECHNOLOGIES,
         player.advancements.technologies,
-        Technology.getCostDisplay
+        function( item ) { return Purchasable.displayCost( item.defaultCost() ); }
     );
     showMessage( "Technologies", message, {padding: ".5em 20%"} );
 }
@@ -53,7 +53,7 @@ function viewDoctrines( player = currentPlayer ) {
     let message = getAdvancementTable(
         DOCTRINES,
         player.advancements.doctrines,
-        Doctrine.getCostDisplay
+        function( item ) { return Purchasable.displayCost( item.defaultCost() ); }
     );
     showMessage( "Doctrines", message, {padding: ".5em 20%"} );
 }
@@ -127,17 +127,32 @@ function getCardTable( data, userData ) {
 }
 
 
-/*** UNASSIGNED UNITS ***/
+/*** UNASSIGNED ***/
 
+
+function displayUnassignedAssets() {
+    if ( !isCouncilPhase() ) {
+        displayUnassignedUnits();
+        displayUnassignedWonders();
+        displayUnassignedAdvancements();
+        displayUnassignedInitiatives();
+    }
+    else {
+        hide('unassignedUnits');
+        hide('unassignedWonders');
+        hide('unassignedAdvancements');
+        hide('unassignedInitiatives');
+    }
+}
 
 function displayUnassignedUnits() {
-    const unassignedUnits = currentPlayer.units.filter( u => u.tileId === "unassigned" );
+    const unassignedUnits = currentPlayer.units.filter( u => u.tileId === DEFAULT_TILE );
     if ( unassignedUnits.length ) {
         let unitsHTML = "";
         for ( let i = 0; i < unassignedUnits.length; i++ ) {
             const unit = unassignedUnits[i];
             const unitDisplay = getUnitDisplayName( unit.unitTypeId, currentPlayer.id );
-            unitsHTML += `<div style='padding-left: 1em'><span id='units-un-${unit.id}' class='link' onclick='selectUnits("unassigned","${unit.id}")'>${unitDisplay}</span></div>\n`;
+            unitsHTML += `<div style='padding-left: 1em'><span id='units-un-${unit.id}' class='link' onclick='selectUnits("${DEFAULT_TILE}","${unit.id}")'>${unitDisplay}</span></div>\n`;
         }
         id('unassignedUnitsValue').innerHTML = unitsHTML;
         show( 'unassignedUnits' );
@@ -145,6 +160,42 @@ function displayUnassignedUnits() {
     else {
         hide('unassignedUnits');
     }
+}
+
+function displayUnassignedWonders() {
+    const unassignedWonders = currentPlayer.dimensions.filter( d => d.wonderTileId === DEFAULT_TILE );
+    if ( unassignedWonders.length ) {
+        let wondersHTML = "";
+        for ( let i = 0; i < unassignedWonders.length; i++ ) {
+            const wonder = unassignedWonders[i];
+            wondersHTML += `<div style='padding-left: 1em'><span id='wonders-un-${wonder.id}' class='link' onclick='selectWonder("${wonder.id}")'>${wonder.name}</span></div>\n`;
+        }
+        id('unassignedWondersValue').innerHTML = wondersHTML;
+        show( 'unassignedWonders' );
+    }
+    else {
+        hide('unassignedWonders');
+    }
+}
+
+function selectWonder( wonderId ) {
+    setSpecialAction(
+        function( tileId ) { return currentPlayer.districts.tileIds.includes( tileId ) && !currentPlayer.dimensions.map( d => d.wonderTileId ).includes( tileId ); },
+        function( tileId ) {
+            const dimensionId = getWonder( wonderId ).getDimensionId();
+            currentPlayer.dimensions.find( d => d.id === dimensionId ).wonderTileId = tileId;
+            displayUnassignedWonders();
+            updateWonderIcons( tileId, wonderId );
+        }
+    );
+}
+
+function displayUnassignedAdvancements() {
+    show('unassignedAdvancements', currentPlayer.special.free.technologiesOrDoctrines );
+}
+
+function displayUnassignedInitiatives() {
+    show('unassignedInitiatives', currentPlayer.special.free.initiativeTokens );
 }
 
 /*** UNIT SELECTION ***/

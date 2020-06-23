@@ -16,8 +16,8 @@ const KAMIKAZE_HIT = 3;
 
 function launchBattle( tileId ) {
     const enemyPlayer = game.players.find( p => p.units.some( u => u.tileId === tileId ) && p.id !== currentPlayer.id );
-    const enemyPlayerDetails = getPlayerBattleDetails( enemyPlayer, tileId );
-    const currentPlayerDetails = getPlayerBattleDetails( currentPlayer, selectedUnits[0].tileId );
+    const enemyPlayerDetails = getPlayerBattleDetails( enemyPlayer, tileId, currentPlayer );
+    const currentPlayerDetails = getPlayerBattleDetails( currentPlayer, selectedUnits[0].tileId, enemyPlayer, tileId );
     createBattle( currentPlayerDetails, enemyPlayerDetails, function() {
         openBattleModal(
             currentPlayer.username,
@@ -35,15 +35,21 @@ function launchBattle( tileId ) {
     } );
 }
 
-function getPlayerBattleDetails( player, tileId ) {
+function getPlayerBattleDetails( player, tileId, enemyPlayer, toTileId = null ) {
     const tileUnits = player.units.filter( u => u.tileId === tileId );
     const isPlayerDistrict = player.districts.tileIds.includes( tileId );
-    const isDefending = player.id !== currentPlayer.id;
+    const isAttacking = Boolean( toTileId ); //todo X - use this for all instances of: !!variable
+    const isDefending = !isAttacking;
+    const combatUnits = tileUnits.filter( u => u.unitTypeId !== UNIT_TYPES[APOSTLE].id && (isDefending || u.movesRemaining > 0) );
     if ( isDefending && player.initiatives.culturalActive ) {
         let currentCR = player.initiatives.culturalActive.find( i => i.tileId === tileId );
         for ( let i = 0; currentCR && i < currentCR.reaperCount; i++ ) {
-            tileUnits.push( new Unit( getRandomUnitId(), UNIT_TYPES[REAPER].id, tileId ) );
+            combatUnits.push( new Unit( getRandomUnitId(), UNIT_TYPES[REAPER].id, tileId ) ); //todo X - make a special unit so name displays in modal as "Civil Resistor"
         }
+    }
+    const isHangingGardenDefense = isDefending && hasGarden( HANGING_GARDEN, player ) && !combatUnits.length && !enemyPlayer.special.scourge;
+    if ( isHangingGardenDefense ) {
+        combatUnits.push( new Unit( getRandomUnitId(), UNIT_TYPES[BOOMER].id, tileId ) ); //todo X - make a special unit so name displays in modal as "Hanging Garden"
     }
     return {
         id: player.id,
@@ -52,14 +58,16 @@ function getPlayerBattleDetails( player, tileId ) {
             kamikaze: hasDoctrine( HUMAN_SACRIFICE, player ),
             militaryTactics: hasTechnology( MILITARY_TACTICS, player ),
             timeTravel: hasTechnology( TIME_TRAVEL, player ),
-            hangingGardens: false,
+            crusade: hasDoctrine( CRUSADES, player ) && isAttacking && player.religion && player.religion.tileIds.includes( toTileId ),
+            waterGardens: hasGarden( WATER_GARDEN, player ) && isDefending && player.districts.tileIds.includes( tileId ),
+            hangingGardens: hasGarden( HANGING_GARDEN, player ) && isDefending && player.districts.tileIds.includes( tileId ) && !isHangingGardenDefense && !enemyPlayer.special.scourge, //bonus for additional hit deflections, not undefended district
             menOfSteel: false,
             potential: {
                 menOfSteel: hasChaos( 61, player ),
                 culturalTokens: player.initiatives.culturalActive.find( i => i.tileId === tileId ) ? player.initiatives.culturalTokens : 0
             }
         },
-        units: tileUnits.filter( u => u.unitTypeId !== UNIT_TYPES[APOSTLE].id && u.movesRemaining > 0 ).map( u => ({
+        units: combatUnits.map( u => ({
             id: u.id,
             unitTypeId: u.unitTypeId,
             roll: null,
@@ -142,14 +150,27 @@ function createBattle( attackPlayerDetails, defendPlayerDetails, callback, battl
 
 function rollForUnits( units, bonuses ) {
     let result = [];
-    const kamikazes = bonuses ? (bonuses.kamikaze || []) : [];
-    const militaryTactics = bonuses ? bonuses.militaryTactics : false;
-    const timeTravel = bonuses ? bonuses.timeTravel : false;
+    const kamikazes         = bonuses ? (bonuses.kamikaze || []) : [];
+    const militaryTactics   = bonuses ? bonuses.militaryTactics  : false;
+    const timeTravel        = bonuses ? bonuses.timeTravel       : false;
+    const crusade           = bonuses ? bonuses.crusade          : false;
+    const waterGardens      = bonuses ? bonuses.waterGardens     : false;
     units.forEach( u => {
         if ( !u.disbanded ) {
-            let hitValue = kamikazes.includes( u.id ) ? KAMIKAZE_HIT : getUnitType( u.unitTypeId ).hit;
-            if ( u.unitTypeId === UNIT_TYPES[REAPER].id && militaryTactics ) {
-                hitValue++;
+            let hitValue = getUnitType( u.unitTypeId ).hit;
+            if ( kamikazes.includes( u.id ) ) {
+                hitValue = KAMIKAZE_HIT;
+            }
+            else {
+                if ( u.unitTypeId === UNIT_TYPES[REAPER].id && militaryTactics ) {
+                    hitValue++;
+                }
+                if ( crusade ) {
+                    hitValue += CRUSADE_HIT
+                }
+                if ( waterGardens ) {
+                    hitValue += WATER_GARDEN_HIT
+                }
             }
 
             let rollResult = roll();

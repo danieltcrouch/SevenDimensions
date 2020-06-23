@@ -41,7 +41,7 @@ const TILE_TYPES = [
 
 class Tile extends Entity {
     constructor( id, tileTypeId, resourceIds ) {
-        super( id, "TILE", getTileType( tileTypeId ).name, function() { return null; } );
+        super( id, "TILE", getTileType( tileTypeId ).name );
         this.tileTypeId = tileTypeId;
         this.resourceIds = resourceIds ? ( Array.isArray( resourceIds ) ? resourceIds : [ resourceIds ] ) : [];
     }

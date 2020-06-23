@@ -239,7 +239,9 @@ function attack() {
             const bonuses = {
                 kamikaze: getKamikazeIds(),
                 militaryTactics: currentPlayerDetails.bonuses.militaryTactics,
-                timeTravel: currentPlayerDetails.bonuses.timeTravel
+                timeTravel: currentPlayerDetails.bonuses.timeTravel,
+                crusade: currentPlayerDetails.bonuses.crusade,
+                waterGardens: currentPlayerDetails.bonuses.waterGardens
             };
             const rollResults = rollForUnits( assignedUnits, bonuses );
             currentPlayerDetails = addRollsToDetails( currentPlayerDetails, rollResults );
@@ -290,7 +292,6 @@ function getOpponentAttackCallback( enemyPlayer ) {
 
     status = updateStatus( 'D' );
     refreshDetails();
-    //todo 3 - time
 
     id('battleSelectAll').checked = false;
     selectAllBattleUnits();
@@ -299,7 +300,7 @@ function getOpponentAttackCallback( enemyPlayer ) {
 function disband() {
     if ( getStatus() === null ) {
         const assignedUnits = getSelectedUnits();
-        if ( assignedUnits && assignedUnits.length === countHits( currentPlayerDetails.units, enemyPlayerDetails.units )  ) { //todo 3 - time
+        if ( assignedUnits && assignedUnits.length === countHits( currentPlayerDetails.units, enemyPlayerDetails.units )  ) {
             const deflectionIds = getDeflectionIds();
             currentPlayerDetails = addDisbandsToDetails( currentPlayerDetails, assignedUnits, deflectionIds );
 
@@ -381,7 +382,7 @@ function checkEnd() {
 
 function addResistance() {
     const tokenMax = currentPlayerDetails.bonuses.potential.culturalTokens;
-    showPrompt(
+    showPrompt( //todo X - test that this doesn't mess up Battle modal
         "Civil Resistance",
         `Enter the number of Cultural Initiative Tokens (out of ${tokenMax}) to use:`,
         function( response ) {

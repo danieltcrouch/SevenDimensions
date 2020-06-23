@@ -41,7 +41,7 @@ function performAnnexCallback( tileId ) {
 }
 
 function startAnnex( tokenCount, fromTileId, toTileId ) {
-    const value = tokenCount * VALUE_OF_ANNEX;
+    const value = tokenCount * VALUE_OF_ANNEX * (currentPlayer.special.assimilation?ASSIMILATION_VALUE:1);
     const currentPlayerDetails = {
         id: currentPlayer.id,
         tileId: fromTileId,

@@ -122,12 +122,20 @@ function generateNewPlayers( testPlayers ) {
                     hasConvened: false
                 },
                 special: {
+                    shutUp: false,
+                    shutUpProtect: false,
                     votePlayerId: null,
                     highPriestReward: false,
                     highPriestVictim: false,
                     gambitBet: 0,
                     insurrection: false,
-                    disbandedUnits: []
+                    disbandedUnits: [],
+                    assimilation: false,
+                    scourge: false,
+                    free: {
+                        technologiesOrDoctrines: 0,
+                        initiativeTokens: 0
+                    }
                 }
             };
         }

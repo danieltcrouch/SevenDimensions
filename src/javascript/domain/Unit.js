@@ -3,20 +3,14 @@ class UnitType {
         this.id = id;
         this.type = "UNIT";
         this.name = name;
+        this.cost = cost;
         this.hit = hit;
         this.move = move;
-        this.cost = cost;
         this.max = max;
-    }
-
-    getAdjustedCost( isInflation, hasModifiedPlastics ) {
-        return this.cost + ( isInflation ? 1 : 0 ) + ( hasModifiedPlastics && this.id === UNIT_TYPES[BOOMER].id ? -1 : 0 );
     }
 }
 
 function getUnitType( id ) { return UNIT_TYPES.find( u => u.id === id ); }
-
-const DEFAULT_TILE = "unassigned";
 
 const APOSTLE      = 0;
 const REAPER       = 1;
@@ -43,22 +37,36 @@ const UNIT_TYPES = [
 /**** ENTITY ****/
 
 
-class Unit extends Entity {
+class Unit extends Purchasable {
     constructor( id, unitTypeId, tileId ) {
         const unitType = getUnitType( unitTypeId );
-        super( id, unitType.type, unitType.name, unitType.getAdjustedCost );
+        super( id, unitType.type, unitType.name, Unit.getCost, Unit.getAdjustedCost );
         this.unitTypeId = unitTypeId;
         this.tileId = tileId;
         this.movesRemaining = unitType.move;
         this.hitDeflections = 0;
     }
 
-    getUnitType() {
-        return getUnitType( this.tileTypeId );
+    static getCost( unitTypeId ) {
+        return getUnitType( unitTypeId ).cost;
+    }
+
+    static getAdjustedCost( unitTypeId, isInflation, hasModifiedPlastics, hasWeaponsManufacturer ) {
+        return hasWeaponsManufacturer ? WEAPONS_MANUFACTURER_VALUE : (
+            getUnitType( unitTypeId ).cost + ( isInflation ? 1 : 0 ) + ( hasModifiedPlastics && this.id === UNIT_TYPES[BOOMER].id ? -1 : 0 )
+        );
     }
 
     getCost() {
-        return getUnitType( this.tileTypeId ).cost;
+        return Unit.getCost( this.unitTypeId );
+    }
+
+    getAdjustedCost( isInflation, hasModifiedPlastics, hasWeaponsManufacturer ) {
+        return Unit.getAdjustedCost( this.unitTypeId, isInflation, hasModifiedPlastics, hasWeaponsManufacturer );
+    }
+
+    getUnitType() {
+        return getUnitType( this.tileTypeId );
     }
 }
 

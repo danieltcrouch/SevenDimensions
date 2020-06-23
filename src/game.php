@@ -37,9 +37,19 @@
                 <div><span class="link" style="padding-left: 1em" onclick="viewAuctions()">Auction Lots:</span> <span id="auctionLotsValue">0/7</span></div>
                 <div><span class="link" onclick="viewInitiatives()">Initiative Tokens:</span> <span id="initiativeTokensValue">0</span></div>
                 <div><span class="link" onclick="viewCards()">Chaos Cards:</span> <span id="chaosCardsValue">0</span></div>
+                <div id="unassignedWonders" style="margin-top: .5em; display: none">
+                    <span style="font-weight: bold">Unassigned Wonders:</span>
+                    <div id="unassignedWondersValue"></div>
+                </div>
                 <div id="unassignedUnits" style="margin-top: .5em; display: none">
                     <span id="units-all-unassigned" class="link" onclick="selectAllUnits('unassigned')">Unassigned Units:</span>
                     <div id="unassignedUnitsValue"></div>
+                </div>
+                <div id="unassignedAdvancements" style="margin-top: .5em; display: none">
+                    <span class="link" onclick="chooseFreeAdvancements()">Free Advancements</span>
+                </div>
+                <div id="unassignedInitiatives" style="margin-top: .5em; display: none">
+                    <span class="link" onclick="chooseFreeInitiatives()">Free Initiative Tokens</span>
                 </div>
             </div>
             <div id="tileDetailsDiv" style="border: 2px solid black; border-radius: 1em; padding: 1em">
@@ -64,11 +74,11 @@
         </div>
         <div class="col-2">
             <div id="playerDiv" class="center">
-                <div><button id="submit" class="button" style="width: 7em; margin-bottom: .5em" onclick="submit()">Submit</button></div>
-                <div><button id="phase"  class="button" style="width: 7em; margin-bottom: .5em" onclick="showActions()">Actions</button></div>
-                <div><button id="phase"  class="button" style="width: 7em; margin-bottom: .5em" onclick="showAbilities()">Abilities</button></div>
-                <div><button id="trade"  class="button" style="width: 7em; margin-bottom: .5em" onclick="showTrade()">Trade</button></div>
-                <div><button id="help"   class="button" style="width: 7em; margin-bottom: .5em" onclick="showHelp()">Help</button></div>
+                <div><button id="submit"  class="button" style="width: 7em; margin-bottom: .5em" onclick="submit()">Submit</button></div>
+                <div><button id="phase"   class="button" style="width: 7em; margin-bottom: .5em" onclick="showActions()">Phase</button></div>
+                <div><button id="ability" class="button" style="width: 7em; margin-bottom: .5em" onclick="showAbilities()">Abilities</button></div>
+                <div><button id="trade"   class="button" style="width: 7em; margin-bottom: .5em" onclick="showTrade()">Trade</button></div>
+                <div><button id="help"    class="button" style="width: 7em; margin-bottom: .5em" onclick="showHelp()">Help</button></div>
             </div>
         </div>
     </div>

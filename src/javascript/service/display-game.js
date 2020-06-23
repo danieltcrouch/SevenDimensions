@@ -171,6 +171,7 @@ function showDoomsdayActions() {
     else if ( event.id === EVENTS[EVENT_FESTIVAL].id ) {
         let tokenCount = ( currentPlayer.units.length > EVENT_FF_UNITS_1 ) ? EVENT_FF_AWARD_1 :
             ( ( currentPlayer.units.length > EVENT_FF_UNITS_2 ) ? EVENT_FF_AWARD_2 : EVENT_FF_AWARD_3 );
+        tokenCount *= hasAuctionLot( PROFESSIONAL_ATHLETICS ) ? PROFESSIONAL_ATHLETICS_VALUE : 1;
         showBinaryChoice(
             event.name,
             `Based on your number of units, you have been awarded ${tokenCount} initiative token(s). Choose the type you would like:`,
@@ -206,7 +207,7 @@ function showDoomsdayActions() {
                 currentPlayer.cards.chaos = [];
                 getChaosCardsAsync( game.players.indexOf( currentPlayer ), EVENT_RESTOCK_CARDS );
 
-                currentPlayer.warBucks += currentPlayer.special.gambitBet * EVENT_GG_RETURN;
+                currentPlayer.warBucks += currentPlayer.special.gambitBet * (hasAuctionLot( ATLANTIS_STOCK ) ? ATLANTIS_STOCK_VALUE : EVENT_GG_RETURN);
                 currentPlayer.special.gambitBet = null;
             }
         );
@@ -320,7 +321,60 @@ function performPayDayDisaster() {
 
 
 function showAbilities() {
-    showMessage( "Abilities", "TODO" ); //cannot open during Council Phase
+    let messageHTML = "Abilities cannot be used during the Council Phase.";
+    if ( !isCouncilPhase() ) {
+        messageHTML = `
+                <div style="font-weight: bold">Advancements:</div>
+                <div>${getAdvancementAbilities()}</div>
+                <div style="font-weight: bold; margin-top: .5em">Chaos:</div>
+                <div>${getChaosAbilities()}</div>
+        `;
+    }
+    showMessage( "Abilities", messageHTML );
+}
+
+function getAdvancementAbilities() {
+    let result = [];
+    if ( isMarketAuctionPhase() ) {
+        if ( hasDoctrine( DIVINE_RIGHT ) ) {
+            result.push( { name: "Inquisition", ability: performInquisition } );
+        }
+    }
+    return result.length ? result.map( i => `<span class="link" onclick="${i.ability}">${i.name}</span><br/>\n` ) : "None";
+}
+
+function getChaosAbilities() {
+    let result = [];
+    let resultHTML = "Currently Blocked (Shut Up)";
+    if ( !currentPlayer.special.shutUp ) {
+        if ( isMarketPhase() ) {
+            if ( isMarketAuctionPhase() ) {
+                //
+            }
+            //
+        }
+        else if ( isExpansionPhase() ) {
+            //
+        }
+
+        if ( hasChaos( 0 ) ) {
+            result.push( { name: CHAOS[0].name, ability: performAmnesia } );
+        }
+        if ( hasChaos( 1 ) ) {
+            result.push( { name: CHAOS[1].name, ability: performAssimilation } );
+        }
+        if ( hasChaos( 29 ) ) {
+            result.push( { name: CHAOS[29].name, ability: performEpiphany } );
+        }
+        if ( hasChaos( 78 ) ) {
+            result.push( { name: CHAOS[78].name, ability: performScourge } );
+        }
+        if ( currentPlayer.cards.chaos.some( c => isShutUp( c ) ) ) {
+            result.push( { name: CHAOS[SHUT_UP[0]].name, ability: performShutUp } );
+        }
+        resultHTML = result.length ? result.map( i => `<span class="link" onclick="${i.ability}">${i.name}</span><br/>\n` ) : "None";
+    }
+    return resultHTML;
 }
 
 
