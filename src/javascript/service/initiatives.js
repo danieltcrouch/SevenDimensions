@@ -42,6 +42,7 @@ function performAnnexCallback( tileId ) {
 
 function startAnnex( tokenCount, fromTileId, toTileId ) {
     const value = tokenCount * VALUE_OF_ANNEX * (currentPlayer.special.assimilation?ASSIMILATION_VALUE:1);
+    currentPlayer.special.assimilation = false;
     const currentPlayerDetails = {
         id: currentPlayer.id,
         tileId: fromTileId,
@@ -54,7 +55,7 @@ function startAnnex( tokenCount, fromTileId, toTileId ) {
         id: enemyPlayer.id,
         tileId: toTileId,
         warBucks: enemyPlayer.warBucks,
-        culturalTokens: enemyPlayer.initiatives.culturalTokens,
+        culturalTokens: enemyPlayer.special.squelched ? 0 : enemyPlayer.initiatives.culturalTokens,
         culturalActive: culturalActive.length ? culturalActive[0] : 0, //reaperCount
         units: enemyPlayer.units.filter( u => u.tileId === toTileId )
     };
@@ -72,6 +73,8 @@ function startAnnex( tokenCount, fromTileId, toTileId ) {
         },
         'I'
     );
+
+    enemyPlayer.special.squelched = false;
 }
 
 function openAnnexDisplay( currentName, enemyName, currentPlayer, enemyPlayer, isAttacker ) {

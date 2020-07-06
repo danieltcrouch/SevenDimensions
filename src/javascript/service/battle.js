@@ -14,24 +14,26 @@ const KAMIKAZE_HIT = 3;
 
 //todo X - refactor this file as "Conflict" instead of battle
 
-function launchBattle( tileId ) {
-    const enemyPlayer = game.players.find( p => p.units.some( u => u.tileId === tileId ) && p.id !== currentPlayer.id );
-    const enemyPlayerDetails = getPlayerBattleDetails( enemyPlayer, tileId, currentPlayer );
-    const currentPlayerDetails = getPlayerBattleDetails( currentPlayer, selectedUnits[0].tileId, enemyPlayer, tileId );
+function launchBattle( tileId, attackerTileId = selectedUnits[0].tileId, attacker = currentPlayer ) {
+    const enemyPlayer = game.players.find( p => p.units.some( u => u.tileId === tileId ) && p.id !== attacker.id );
+    const enemyPlayerDetails = getPlayerBattleDetails( enemyPlayer, tileId, attacker );
+    const currentPlayerDetails = getPlayerBattleDetails( attacker, attackerTileId, enemyPlayer, tileId ); //todo X - doesn't use selected units for attack
     createBattle( currentPlayerDetails, enemyPlayerDetails, function() {
-        openBattleModal(
-            currentPlayer.username,
-            enemyPlayer.username,
-            currentPlayerDetails,
-            enemyPlayerDetails,
-            true,
-            {
-                status: 'A',
-                attackStatus: null,
-                defendStatus: null
-            },
-            function() {}
-        );
+        if ( attacker.id === currentPlayer.id ) {
+            openBattleModal(
+                attacker.username,
+                enemyPlayer.username,
+                currentPlayerDetails,
+                enemyPlayerDetails,
+                true,
+                {
+                    status: 'A',
+                    attackStatus: null,
+                    defendStatus: null
+                },
+                function() {}
+            );
+        }
     } );
 }
 
@@ -59,10 +61,13 @@ function getPlayerBattleDetails( player, tileId, enemyPlayer, toTileId = null ) 
             militaryTactics: hasTechnology( MILITARY_TACTICS, player ),
             timeTravel: hasTechnology( TIME_TRAVEL, player ),
             crusade: hasDoctrine( CRUSADES, player ) && isAttacking && player.religion && player.religion.tileIds.includes( toTileId ),
-            waterGardens: hasGarden( WATER_GARDEN, player ) && isDefending && player.districts.tileIds.includes( tileId ),
+            waterGardens: hasGarden( WATER_GARDEN, player ) && isDefending && player.districts.tileIds.includes( tileId ) && !enemyPlayer.special.scourge,
             hangingGardens: hasGarden( HANGING_GARDEN, player ) && isDefending && player.districts.tileIds.includes( tileId ) && !isHangingGardenDefense && !enemyPlayer.special.scourge, //bonus for additional hit deflections, not undefended district
+            bulldozer: player.special.bulldozer,
+            dDay: isAttacking && game.state.special.dDay === toTileId,
             menOfSteel: false,
             potential: {
+                criticalHit: hasChaos( 14, player ),
                 menOfSteel: hasChaos( 61, player ),
                 culturalTokens: player.initiatives.culturalActive.find( i => i.tileId === tileId ) ? player.initiatives.culturalTokens : 0
             }
@@ -148,28 +153,29 @@ function createBattle( attackPlayerDetails, defendPlayerDetails, callback, battl
     );
 }
 
-function rollForUnits( units, bonuses ) {
+function rollForUnits( units, bonuses = {} ) {
     let result = [];
-    const kamikazes         = bonuses ? (bonuses.kamikaze || []) : [];
-    const militaryTactics   = bonuses ? bonuses.militaryTactics  : false;
-    const timeTravel        = bonuses ? bonuses.timeTravel       : false;
-    const crusade           = bonuses ? bonuses.crusade          : false;
-    const waterGardens      = bonuses ? bonuses.waterGardens     : false;
     units.forEach( u => {
         if ( !u.disbanded ) {
             let hitValue = getUnitType( u.unitTypeId ).hit;
-            if ( kamikazes.includes( u.id ) ) {
+            if ( bonuses.kamikaze && bonuses.kamikaze.includes( u.id ) ) {
                 hitValue = KAMIKAZE_HIT;
             }
             else {
-                if ( u.unitTypeId === UNIT_TYPES[REAPER].id && militaryTactics ) {
+                if ( bonuses.militaryTactics && u.unitTypeId === UNIT_TYPES[REAPER].id ) {
                     hitValue++;
                 }
-                if ( crusade ) {
-                    hitValue += CRUSADE_HIT
+                if ( bonuses.crusade ) {
+                    hitValue += CRUSADE_HIT;
                 }
-                if ( waterGardens ) {
-                    hitValue += WATER_GARDEN_HIT
+                if ( bonuses.waterGardens ) {
+                    hitValue += WATER_GARDEN_HIT;
+                }
+                if ( bonuses.bulldozer ) {
+                    hitValue ++;
+                }
+                if ( bonuses.dDay ) {
+                    hitValue ++;
                 }
             }
 
@@ -179,7 +185,7 @@ function rollForUnits( units, bonuses ) {
                 roll: rollResult,
                 isHit: rollResult >= hitValue,
             } );
-            if ( timeTravel && u.unitTypeId === UNIT_TYPES[ROBOT].id ) {
+            if ( bonuses.timeTravel && u.unitTypeId === UNIT_TYPES[ROBOT].id ) {
                 rollResult = roll();
                 result.push( {
                     id: u.id,
@@ -426,17 +432,23 @@ function endBattle( attackPlayerDetails, defendPlayerDetails ) {
        },
        function() {
            game.battles.push( battleLog );
-           updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResult );
+           updatePlayers( attackPlayerDetails, defendPlayerDetails, attackResult );
        }
     );
 }
 
-function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResult ) {
+function updatePlayers( attackPlayerDetails, defendPlayerDetails, attackResult ) {
     const tileId = defendPlayerDetails.tileId;
     attackPlayerDetails.units.forEach( u => {
         let unit = currentPlayer.units.find( du => du.id === u.id );
         if ( u.disbanded ) {
             removeUnit( unit, currentPlayer );
+            if ( game.state.special.dDay === tileId ) {
+                currentPlayer.warBucks++;
+            }
+            if ( Number.isInteger( currentPlayer.special.wayOfTheSamurai ) ) {
+                currentPlayer.warBucks++;
+            }
         }
         else {
             let unit = currentPlayer.units.find( du => du.id === u.id );
@@ -452,6 +464,9 @@ function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResu
         let unit = defendPlayer.units.find( du => du.id === u.id );
         if ( u.disbanded ) {
             removeUnit( unit, defendPlayer );
+            if ( Number.isInteger( defendPlayer.special.wayOfTheSamurai ) ) {
+                defendPlayer.warBucks++;
+            }
         }
         else {
             if ( defendPlayer.districts.tileIds.includes( tileId ) ) {
@@ -479,6 +494,10 @@ function updatePlayerUnits( attackPlayerDetails, defendPlayerDetails, attackResu
         } );
         if ( getTileDetails(tileId).districtPlayerId ) {
             swapDistrict( defendPlayerDetails.id, attackPlayerDetails.id, tileId );
+        }
+        if ( game.state.special.bounty === defendPlayerDetails.id ) {
+            currentPlayer.warBucks += BOUNTY_VALUE;
+            game.state.special.bounty = null;
         }
     }
 }

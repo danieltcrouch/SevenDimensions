@@ -231,6 +231,7 @@ function purchase() {
     else {
         const technologyDoctrineCount = getSelectedOption( "technologySelect" ).index + getSelectedOption( "doctrineSelect" ).index;
         const advancementsInCartCount = technologyDoctrineCount + nm('gardens').filter( c => c.checked ).length + nm('auctions').filter( c => c.checked ).length;
+        const cardsInCartCount = parseInt( id('cardCount').value );
         const advancementMax = hasTechnology( GLOBAL_NETWORKING, marketModalValues ) ? GLOBAL_NETWORKING_ADVANCEMENT_MAX : MAX_ADVANCEMENTS;
         const cardMax = hasTechnology( GLOBAL_NETWORKING, marketModalValues ) ? GLOBAL_NETWORKING_CARD_MAX : MAX_CARDS;
         if ( technologyDoctrineCount && + marketModalValues.special.free.technologiesOrDoctrines ) {
@@ -239,11 +240,14 @@ function purchase() {
         else if ( advancementsInCartCount + marketModalValues.turn.purchasedAdvancementCount > advancementMax ) {
             showToaster( "Cannot purchase more than " + advancementMax + " advancements" );
         }
-        else if ( parseInt( id('cardCount').value ) + marketModalValues.turn.purchasedCardCount > cardMax ) {
+        else if ( cardsInCartCount + marketModalValues.turn.purchasedCardCount > cardMax ) {
             showToaster( "Cannot purchase more than " + cardMax + " cards" );
         }
-        else if ( parseInt( id('cardCount').value ) + marketModalValues.turn.purchasedCardCount > cardMax ) {
-            showToaster( "Cannot purchase more than " + cardMax + " cards" );
+        else if ( marketModalValues.special.dark && advancementsInCartCount ) {
+            showToaster( "Cannot purchase advancements this round (Chaos Card: Dark Ages)" );
+        }
+        else if ( game.state.special.exclusiveCardClub && game.state.special.exclusiveCardClub !== marketModalValues.id && cardsInCartCount ) {
+            showToaster( "Cannot purchase cards this round (Chaos Card: Exclusive Card Club)" );
         }
         else {
             let isValid = true;
@@ -303,7 +307,8 @@ function assignPurchases() {
         }
     }
 
-    const newCardIds = Deck.getCurrentDeck( CHAOS, game.players.map( p => p.cards.chaos.map( c => c.id ) ) ).getRandomCards( parseInt( id('cardCount').value ) ).map( c => c.id );
+    //Equal chance of getting recently discarded card
+    const newCardIds = Deck.getCurrentDeck( CHAOS, game.players.map( p => p.cards.chaos ) ).getRandomCards( parseInt( id('cardCount').value ) ).map( c => c.id );
     marketModalValues.cards.chaos = marketModalValues.cards.chaos.concat( newCardIds );
 
     const newWonderIds = nm('wonders').filter( c => c.checked ).map( c => c.id.split('-')[1] );

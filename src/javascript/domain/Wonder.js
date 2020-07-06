@@ -13,7 +13,7 @@ class Wonder extends Purchasable {
 
     isLocked( currentPlayer, allPlayers = [] ) {
         const dimensionId = this.getDimensionId();
-        return !currentPlayer.dimensions.some( d => d.id === dimensionId ) || allPlayers.map( p => p.dimensions ).flat().filter( d => d.wonderTileId ).map( d => d.id ).some( d => d === dimensionId );
+        return !currentPlayer.dimensions.some( d => d.id === dimensionId ) || allPlayers.some( p => p.dimensions.some( d => d.id === dimensionId && d.wonderTileId ) );
     }
 
     getDimensionId() {

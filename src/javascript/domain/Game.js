@@ -46,12 +46,12 @@ const MAX_VP = 14;
 const MAX_ADVANCEMENTS = 7;
 const MAX_DISTRICTS = 7;
 const MAX_CARDS = 7;
+const MAX_UNITS_TILE = 7;
 
 const VALUE_OF_ANNEX = 5;
 const REAPERS_IN_CR = 5;
 
 const EVENT_GG_RETURN = 2;
-const EVENT_GG_RETURN_ATLANTIS = 7;
 const EVENT_FF_UNITS_1 = 7;
 const EVENT_FF_UNITS_2 = 3;
 const EVENT_FF_AWARD_1 = 1;

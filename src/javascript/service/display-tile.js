@@ -13,16 +13,16 @@ function displayTileDetails( tileId ) {
     show( 'tileUnits', tileDetails.unitSets.length );
     tileDetails.unitSets.forEach( us => {
         const player = getPlayer( us.id );
-        const isExpansionPlayer = isExpansionSubPhase() && us.id === currentPlayer.id;
-        const spanTitleAttributes = isExpansionPlayer ? " id='units-all-selected' class='link' onclick='selectAllUnits(\"selected\")'" : "";
+        const canMove = isExpansionSubPhase() && us.id === currentPlayer.id && currentPlayer.special.exhaust !== tileId;
+        const spanTitleAttributes = canMove ? " id='units-all-selected' class='link' onclick='selectAllUnits(\"selected\")'" : "";
         tileUnitsHTML += `<div><span${spanTitleAttributes}>Units (${player.username}): </span></div>`;
 
-        const units = isExpansionPlayer ? us.units : getConsolidatedUnitsByType( us.units );
+        const units = canMove ? us.units : getConsolidatedUnitsByType( us.units );
         for ( let i = 0; i < units.length; i++ ) {
             const unit = units[i];
-            const spanUnitAttributes = isExpansionPlayer ? ` id='units-se-${unit.id}' class='link' onclick='selectUnits("selected","${unit.id}")'` : "";
+            const spanUnitAttributes = canMove ? ` id='units-se-${unit.id}' class='link' onclick='selectUnits("selected","${unit.id}")'` : "";
             const unitDisplay = getUnitDisplayName( unit.unitTypeId, us.id, unit.count );
-            const movesRemaining = isExpansionPlayer ? ` (Moves: ${unit.movesRemaining})` : "";
+            const movesRemaining = canMove ? ` (Moves: ${unit.movesRemaining})` : "";
             tileUnitsHTML += `<div style='padding-left: 1em'><span${spanUnitAttributes}>${unitDisplay}${movesRemaining}</span></div>\n`;
         }
     } );

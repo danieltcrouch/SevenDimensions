@@ -16,7 +16,7 @@ function performPurchasedAdvancements( player, newTechnologyIds, newDoctrineIds,
 
     if ( newAuctionIds.includes( AUCTIONS[THINK_TANK].id ) ) {
         receiveFreeAdvancements( THINK_TANK_VALUE, player );
-        const newCardIds = Deck.getCurrentDeck( CHAOS, game.players.map( p => p.cards.chaos.map( c => c.id ) ) ).getRandomCards( THINK_TANK_VALUE ).map( c => c.id );
+        const newCardIds = Deck.getCurrentDeck( CHAOS, game.players.map( p => p.cards.chaos ) ).getRandomCards( THINK_TANK_VALUE ).map( c => c.id );
         player.cards.chaos = player.cards.chaos.concat( newCardIds );
     }
 }

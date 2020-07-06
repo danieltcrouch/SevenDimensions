@@ -68,7 +68,7 @@ function fillTile( tile, districtPlayerId ) {
     }
     else if ( tile.tileTypeId === TILE_TYPES[CAPITAL].id ) {
         hideById(tile.id + "-text");
-        const factionId = getPlayer( districtPlayerId ).factionId;
+        const factionId = getPlayer( districtPlayerId ).factionId || getPlayer( districtPlayerId ).special.identity;
         id(tile.id + "-background").setAttributeNS(null, "fill", `url(#faction${factionId})`);
     }
 

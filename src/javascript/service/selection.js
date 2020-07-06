@@ -29,7 +29,7 @@ function tileClickCallback( tileId ) {
         ) ) {
         moveUnits( tileId );
     }
-    else if ( selectedUnits.length && getAdjacentTiles( selectedUnits[0].tileId, true, !hasTechnology( ADAPTIVE_MAPPING ) ).includes( tileId ) && hasEnemyUnits( tileId ) ) {
+    else if ( selectedUnits.length && getAdjacentTiles( selectedUnits[0].tileId, true, !hasTechnology( ADAPTIVE_MAPPING ) ).includes( tileId ) && hasEnemyUnits( tileId ) && !isDefenderImmune( tileId ) ) {
         showConfirm( "Battle", "Are you sure you want to attack this player?", function( result ) {
             if ( result ) {
                 launchBattle( tileId );
@@ -139,7 +139,7 @@ function moveSuggestion( tileId ) {
             hasGlobalTravel: hasTechnology( GLOBAL_TRAVEL ),
             districtTileIds: currentPlayer.districts.tileIds
         };
-        suggestedPath = calculateShortestNonCombatPath( rootTileId, destinationTileId, allTiles, impassableTiles, maxMove, bonuses );
+        suggestedPath = calculateShortestPath( rootTileId, destinationTileId, allTiles, impassableTiles, maxMove, bonuses );
 
         highlightSuggestedTiles( suggestedPath );
     }
@@ -172,6 +172,58 @@ function hasEnemyUnits( tileId, includeApostles = false ) {
 function hasEnemyDistrict( tileId ) {
     const districtPlayers = game.players.filter( p => p.districts.tileIds.includes( tileId ) ).map( p => p.id );
     return districtPlayers.length && districtPlayers[0] !== currentPlayer.id;
+}
+
+function isDefenderImmune( tileId ) {
+    const defender = getPlayer( getEnemyPlayer( tileId, true ).id ); //only units
+    let isImmune = false;
+    if ( defender.special.cease ) {
+        isImmune = true;
+    }
+    return isImmune;
+}
+
+function getTilesByThreat( enemyPlayerId = null, player = currentPlayer ) {
+    let result = [];
+    const allTiles = game.board.map( t => t.id );
+    const impassableTiles = allTiles.filter( t => isImpassibleTile( t, !hasTechnology( ADAPTIVE_MAPPING, getPlayer( enemyPlayerId ) ), false ) );
+    const controlledTiles = getControlledTiles( player );
+    const enemyTiles = allTiles.filter( t => {
+        let isEnemyTile = false;
+        if ( !controlledTiles.includes( t.id ) ) {
+            const enemy = getEnemyPlayer( t.id );
+            if ( enemy && (!enemyPlayerId || enemy.id === enemyPlayerId) ) {
+                isEnemyTile = true;
+            }
+        }
+        return isEnemyTile;
+    } );
+    enemyTiles.forEach( et => {
+        const tile = {
+            tileId: et,
+            distance: Number.POSITIVE_INFINITY
+        };
+        controlledTiles.forEach( ct => {
+            const distance = calculateShortestPath( ct, et, allTiles, impassableTiles, 10 ).length;
+            if ( distance > 0 && distance < tile.distance ) {
+                tile.distance = distance;
+            }
+        } );
+        result.push( tile );
+    } );
+    return result.sort( (t1,t2) => t1.distance - t2.distance ).map( t => t.tileId );
+}
+
+function getControlledTiles( player = currentPlayer ) {
+    return game.board.filter( t => getTileDetails( t.id ).controlPlayerId === player.id ).map( t => t.id );
+}
+
+function hasDistrict( tileId ) {
+    return Boolean( getDistrictPlayer( tileId ) );
+}
+
+function getDistrictPlayer( tileId ) {
+    return game.players.find( p => p.districts.tileIds.includes( tileId ) );
 }
 
 function isImpassibleTile( tileId, checkVolcano = true, checkCombat = true ) {

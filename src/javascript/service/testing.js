@@ -49,11 +49,17 @@ function getNewGame( testPlayers = TEST_USERS ) {
                 shortage: false,
                 inflation: false
             },
-            chaosDiscard: [],
+            special: {
+                bounty: null,
+                dDay: null,
+                exclusiveCardClub: null,
+                powerStruggle: false
+            },
             winners: []
         },
         board: newMap,
-        players: newPlayers
+        players: newPlayers,
+        battles: []
     };
 }
 
@@ -131,7 +137,24 @@ function generateNewPlayers( testPlayers ) {
                     insurrection: false,
                     disbandedUnits: [],
                     assimilation: false,
+                    benefactor: false,
+                    bulldozer: false,
+                    cease: false,
+                    copy: null,
+                    dark: false,
+                    doubleDown: false,
+                    exhaust: null,
+                    friendlyTerms: false,
+                    jail: false,
+                    identity: false,
+                    manifestDestiny: false,
+                    march: false,
+                    micro: false,
                     scourge: false,
+                    silentAuction: false,
+                    spiritualWarfare: false,
+                    squelched: false,
+                    wayOfTheSamurai: null,
                     free: {
                         technologiesOrDoctrines: 0,
                         initiativeTokens: 0

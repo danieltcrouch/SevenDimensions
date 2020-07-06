@@ -1,7 +1,7 @@
 /*** CALCULATE ***/
 
 
-function calculateShortestNonCombatPath( rootTileId, destinationTileId, allTileIds, impassableTileIds, maxMove, bonuses ) {
+function calculateShortestPath( rootTileId, destinationTileId, allTileIds, impassableTileIds, maxMove, bonuses = {} ) {
     let result = [];
 
     if ( getHexFromId( rootTileId ).calculateDistance( getHexFromId( destinationTileId ) ) <= maxMove ) {
@@ -82,6 +82,9 @@ function getAbilitiesForUnit( unit ) {
         if ( currentPlayer.religion && tileDetails.districtPlayerId && !tileDetails.religionIds.includes( currentPlayer.religion.id ) ) {
             result.push( { text: "Evangelize", callback: evangelize } );
         }
+        if ( currentPlayer.factionId === FACTIONS[HOLY_EMPIRE].id && currentPlayer.special.spiritualWarfare && currentPlayer.religion ) {
+            result.push( { text: "Found District", callback: evangelizeAdjacent } );
+        }
     }
     else {
         if ( tileDetails.districtPlayerId !== currentPlayer.id ) {
@@ -96,6 +99,17 @@ function getAbilitiesForUnit( unit ) {
             unit.unitTypeId === UNIT_TYPES[GODHAND].id
         ) ) {
             result.push( { text: "Bombard", callback: pickBombardTile } );
+        }
+        if ( currentPlayer.special.manifestDestiny && !tileDetails.districtPlayerId && currentPlayer.districts.tileIds.length < MAX_DISTRICTS ) {
+            result.push( { text: "Found District", callback: found } );
+        }
+        if ( currentPlayer.special.spiritualWarfare && currentPlayer.religion ) {
+            if ( currentPlayer.factionId === FACTIONS[HOLY_EMPIRE].id ) {
+                result.push( { text: "Found District", callback: evangelizeAdjacent } );
+            }
+            else {
+                result.push( { text: "Found District", callback: evangelize } );
+            }
         }
     }
 
@@ -113,6 +127,14 @@ function evangelize( unit ) {
     addReligion( currentPlayer, tileId );
 }
 
+function evangelizeAdjacent( unit ) {
+    const rootTileId = unit.tileId;
+    setSpecialAction(
+        function( tileId ) { return hasDistrict( tileId ) && getAdjacentTiles( rootTileId ).includes( tileId ) && !currentPlayer.religion.tileIds.includes( tileId ); },
+        function( tileId ) { addReligion( currentPlayer, tileId ); }
+    );
+}
+
 function conquer( unit ) {
     const tileId = unit.tileId;
     const tileDetails = getTileDetails( tileId );
@@ -128,7 +150,7 @@ function killApostle( unit ) {
             false,
             function( playerIds ) {
                 enemyPlayers.filter( p => playerIds.includes( p.id ) ).forEach( p => {
-                    p.units.filter( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ) .forEach( u => removeUnit( u, p ) );
+                    p.units.filter( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ).forEach( u => removeUnit( u, p ) );
                 } );
             },
             enemyPlayers
@@ -231,4 +253,8 @@ function removeUnit( unit, player, updateDisplay = true ) {
 
 function getRandomUnitId() {
     return ( Math.floor( Math.random() * 10000 ) + "" ).padStart( 4, '0' );
+}
+
+function isSpecialUnit( unit ) {
+    return [UNIT_TYPES[HERO].id, UNIT_TYPES[GODHAND].id, UNIT_TYPES[ROBOT].id].includes( unit.unitTypeId );
 }

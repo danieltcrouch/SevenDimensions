@@ -162,12 +162,20 @@ class Auction extends Advancement {
         return Math.max(cost - edenCount, 1);
     }
 
+    static getMinimumBidCost( cost ) {
+        return Math.floor( cost / 2 );
+    }
+
     getCostOrLocked( players, edenCount ) {
         return Purchasable.displayCostLocked( this.isLocked( players ), Auction.getAdjustedCost( this.defaultCost(), edenCount ) );
     }
 
     isLocked( players ) {
         return !players.some( p => p.advancements.auctionWins.includes( this.id ) );
+    }
+
+    getMinimumBid() {
+        return Auction.getMinimumBidCost( this.defaultCost() );
     }
 }
 

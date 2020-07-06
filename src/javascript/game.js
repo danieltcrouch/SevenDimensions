@@ -3,18 +3,24 @@
 //  Festival of Fairies must choose one type
 //  Scandal Disaster removes tokens evenly (no choice)
 //  Chaos Cards are always played on your turn
-//  Epiphany is only during the Market Phase
-//  Shut-up has choice of block or protect
-//todo 3 - Abilities
-//  Chaos
-//  Faction
-//  Office
+//  Several Chaos Cards have been altered
 //todo 4 - Clean-up Common
+//todo 6.5 - Review all of this code
 //todo 7 - Liquify Modal
 //  Units (in tile?), money, initiative tokens, chaos cards, resources -- it uses whatever is passed in -> if (details.money) {}
 //      Organize units by tile and tile description
 //  parameters so it is useful for Mars (all units), Inquisitions (all the above), Annex (units in tile, civil resist, money)
 //  Needs to return all things liquified, including an array of unit IDs, as well as the total value of all things liquified
+//todo X.3 - Abilities
+//  Chaos
+//      need to display card descriptions somewhere
+//      Only allow council-specific cards during harvest
+//      Make sure abilities don't affect untouchable players and tiles
+//      (add to rules: Prophetic Vision, can buy garden with only 1 district)
+//  Office
+//  Faction
+//  Hero
+//todo X - Diplomatic Immunity from initiatives
 //todo X - some stuff is set-up for "Midnight" while other stuff is not
 //todo X - clean up test files; clean up player/state JSON to consolidate where flags are (make "global" object on each player and state?)
 //todo X - need a place to purchase Wonders
@@ -135,6 +141,10 @@ function loadRecurringEffects() {
             }
             if ( hasTechnology( WARP_DRIVES, p ) ) {
                 p.units.filter( u => u.unitTypeId === UNIT_TYPES[SPEEDSTER].id || u.unitTypeId === UNIT_TYPES[GODHAND].id ).forEach( u => u.movesRemaining++ );
+            }
+            if ( p.special.march ) {
+                performMarch( p );
+                p.special.march = false;
             }
         } );
     }
@@ -297,7 +307,7 @@ function completeSubPhase() {
         if ( isMarketAuctionPhase() ) {
             const auctionLot = getNextAuction( game.players );
             if ( auctionLot ) {
-                const highestBidderId = game.players.reduce( (prev, current) => {
+                const highestBidderId = game.players.filter( p => !p.special.silentAuction ).reduce( (prev, current) => {
                     return ( current.turn.auctionBid > prev.turn.auctionBid || (current.turn.auctionBid === prev.turn.auctionBid && getPlayerNumber(current.id) < getPlayerNumber(prev.id)) ) ? current : prev },
                     game.players[game.state.ambassador]
                 ).id;
@@ -326,8 +336,6 @@ function completeSubPhase() {
                 p.initiatives.politicalActive = [];
                 p.initiatives.culturalActive = [];
 
-                //todo X - enforce unit cap
-
                 if ( hasTechnology( GENETIC_RESURRECTION, p ) && p.special.disbandedUnits.length ) {
                     const unit = p.special.disbandedUnits.sort( (a,b) => parseInt(b.unitTypeId) - parseInt(a.unitTypeId) ).slice(0, 1);
                     const controlPlayerId = getTileDetails( unit.tileId ).controlPlayerId;
@@ -338,6 +346,18 @@ function completeSubPhase() {
                 }
                 p.special.disbandedUnits = [];
             } );
+
+            game.board.tiles.forEach( t => {
+                const tileDetails = getTileDetails( t.id );
+                tileDetails.unitSets.forEach( us => {
+                    const player = getPlayer( us.id );
+                    const unitMax = MAX_UNITS_TILE + (player.special.micro?MICRONIZATION_VALUE:0);
+                    if ( us.units.length > unitMax ) {
+                        const disbands = getLowestDisbands( us.units, us.units.length - unitMax );
+                        disbands.forEach( u => removeUnit( u, player, false ) );
+                    }
+                } );
+            } );
         }
     }
     else if ( isHarvestPhase() ) {
@@ -346,21 +366,21 @@ function completeSubPhase() {
     else if ( isCouncilPhase() ) {
         if ( isCouncilSubPhase() ) {
             let winners = getWinners();
-            if ( winners.length ) {
+            if ( winners.length && !game.state.special.powerStruggle ) {
                 game.state.winners = winners;
                 endGame();
             }
             else if ( game.state.event >= 0 ) {
                 const event = EVENTS[game.state.event];
                 if ( event.id === EVENTS[EVENT_ELECTION].id ) {
-                    game.players.forEach( p => {p.cards.offices = []; p.special.highPriestReward = false; p.special.highPriestReward = false;} );
+                    game.players.forEach( p => {p.cards.offices = []; p.special.highPriestReward = false; p.special.highPriestVictim = false;} );
                     game.state.events.office = (new Deck(OFFICES)).getRandomCards( 1 ).map( c => c.id )[0];
                 }
                 else if ( event.id === EVENTS[EVENT_DISASTER].id ) {
                     game.state.events.disaster = (new Deck(DISASTERS)).getRandomCards( 1 ).map( c => c.id )[0];
                 }
                 else if ( event.id === EVENTS[EVENT_MIDTERM].id ) {
-                    game.state.events.office = Deck.getCurrentDeck( OFFICES, game.players.map( p => p.cards.offices.map( c => c.id ) ) ).getRandomCards( 1 ).map( c => c.id )[0];
+                    game.state.events.office = Deck.getCurrentDeck( OFFICES, game.players.map( p => p.cards.offices ) ).getRandomCards( 1 ).map( c => c.id )[0];
                 }
                 else if ( event.id === EVENTS[EVENT_MARS].id ) {
                     const multiplier = roll( 6 );
@@ -408,8 +428,36 @@ function completeSubPhase() {
 
             //Round End
             game.players.forEach( p => {
+                p.special.bulldozer = false;
+                p.special.cease = false;
+                p.special.dark = false;
+                p.special.exhaust = null;
                 p.special.scourge = false;
+                p.special.shutUp = false;
+                p.special.shutUpProtect = false;
+                p.special.silentAuction = false;
+                p.special.wayOfTheSamurai = null;
+
+                if ( p.special.copy ) {
+                    p.factionId = p.special.copy;
+                    p.special.copy = null;
+                }
+                if ( p.special.friendlyTerms ) {
+                    game.players.filter( pl => pl.id !== p.id && !game.battles.some( b => b.round === game.state.round && [b.attackPlayerId, b.defendPlayerId].includes( p.id ) && [b.attackPlayerId, b.defendPlayerId].includes( pl.id ) ) ).forEach( pl => {
+                        const warBucks = Math.min( FRIENDLY_TERMS_VALUE, pl.warBucks );
+                        pl.warBucks -= warBucks;
+                        p.warBucks += warBucks;
+                    } );
+                    p.special.friendlyTerms = false;
+                }
+                if ( p.special.identity ) {
+                    p.factionId = p.special.identity;
+                    p.special.identity = null;
+                }
             } );
+            game.state.special.dDay = null;
+            game.state.special.exclusiveCardClub = null;
+            game.state.special.powerStruggle = false;
         }
     }
 
@@ -442,7 +490,7 @@ function getElectionWinner() {
 }
 
 function assignOracleOffices( winningPlayerId ) {
-    let currentOffices = Deck.getCurrentDeck( OFFICES, game.players.map( pl => pl.cards.offices.map( o => o.id ) ) );
+    let currentOffices = Deck.getCurrentDeck( OFFICES, game.players.map( pl => pl.cards.offices ) );
     currentOffices.shuffle();
     game.players.forEach( p => {
         if ( p.id !== winningPlayerId && hasDoctrine( DIVINE_ORACLES, p ) ) {
@@ -512,9 +560,9 @@ function calculateVP( player ) {
     result += player.dimensions.length;
     result += player.dimensions.filter( d => !!d.wonderTileId ).length * 2;
     result += hasHero( player.units ) ? 1 : 0;
+    result += player.cards.chaos.filter( c => isHeavensGate( c ) ).length;
     result += player.special.highPriestReward ? 1 : 0;
     result -= player.special.highPriestVictim ? 1 : 0;
-    result += player.cards.chaos.filter( c => isHeavensGate( c ) ).length;
     result -= player.special.insurrection ? 1 : 0;
     return result;
 }
@@ -660,14 +708,14 @@ function getEnemyPlayer( tileId, includeApostles = false ) {
     return result;
 }
 
-function pickPlayers( allowMultiple, allowNone, callback, players = game.players, message = "" ) {
+function pickPlayers( allowMultiple, allowSelectAllOrNone, callback, players = game.players, message = "" ) {
     message = message || (allowMultiple ? "Choose players to target:" : "Choose a player to target:");
     showPicks(
         "Enemy Players",
         message,
         players.map( p => p.username ),
         allowMultiple,
-        allowMultiple, //todo 4 - allow "None" for radio buttons; maybe return -1?
+        allowSelectAllOrNone,
         function( index ) {
             let playerIds = index;
             if ( Number.isInteger( index ) || Array.isArray( index ) ) {
@@ -766,6 +814,10 @@ function isFirstTurn() {
 
 function incrementTurnIndex() {
     game.state.turn = incrementIndex( game.state.turn, game.players.length );
+    if ( game.players[game.state.turn].special.jail && isExpansionSubPhase() ) {
+        game.state.turn = incrementIndex( game.state.turn, game.players.length );
+        game.players[game.state.turn].special.jail = false;
+    }
 }
 
 function incrementAmbassadorIndex() {

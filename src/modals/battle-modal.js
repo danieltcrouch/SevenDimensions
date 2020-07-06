@@ -241,7 +241,9 @@ function attack() {
                 militaryTactics: currentPlayerDetails.bonuses.militaryTactics,
                 timeTravel: currentPlayerDetails.bonuses.timeTravel,
                 crusade: currentPlayerDetails.bonuses.crusade,
-                waterGardens: currentPlayerDetails.bonuses.waterGardens
+                waterGardens: currentPlayerDetails.bonuses.waterGardens,
+                bulldozer: currentPlayerDetails.bonuses.bulldozer,
+                dDay: currentPlayerDetails.bonuses.dDay
             };
             const rollResults = rollForUnits( assignedUnits, bonuses );
             currentPlayerDetails = addRollsToDetails( currentPlayerDetails, rollResults );

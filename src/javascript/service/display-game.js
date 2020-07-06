@@ -43,16 +43,18 @@ function showAuctionActions() {
     const hasBid = Number.isInteger( currentPlayer.turn.auctionBid );
     const auctionLot = getNextAuction( game.players );
     if ( auctionLot && !currentPlayer.advancements.auctions.includes( auctionLot.id ) ) {
-        const minimum = Math.floor( auctionLot.costFunction() / 2 );
+        const minimum = auctionLot.getMinimumBid();
         showPrompt( "Auction",
-            "Enter an amount to bid on " + auctionLot.name + " (minimum: " + minimum + "WB):",
+            "Enter an amount to bid on " + auctionLot.name + " (minimum: " + minimum + "WB) or 0 to pass:",
             function( response ) {
                 const isCancel = response === undefined;
                 if ( !(isCancel && hasBid) ) {
-                    const value = parseInt( response );
+                    const benefactorAddition = currentPlayer.special.benefactor ? BENEFACTOR_VALUE : 0;
+                    const value = parseInt( response ) + benefactorAddition;
                     if ( Number.isInteger( value ) && ( value >= minimum || value === 0 ) ) {
-                        if ( value <= currentPlayer.warBucks ) {
+                        if ( value <= (currentPlayer.warBucks + benefactorAddition) ) {
                             currentPlayer.turn.auctionBid = value;
+                            currentPlayer.special.benefactor = false;
                         }
                         else {
                             showToaster( "Bid too high." );
@@ -97,14 +99,14 @@ function showHarvestActions() {
         const resourceDisplay = resourceReward.map( r => r.count + " " + getResource(r.id).name + (r.count > 1 ? "s" : "") ).join(", ");
         const message =
             `This harvest, you are rewarded:<br/>
-             ${warBuckReward}WB from districts<br/>
+             ${warBuckReward}WB<br/>
              ${resourceDisplay}`;
         showConfirm(
             "Harvest",
             message,
             function( response ) {
                 if ( response ) {
-                    currentPlayer.warBucks += warBuckReward;
+                    currentPlayer.warBucks += warBuckReward * (currentPlayer.special.doubleDown?2:1);
                     id('warBucksValue').innerText = currentPlayer.warBucks;
                     resourceReward.forEach( r => {
                         const currentResource = currentPlayer.resources.find( cr => cr.id === r.id );
@@ -115,6 +117,7 @@ function showHarvestActions() {
                             currentPlayer.resources.push( {id: r.id, count: r.count} );
                         }
                     } );
+                    currentPlayer.special.doubleDown = false;
                     currentPlayer.turn.hasReaped = true;
                 }
         } );
@@ -191,7 +194,12 @@ function showDoomsdayActions() {
         );
     }
     else if ( event.id === EVENTS[EVENT_DISASTER].id ) {
-        performDisaster();
+        if ( !hasChaos( 36 ) ) {
+            performDisaster();
+        }
+        else {
+            remove( currentPlayer.cards.chaos, CHAOS[35].id );
+        }
     }
     else if ( event.id === EVENTS[EVENT_MIDTERM].id ) {
         game.state.events.shortage = false;
@@ -204,8 +212,13 @@ function showDoomsdayActions() {
             event.name,
             event.description,
             function() {
-                currentPlayer.cards.chaos = [];
-                getChaosCardsAsync( game.players.indexOf( currentPlayer ), EVENT_RESTOCK_CARDS );
+                if ( hasChaos( 6 ) ) {
+                    remove( currentPlayer.cards.chaos, CHAOS[6].id );
+                }
+                else {
+                    currentPlayer.cards.chaos = currentPlayer.cards.chaos.filter( c => isHeavensGate( c ) );
+                }
+                getChaosCardsAsync( game.players.indexOf( currentPlayer ), EVENT_RESTOCK_CARDS ); //Cannot use getRandomCard() since phase is Async
 
                 currentPlayer.warBucks += currentPlayer.special.gambitBet * (hasAuctionLot( ATLANTIS_STOCK ) ? ATLANTIS_STOCK_VALUE : EVENT_GG_RETURN);
                 currentPlayer.special.gambitBet = null;
@@ -246,37 +259,37 @@ function performDisaster() {
             function() {
                 if ( disaster.id === DISASTERS[ERUPTION].id ) {
                     const volcanoAdjacentTileIds = game.board.filter( t => t.name === TILE_TYPES[VOLCANO].name ).reduce( (result, t) => result.concat( t.id ).concat( getAdjacentTiles( t.id ) ), [] );
-                    game.players.forEach( p => p.units.forEach( u => {
+                    currentPlayer.units.forEach( u => {
                         if ( volcanoAdjacentTileIds.includes( u.tileId ) ) {
                             removeUnit( u, currentPlayer );
                         }
-                    } ) );
-                }
-                else if ( disaster.id === DISASTERS[SCANDAL].id ) {
-                    game.players.forEach( p => {
-                        const districtCount = p.districts.tileIds.length;
-                        const currentCTokenCount = p.initiatives.culturalTokens;
-                        const currentPTokenCount = p.initiatives.politicalTokens;
-                        const cTokenOverCount = Math.max( currentCTokenCount - currentPTokenCount, 0 );
-                        const pTokenOverCount = Math.max( currentPTokenCount - currentCTokenCount, 0 );
-                        const remainingCount = districtCount - (cTokenOverCount + pTokenOverCount);
-                        const remainder = (remainingCount % 2 === 0) ? 0 : 1;
-                        p.initiatives.culturalTokens  = Math.max( Math.trunc( (remainingCount / 2) + cTokenOverCount + remainder ), 0 );
-                        p.initiatives.politicalTokens = Math.max( Math.trunc( (remainingCount / 2) + pTokenOverCount ), 0 );
                     } );
                 }
+                else if ( disaster.id === DISASTERS[SCANDAL].id ) {
+                    const districtCount = currentPlayer.districts.tileIds.length;
+                    const currentCTokenCount = currentPlayer.initiatives.culturalTokens;
+                    const currentPTokenCount = currentPlayer.initiatives.politicalTokens;
+                    const cTokenOverCount = Math.max( currentCTokenCount - currentPTokenCount, 0 );
+                    const pTokenOverCount = Math.max( currentPTokenCount - currentCTokenCount, 0 );
+                    const remainingCount = districtCount - (cTokenOverCount + pTokenOverCount);
+                    const remainder = (remainingCount % 2 === 0) ? 0 : 1;
+                    currentPlayer.initiatives.culturalTokens  = Math.max( Math.trunc( (remainingCount / 2) + cTokenOverCount + remainder ), 0 );
+                    currentPlayer.initiatives.politicalTokens = Math.max( Math.trunc( (remainingCount / 2) + pTokenOverCount ), 0 );
+                }
                 else if ( disaster.id === DISASTERS[THE_COST_OF_DISCIPLESHIP].id ) {
-                    game.players.forEach( p => p.units.forEach( u => {
+                    currentPlayer.units.forEach( u => {
                         if ( u.unitTypeId === UNIT_TYPES[JUGGERNAUT].id || u.unitTypeId === UNIT_TYPES[ROBOT].id ) {
                             removeUnit( u, currentPlayer );
                         }
-                    } ) );
+                    } );
                 }
                 else if ( disaster.id === DISASTERS[SHORTAGE].id ) {
                     game.state.events.shortage = true;
                 }
                 else if ( disaster.id === DISASTERS[INSURRECTION].id ) {
-                    getLeadPlayers().map( id => getPlayer(id) ).forEach( p => p.special.insurrection = true );
+                    if ( getLeadPlayers().includes( currentPlayer.id ) ) {
+                        currentPlayer.special.insurrection = true;
+                    }
                 }
                 else if ( disaster.id === DISASTERS[INFLATION].id ) {
                     game.state.events.inflation = true;
@@ -320,7 +333,7 @@ function performPayDayDisaster() {
 /*** ABILITY ***/
 
 
-function showAbilities() {
+function showAbilities() { //todo 3 - do these take into account Capital impassibility? what about, it being the player's turn? can exhausted units liquify?
     let messageHTML = "Abilities cannot be used during the Council Phase.";
     if ( !isCouncilPhase() ) {
         messageHTML = `
@@ -349,12 +362,44 @@ function getChaosAbilities() {
     if ( !currentPlayer.special.shutUp ) {
         if ( isMarketPhase() ) {
             if ( isMarketAuctionPhase() ) {
-                //
+                if ( hasChaos( 2 ) ) {
+                    result.push( { name: CHAOS[2].name, ability: performBenefactor } );
+                }
             }
-            //
+            else {
+                if ( hasChaos( 65 ) ) {
+                    result.push( { name: CHAOS[65].name, ability: performNepotism } );
+                }
+                if ( hasChaos( 76 ) && currentPlayer.dimensions.some( d => !d.wonderTileId && !game.players.some( p => p.dimensions.some( pd => pd.id === d.id && pd.wonderTileId ) ) ) ) {
+                    result.push( { name: CHAOS[65].name, ability: performSacred } );
+                }
+            }
         }
         else if ( isExpansionPhase() ) {
-            //
+            if ( isPreExpansionPhase() ) {
+                if ( hasChaos( 59 ) ) {
+                    result.push( { name: CHAOS[59].name, ability: performMarchPreExpansion } );
+                }
+            }
+            else {
+                if ( hasChaos( 59 ) ) {
+                    result.push( { name: CHAOS[59].name, ability: performMarch } );
+                }
+                if ( hasChaos( 91 ) ) {
+                    result.push( { name: CHAOS[91].name, ability: performSquelch } );
+                }
+            }
+            if ( hasChaos( 27 ) ) {
+                result.push( { name: CHAOS[27].name, ability: performDoubleDown } );
+            }
+        }
+        else if ( isHarvestPhase() ) {
+            if ( hasChaos( 27 ) ) {
+                result.push( { name: CHAOS[27].name, ability: performDoubleDownPostHarvest } );
+            }
+            if ( hasChaos( 70 ) ) {
+                result.push( { name: CHAOS[70].name, ability: performPower } );
+            }
         }
 
         if ( hasChaos( 0 ) ) {
@@ -363,14 +408,167 @@ function getChaosAbilities() {
         if ( hasChaos( 1 ) ) {
             result.push( { name: CHAOS[1].name, ability: performAssimilation } );
         }
+        if ( hasChaos( 3 ) ) {
+            result.push( { name: CHAOS[3].name, ability: performBounty } );
+        }
+        if ( hasChaos( 4 ) ) {
+            result.push( { name: CHAOS[4].name, ability: performBulldozer } );
+        }
+        if ( hasChaos( 7 ) ) {
+            result.push( { name: CHAOS[7].name, ability: performCease } );
+        }
+        if ( hasChaos( 8 ) ) {
+            result.push( { name: CHAOS[8].name, ability: performChaos } );
+        }
+        if ( hasChaos( 9 ) ) {
+            result.push( { name: CHAOS[9].name, ability: performChurch } );
+        }
+        if ( hasChaos( 10 ) ) {
+            result.push( { name: CHAOS[10].name, ability: performClone } );
+        }
+        if ( hasChaos( 11 ) ) {
+            result.push( { name: CHAOS[11].name, ability: performCopy } );
+        }
+        if ( hasChaos( 12 ) ) {
+            result.push( { name: CHAOS[12].name, ability: performCoup } );
+        }
+        if ( hasChaos( 15 ) ) {
+            result.push( { name: CHAOS[15].name, ability: performDDay } );
+        }
+        if ( hasChaos( 16 ) ) {
+            result.push( { name: CHAOS[16].name, ability: performDark } );
+        }
+        if ( hasChaos( 17 ) ) {
+            result.push( { name: CHAOS[17].name, ability: performDefector } );
+        }
+        if ( hasChaos( 18 ) ) {
+            result.push( { name: CHAOS[18].name, ability: performDeserter } );
+        }
+        if ( currentPlayer.cards.chaos.some( c => isDitto(c) ) ) {
+            result.push( { name: CHAOS[18].name, ability: performDitto } );
+        }
+        if ( hasChaos( 25 ) ) {
+            result.push( { name: CHAOS[25].name, ability: performDiversify } );
+        }
         if ( hasChaos( 29 ) ) {
             result.push( { name: CHAOS[29].name, ability: performEpiphany } );
+        }
+        if ( currentPlayer.cards.chaos.some( c => isEspionage(c) ) ) {
+            result.push( { name: CHAOS[29].name, ability: performEspionage } );
+        }
+        if ( hasChaos( 33 ) ) {
+            result.push( { name: CHAOS[33].name, ability: performExclusive } );
+        }
+        if ( hasChaos( 34 ) ) {
+            result.push( { name: CHAOS[34].name, ability: performExhaust } );
+        }
+        if ( hasChaos( 35 ) ) {
+            result.push( { name: CHAOS[35].name, ability: performFamine } );
+        }
+        if ( hasChaos( 38 ) ) {
+            result.push( { name: CHAOS[38].name, ability: performFTerms } );
+        }
+        if ( hasChaos( 40 ) ) {
+            result.push( { name: CHAOS[38].name, ability: performGamebreaker } );
+        }
+        if ( hasChaos( 42 ) ) {
+            result.push( { name: CHAOS[42].name, ability: performGideon } );
+        }
+        if ( hasChaos( 43 ) ) {
+            result.push( { name: CHAOS[43].name, ability: performGiveTired } );
+        }
+        if ( hasChaos( 44 ) ) {
+            result.push( { name: CHAOS[44].name, ability: performGJail } );
+        }
+        if ( hasChaos( 45 ) && game.players.some( p => p.religion ) ) {
+            result.push( { name: CHAOS[45].name, ability: performGAwakening } );
+        }
+        if ( hasChaos( 46 ) && !currentPlayer.units.some( u => u.unitTypeId === UNIT_TYPES[GODHAND].id ) ) {
+            result.push( { name: CHAOS[46].name, ability: performHGod } );
+        }
+        if ( hasChaos( 55 ) ) {
+            result.push( { name: CHAOS[55].name, ability: performIdentity } );
+        }
+        if ( hasChaos( 56 ) ) {
+            result.push( { name: CHAOS[56].name, ability: performInspired } );
+        }
+        if ( hasChaos( 58 ) ) {
+            result.push( { name: CHAOS[58].name, ability: performManifest } );
+        }
+        if ( hasChaos( 60 ) ) {
+            result.push( { name: CHAOS[60].name, ability: performMaster } );
+        }
+        if ( hasChaos( 62 ) ) {
+            result.push( { name: CHAOS[62].name, ability: performMicro } );
+        }
+        if ( hasChaos( 63 ) ) {
+            result.push( { name: CHAOS[63].name, ability: performMonopoly } );
+        }
+        if ( hasChaos( 66 ) ) {
+            result.push( { name: CHAOS[66].name, ability: performParks } );
+        }
+        if ( hasChaos( 67 ) ) {
+            result.push( { name: CHAOS[67].name, ability: performPenny } );
+        }
+        if ( hasChaos( 68 ) ) {
+            result.push( { name: CHAOS[68].name, ability: performPersecution } );
+        }
+        if ( hasChaos( 69 ) && currentPlayer.districts.tileIds.length !== MAX_DISTRICTS ) {
+            result.push( { name: CHAOS[68].name, ability: performPioneers } );
+        }
+        if ( hasChaos( 72 ) ) {
+            result.push( { name: CHAOS[72].name, ability: performPublic } );
+        }
+        if ( hasChaos( 73 ) ) {
+            result.push( { name: CHAOS[73].name, ability: performPuppeteer } );
+        }
+        if ( hasChaos( 74 ) ) {
+            result.push( { name: CHAOS[74].name, ability: performInquisition } );
+        }
+        if ( hasChaos( 75 ) ) {
+            result.push( { name: CHAOS[75].name, ability: performRInvestment } );
         }
         if ( hasChaos( 78 ) ) {
             result.push( { name: CHAOS[78].name, ability: performScourge } );
         }
+        if ( hasChaos( 79 ) ) {
+            result.push( { name: CHAOS[79].name, ability: performSeductress } );
+        }
+        if ( hasChaos( 81 ) ) {
+            result.push( { name: CHAOS[81].name, ability: performShift } );
+        }
         if ( currentPlayer.cards.chaos.some( c => isShutUp( c ) ) ) {
             result.push( { name: CHAOS[SHUT_UP[0]].name, ability: performShutUp } );
+        }
+        if ( hasChaos( 87 ) ) {
+            result.push( { name: CHAOS[87].name, ability: performSilent } );
+        }
+        if ( hasChaos( 89 ) ) {
+            result.push( { name: CHAOS[89].name, ability: performSpace } );
+        }
+        if ( hasChaos( 90 ) ) {
+            result.push( { name: CHAOS[90].name, ability: performSpiritual } );
+        }
+        if ( hasChaos( 92 ) ) {
+            result.push( { name: CHAOS[92].name, ability: performStrategic } );
+        }
+        if ( hasChaos( 94 ) ) {
+            result.push( { name: CHAOS[94].name, ability: performTRefund } );
+        }
+        if ( hasChaos( 95 ) ) {
+            result.push( { name: CHAOS[95].name, ability: performTClaw } );
+        }
+        if ( hasChaos( 96 ) ) {
+            result.push( { name: CHAOS[96].name, ability: performTGTRobbery } );
+        }
+        if ( hasChaos( 97 ) ) {
+            result.push( { name: CHAOS[97].name, ability: performTSwap } );
+        }
+        if ( hasChaos( 98 ) && currentPlayer.religion ) {
+            result.push( { name: CHAOS[98].name, ability: performTithing } );
+        }
+        if ( hasChaos( 99 ) ) {
+            result.push( { name: CHAOS[99].name, ability: performWay } );
         }
         resultHTML = result.length ? result.map( i => `<span class="link" onclick="${i.ability}">${i.name}</span><br/>\n` ) : "None";
     }
