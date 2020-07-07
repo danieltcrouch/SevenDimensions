@@ -4,41 +4,49 @@
 //  Scandal Disaster removes tokens evenly (no choice)
 //  Chaos Cards are always played on your turn
 //  Several Chaos Cards have been altered
-//todo 4 - Clean-up Common
-//todo 6.5 - Review all of this code
-//todo 7 - Liquify Modal
+
+//[Push Changes and light test]
+//todo 1 - Trading
+//  Options: Accept, Counter, Decline
+//  Use polling
+//[Push Changes and light test]
+//todo 2 - Liquify Modal
 //  Units (in tile?), money, initiative tokens, chaos cards, resources -- it uses whatever is passed in -> if (details.money) {}
 //      Organize units by tile and tile description
 //  parameters so it is useful for Mars (all units), Inquisitions (all the above), Annex (units in tile, civil resist, money)
 //  Needs to return all things liquified, including an array of unit IDs, as well as the total value of all things liquified
-//todo X.3 - Abilities
-//  Chaos
-//      need to display card descriptions somewhere
-//      Only allow council-specific cards during harvest
-//      Make sure abilities don't affect untouchable players and tiles
-//      (add to rules: Prophetic Vision, can buy garden with only 1 district)
-//  Office
-//  Faction
-//  Hero
-//todo X - Diplomatic Immunity from initiatives
-//todo X - some stuff is set-up for "Midnight" while other stuff is not
-//todo X - clean up test files; clean up player/state JSON to consolidate where flags are (make "global" object on each player and state?)
-//todo X - need a place to purchase Wonders
-//todo X - admin page for after game has started; shows who hasn't submitted
-//todo X - Can't start battle while battleId is present
-//todo X - convert modals so that purchase button is at the bottom beside "Close"
-//todo X - settings per player to automatically use AI for defense
-//todo X - trading
-//  Options: Accept, Counter, Decline
-//  Use polling
-//todo X - Action button should only be abilities
-//  Market to buttons in display-player (units in display-tile)
-//      This does slightly nerf MMC, but I think it's fine as long as they get the refund from the total, not the individual buys
-//      Basically add items to cart
-//      Lauren says not to do this; that Market modal is better (it just needs to look nicer)
-//  Where does Auction go?
-//  Where does Council/Dimensions go?
-//  Where do Elections/Doomsday go?
+//[Push Changes and light test]
+//todo 3 - Chaos Abilities
+//  need to display card descriptions somewhere
+//  Only allow council-specific cards during harvest
+//  Make sure abilities don't affect untouchable players and tiles
+//  (add to rules: Prophetic Vision, can buy garden with only 1 district)
+//[Push Changes and light test]
+//todo 4 - Various
+//  Can't start battle while battleId is present
+//  Some stuff is set-up for "Midnight" while other stuff is not
+//  Diplomatic Immunity from initiatives
+//[Push Changes and light test]
+//todo 5 - Faction & Office Abilities
+//  ...
+//[Push Changes and light test]
+//todo 6 - Specific Cleaning
+//  clean up test files; clean up player/state JSON to consolidate where flags are (make "global" object on each player and state?)
+//  remove inline styling and add to CSS classes
+//[Push Changes and light test]
+//todo 7 - Modal Refactor
+//  Make more modals/shadow-boxes for the game (for choosing advancements, initiative tokens)
+//  Convert modals so that purchase button is at the bottom beside "Close"
+//[Push Changes and light test]
+//todo 8 - Lobby & Admin
+//  admin page for after game has started; shows who hasn't submitted
+//  settings per player to automatically use AI for defense?
+//[Push Changes and light test]
+//todo 9 - Grand Review
+//  ...
+//todo XXX - Begin testing with Brothers; Work; FWC
+//todo X - refactor and clean up: Common, Seven, Reviews, Bracket, Overflow (Football and Turing can be ignored for now)
+
 const COLORS = ["red", "green", "blue", "purple", "orange", "teal", "gold"];
 
 let game;
@@ -65,7 +73,7 @@ function loadGame() {
 }
 
 function loadGameCallback( response ) {
-    game = jsonParse( response );
+    game = response;
     convertClasses( game );
 
     loadGameState();
@@ -255,7 +263,7 @@ function updatePlayer() {
             action:    "updatePlayer",
             userId:    userId,
             gameId:    gameId,
-            player:    JSON.stringify( currentPlayer )
+            player:    currentPlayer
         },
         updatePlayerCallback,
         function( error ) {
@@ -272,7 +280,7 @@ function updatePlayerCallback() {
             id:     gameId
         },
         function( response ) {
-            game = jsonParse( response );
+            game = response;
             incrementTurn();
             updateGame();
         },
@@ -415,8 +423,7 @@ function completeSubPhase() {
                     }
                     else {
                         game.players.forEach( p => p.warBucks = Math.max( (p.warBucks - EVENT_MARS_COST), 0 ) );
-                        //todo X - helper function to charge money
-                        //liquify units - helper function
+                        //todo 2 - liquify units - helper function
                     }
                     game.players.forEach( p => p.special.liquify = null );
                 }
@@ -494,7 +501,7 @@ function assignOracleOffices( winningPlayerId ) {
     currentOffices.shuffle();
     game.players.forEach( p => {
         if ( p.id !== winningPlayerId && hasDoctrine( DIVINE_ORACLES, p ) ) {
-            //todo X - make a helper method that returns players in order (and then TODO to use it elsewhere)
+            //todo 4 - make a helper method that returns players in order (and then TODO to use it elsewhere)
             const unusedOffice = currentOffices.getTopCard();
             if ( unusedOffice ) {
                 p.cards.offices.push( unusedOffice );
@@ -510,13 +517,13 @@ function updateGame() {
             action:    "updateGame",
             userId:    userId,
             gameId:    gameId,
-            game:      JSON.stringify( game )
+            game:      game
         },
-        function( response ) {
+        function() {
             showToaster("Turn successfully saved.");
             reloadPage();
         },
-        function( error ) {
+        function() {
             showToaster( "Unable to save game." );
         }
     );
@@ -524,7 +531,7 @@ function updateGame() {
 
 function reloadPage( internal = false ) {
     if ( internal ) {
-        loadGameCallback( JSON.stringify( game ) );
+        loadGameCallback( game );
     }
     else {
         postCallEncoded(
@@ -544,7 +551,7 @@ function endGame() {
        {
            action: "endGame",
            id:     gameId,
-           state:  JSON.stringify( game.state )
+           state:  game.state
        },
        loadGameCallback
     );
@@ -558,7 +565,7 @@ function calculateVP( player ) {
     let result = 0;
     result += player.districts.tileIds.length;
     result += player.dimensions.length;
-    result += player.dimensions.filter( d => !!d.wonderTileId ).length * 2;
+    result += player.dimensions.filter( d => Boolean( d.wonderTileId ) ).length * 2;
     result += hasHero( player.units ) ? 1 : 0;
     result += player.cards.chaos.filter( c => isHeavensGate( c ) ).length;
     result += player.special.highPriestReward ? 1 : 0;

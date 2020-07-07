@@ -33,7 +33,8 @@
     }
 </style>
 <script>
-    setLoginAttributes( function() { location.href = "https://seven.religionandstory.com/lobby.php"; } ); //location.assign()
+    const appName = "<?php echo getAppCode(); ?>";
+    setLoginUser( appName, function() { location.assign( "https://seven.religionandstory.com/lobby.php" ); } );
 </script>
 <?php includeModals(); ?>
 </html>

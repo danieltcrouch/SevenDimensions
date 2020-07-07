@@ -11,8 +11,8 @@ function setUserType( userType ) {
 
 function startGame() {
     //const gameId = "";
-    //location.href = "https://seven.religionandstory.com/game.php?id=" + TEST_GAME_ID;
-    location.href = "https://seven.religionandstory.com/game.php?id=" + "00000000000000000000000000000000" + "&testPlayerId=" + "00000000000000000000000000000001"; //todo 4 - use .assign() everywhere instead of assigning to href
+    //location.assign( "https://seven.religionandstory.com/game.php?id=" + TEST_GAME_ID );
+    location.assign( "https://seven.religionandstory.com/game.php?id=" + TEST_GAME_ID + "&testPlayerId=" + TEST_USERS[0].id );
 }
 
 function initializeGame( gameData ) {
@@ -20,7 +20,7 @@ function initializeGame( gameData ) {
         "php/main-controller.php",
         {
             action:    "createGame",
-            game:      JSON.stringify( gameData ) //todo 5 - can calling JSON.stringify be built into helper?
+            game:      gameData
         },
         function( response ) {},
         function( error ) {} );

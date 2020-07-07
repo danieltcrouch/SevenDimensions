@@ -36,16 +36,13 @@ class Deck {
     }
 
     removeCard( card ) {
-        return !!this.removeCardByIndex( this.getCardIndex( card ) );
+        return Boolean( this.removeCardByIndex( this.getCardIndex( card ) ) );
     }
 
     removeCardByIndex( cardIndex ) {
         let card = undefined;
         if ( cardIndex >= 0 && cardIndex < this.getCount() ) {
-            card = this.cards[cardIndex];
-            if ( typeof card !== "undefined" ) {
-                this.cards.splice( cardIndex, 1 );
-            }
+            card = this.cards.splice( cardIndex, 1 )[0];
         }
         return card;
     }

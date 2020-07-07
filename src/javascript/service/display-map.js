@@ -13,7 +13,7 @@ function addDistrict( player, tileId ) {
 
 function removeDistrict( player, tileId ) {
     let tiles = player.districts.tileIds;
-    tiles.splice( tiles.indexOf( tileId ), 1 );
+    remove( tiles, tileId );
     colorElement( `${tileId}-background`, getColorFromPlayerId( player.id ), isImageTile(tileId) );
 }
 
@@ -25,7 +25,7 @@ function addReligion( player, tileId ) {
 
 function removeReligion( player, tileId ) {
     let tiles = player.religion.tileIds;
-    tiles.splice( tiles.indexOf( tileId ), 1 ); //todo 5 - use Common array remove (search for either splice or x = x.filter)
+    remove( tiles, tileId );
     const tileDetails = getTileDetails( tileId );
     updateReligionIcons( tileId, tileDetails.religionIds, tileDetails.districtPlayerId );
 }
@@ -78,7 +78,7 @@ function fillTile( tile, districtPlayerId ) {
 }
 
 function addTileIcons( tile, tileDetails ) {
-    updateUnitIcons( tile.id, tileDetails.unitSets, !!tileDetails.districtPlayerId, tileDetails.controlPlayerId );
+    updateUnitIcons( tile.id, tileDetails.unitSets, Boolean( tileDetails.districtPlayerId ), tileDetails.controlPlayerId );
     updateWonderIcons( tile.id, tileDetails.wonderId );
     updateResourceIcons( tile.id, tileDetails.resourceIds );
     updateReligionIcons( tile.id, tileDetails.religionIds, tileDetails.districtPlayerId );
@@ -87,7 +87,7 @@ function addTileIcons( tile, tileDetails ) {
 
 function updateUnitIconsFromId( tileId ) {
     const tileDetails = getTileDetails( tileId );
-    updateUnitIcons( tileId, tileDetails.unitSets, !!tileDetails.districtPlayerId, tileDetails.controlPlayerId );
+    updateUnitIcons( tileId, tileDetails.unitSets, Boolean( tileDetails.districtPlayerId ), tileDetails.controlPlayerId );
 }
 
 function updateUnitIcons( tileId, unitSets, isDistrict, controlPlayerId ) {
@@ -95,7 +95,7 @@ function updateUnitIcons( tileId, unitSets, isDistrict, controlPlayerId ) {
     const unitIds = unitSet ? unitSet.units.map( u => u.unitTypeId ) : [];
     const normalUnitIds = unitIds.filter( id => id !== UNIT_TYPES[HERO].id );
     const isMultipleUnits = unitSets.reduce( ( units, set ) => units.concat( set.units ), [] ).length > 1;
-    const isNonHeroUnits = !!normalUnitIds.length;
+    const isNonHeroUnits = Boolean( normalUnitIds.length );
     if ( isNonHeroUnits ) {
         const strongestUnitId = Math.max( ...normalUnitIds );
         id(tileId + "-unit").setAttributeNS(null, "fill", `url(#unit${strongestUnitId})`);
@@ -115,7 +115,7 @@ function updateUnitIcons( tileId, unitSets, isDistrict, controlPlayerId ) {
 }
 
 function updateWonderIcons( tileId, wonderId ) {
-    show( tileId + "-wonder", !!wonderId );
+    show( tileId + "-wonder", Boolean( wonderId ) );
     if ( wonderId ) {
         id(tileId + "-wonder").setAttributeNS(null, "fill", `url(#won${wonderId})`);
     }
@@ -168,7 +168,7 @@ function generateMapSVG( callbackFunction ) {
                tile.setAttributeNS(null, "onclick", callbackFunction.name + "('" + hex.id + "')" );
                tile.classList.add( "tile" );
 
-               //todo 8 - image not working on phone - svg filter is the problem
+               //todo 6 - image not working on phone - svg filter is the problem
                let background = document.createElementNS( "http://www.w3.org/2000/svg", "polygon" );
                background.setAttributeNS(null, "id", hex.id + "-background" );
                background.setAttributeNS(null, "points", hex.vertices.map( p => (p.x + "," + p.y) ).join(" ") );

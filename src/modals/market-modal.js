@@ -59,9 +59,8 @@ function populateAdvancements() {
     const availableDoctrines = DOCTRINES.filter( d => !marketModalValues.advancements.doctrines.includes( d.id ) );
     const availableGardens = GARDENS.filter( g => !marketModalValues.advancements.gardens.includes( g.id ) );
     const availableAuctions = AUCTIONS.filter( a => !marketModalValues.advancements.auctions.includes( a.id ) );
-    //todo 4 - Add "None" option to Common?
-    addAllToSelect( 'technologySelect', [{text: "None", value: null}].concat( availableTechnologies.map( (t) => ({text: t.name, value: t.id}) ) ) );
-    addAllToSelect( 'doctrineSelect', [{text: "None", value: null}].concat( availableDoctrines.map( (d) => ({text: d.name, value: d.id}) ) ) );
+    addAllToSelect( 'technologySelect', [NONE_OPTION].concat( availableTechnologies.map( (t) => ({text: t.name, value: t.id}) ) ) );
+    addAllToSelect( 'doctrineSelect', [NONE_OPTION].concat( availableDoctrines.map( (d) => ({text: d.name, value: d.id}) ) ) );
     populateCheckboxes( availableGardens, "gardens", function( item ) { return item.getCostOrLocked( marketModalValues.districts.tileIds.length, hasTechnology( BIODOMES, marketModalValues ), edenCount ); } );
     populateCheckboxes( availableAuctions, "auctions", function( item ) { return item.getCostOrLocked( game.players, edenCount ); } );
 }

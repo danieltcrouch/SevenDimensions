@@ -10,8 +10,7 @@ const TEST_USERS = [
 ];
 
 function readTestFile( callbackFunction ) {
-    //todo 5 - move this functionality (js and php) to Common
-    //todo X - divide testing and "setup" code
+    //todo 6 - divide testing and "setup" code
     postCallEncoded(
         "php/main-controller.php",
         {
@@ -19,7 +18,6 @@ function readTestFile( callbackFunction ) {
             fileName: "../resources/test-game.txt"
         },
         function ( response ) {
-            response = jsonParse( response );
             let game = ( !response || response.length === 0 ) ? getNewGame() : getScenarioGame( response );
             initializeTestGame( game, callbackFunction );
         }
@@ -166,7 +164,6 @@ function generateNewPlayers( testPlayers ) {
 }
 
 function initializeTestGame( gameData, callbackFunction ) {
-    gameData = JSON.stringify( gameData );
     postCallEncoded(
         "php/main-controller.php",
         {
@@ -175,7 +172,7 @@ function initializeTestGame( gameData, callbackFunction ) {
             gameId:    TEST_GAME_ID,
             game:      gameData
         },
-        function( response ) {
+        function() {
             callbackFunction( gameData );
         },
         function( error ) {} );

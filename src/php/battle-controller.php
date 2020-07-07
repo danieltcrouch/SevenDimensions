@@ -1,5 +1,5 @@
 <?php
-require_once( "service.php" );
+require_once( "common-includes.php" );
 require_once( "battle-database.php" );
 
 if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
@@ -41,10 +41,6 @@ if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
         }
         else {
             $result = $action();
-        }
-
-        if ( isset($_POST['userId']) && $_POST['userId'] === getCurrentUser() ) {
-            //todo 4 - apply this check where necessary
         }
 
         echo json_encode($result);

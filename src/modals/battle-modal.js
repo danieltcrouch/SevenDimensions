@@ -21,7 +21,7 @@ function openBattleModal( currentName, enemyName, currentPlayer, enemyPlayer, is
     displayUnits();
     refreshDetails();
 
-    //todo X - add link from home screen to join battle if you close it
+    //todo 4 - add link from home screen to join battle if you close it
 
     show( "battleModal", true, "block" );
     setCloseHandlersJS( "battleModal" );
@@ -273,7 +273,7 @@ function getOpponentAttack() {
         function() {
             if ( isAttacker ) {
                 updateAI( true );
-                const rollResults = rollForUnits( enemyPlayerDetails.units ); //todo X - does the AI need to be able to use bonus abilities?
+                const rollResults = rollForUnits( enemyPlayerDetails.units ); //todo 4 - does the AI need to be able to use bonus abilities?
                 enemyPlayerDetails = addRollsToDetails( enemyPlayerDetails, rollResults );
                 saveAttack( enemyPlayerDetails, false, function() {
                     getOpponentAttackCallback( enemyPlayerDetails );
@@ -384,7 +384,7 @@ function checkEnd() {
 
 function addResistance() {
     const tokenMax = currentPlayerDetails.bonuses.potential.culturalTokens;
-    showPrompt( //todo X - test that this doesn't mess up Battle modal
+    showNumberPrompt( //todo X - test that this doesn't mess up Battle modal
         "Civil Resistance",
         `Enter the number of Cultural Initiative Tokens (out of ${tokenMax}) to use:`,
         function( response ) {

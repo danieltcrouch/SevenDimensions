@@ -237,11 +237,11 @@ function addUnit( unit, player, updateDisplay = true ) {
 
 function removeUnit( unit, player, updateDisplay = true ) {
     if ( player.units.some( u => u.id === unit.id ) ) {
-        player.units.splice( p.units.findIndex( u => u.id === unit.id ), 1 );
+        removeObject( player.units, ( u => u.id === unit.id ) );
         player.special.disbandedUnits.push( unit );
     }
     if ( selectedUnits.some( u => u.id === unit.id ) ) {
-        selectedUnits.splice( selectedUnits.findIndex( u => u.id === unit.id ), 1 );
+        removeObject( selectedUnits, ( u => u.id === unit.id ) );
     }
 
     if ( updateDisplay ) {

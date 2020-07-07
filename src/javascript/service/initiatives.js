@@ -15,7 +15,7 @@ function hasInitiative( fromTileId, toTileId, checkPolitical ) {
 function performAnnexCallback( tileId ) {
     let enemyPlayer = game.players.find( p => p.districts.tileIds.includes( tileId ) );
     if ( enemyPlayer ) {
-        showPrompt(
+        showNumberPrompt(
             "Annexation",
             `Enter the number of Political Initiative Tokens (out of ${currentPlayer.initiatives.politicalTokens}) to use:`,
             function( response ) {
@@ -91,10 +91,10 @@ function openAnnexDisplay( currentName, enemyName, currentPlayer, enemyPlayer, i
         } );
     }
     else {
-        //todo 7 - Liquify
+        //todo 2 - Liquify
         //  Need to convert modal results to accepted format
         //  Don't pass in any culturalTokens if already used that round
-        saveInitiative( getLowestResistance( currentPlayer.attackStrength, enemyPlayer ) /* todo 7 - use until Liquify ready */, false, function(){} );
+        saveInitiative( getLowestResistance( currentPlayer.attackStrength, enemyPlayer ) /* todo 2 - use until Liquify ready */, false, function(){} );
     }
 }
 
@@ -105,7 +105,7 @@ function saveInitiative( playerDetails, isAttacker, callback ) {
             action: "saveInitiative",
             battleId: battleId,
             isAttack: isAttacker,
-            playerDetails: JSON.stringify( playerDetails ),
+            playerDetails: playerDetails
         },
         callback
     );
@@ -124,7 +124,6 @@ function getInitiative( isAttacker, maxTime, callback, timeOutCallback ) {
                    isAttack: isAttacker
                },
                function( result ) {
-                   result = jsonParse( result );
                    if ( result && result.id ) {
                        window.clearInterval(intervalId);
                        callback( result );
@@ -153,7 +152,7 @@ function endAnnex( attackPlayerDetails, defendPlayerDetails ) {
        {
            action: "endBattle",
            battleId: battleId,
-           battleInfo: JSON.stringify( battleLog )
+           battleInfo: battleLog
        },
        function() {
            //game.battles.push( battleLog );

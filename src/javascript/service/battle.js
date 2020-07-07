@@ -12,12 +12,12 @@ const MAX_TIMEOUT = 3600000;
 
 const KAMIKAZE_HIT = 3;
 
-//todo X - refactor this file as "Conflict" instead of battle
+//todo 6 - refactor this file as "Conflict" instead of battle
 
 function launchBattle( tileId, attackerTileId = selectedUnits[0].tileId, attacker = currentPlayer ) {
     const enemyPlayer = game.players.find( p => p.units.some( u => u.tileId === tileId ) && p.id !== attacker.id );
     const enemyPlayerDetails = getPlayerBattleDetails( enemyPlayer, tileId, attacker );
-    const currentPlayerDetails = getPlayerBattleDetails( attacker, attackerTileId, enemyPlayer, tileId ); //todo X - doesn't use selected units for attack
+    const currentPlayerDetails = getPlayerBattleDetails( attacker, attackerTileId, enemyPlayer, tileId ); //todo 4 - doesn't use selected units for attack
     createBattle( currentPlayerDetails, enemyPlayerDetails, function() {
         if ( attacker.id === currentPlayer.id ) {
             openBattleModal(
@@ -40,18 +40,18 @@ function launchBattle( tileId, attackerTileId = selectedUnits[0].tileId, attacke
 function getPlayerBattleDetails( player, tileId, enemyPlayer, toTileId = null ) {
     const tileUnits = player.units.filter( u => u.tileId === tileId );
     const isPlayerDistrict = player.districts.tileIds.includes( tileId );
-    const isAttacking = Boolean( toTileId ); //todo X - use this for all instances of: !!variable
+    const isAttacking = Boolean( toTileId );
     const isDefending = !isAttacking;
     const combatUnits = tileUnits.filter( u => u.unitTypeId !== UNIT_TYPES[APOSTLE].id && (isDefending || u.movesRemaining > 0) );
     if ( isDefending && player.initiatives.culturalActive ) {
         let currentCR = player.initiatives.culturalActive.find( i => i.tileId === tileId );
         for ( let i = 0; currentCR && i < currentCR.reaperCount; i++ ) {
-            combatUnits.push( new Unit( getRandomUnitId(), UNIT_TYPES[REAPER].id, tileId ) ); //todo X - make a special unit so name displays in modal as "Civil Resistor"
+            combatUnits.push( new Unit( getRandomUnitId(), UNIT_TYPES[REAPER].id, tileId ) ); //todo 4 - make a special unit so name displays in modal as "Civil Resistor"
         }
     }
     const isHangingGardenDefense = isDefending && hasGarden( HANGING_GARDEN, player ) && !combatUnits.length && !enemyPlayer.special.scourge;
     if ( isHangingGardenDefense ) {
-        combatUnits.push( new Unit( getRandomUnitId(), UNIT_TYPES[BOOMER].id, tileId ) ); //todo X - make a special unit so name displays in modal as "Hanging Garden"
+        combatUnits.push( new Unit( getRandomUnitId(), UNIT_TYPES[BOOMER].id, tileId ) ); //todo 4 - make a special unit so name displays in modal as "Hanging Garden"
     }
     return {
         id: player.id,
@@ -98,7 +98,6 @@ function getCurrentBattle() {
 }
 
 function checkBattle( battleDetails ) {
-    battleDetails = jsonParse( battleDetails );
     if ( battleDetails.id ) {
         battleId = battleDetails.id;
         const attackDetails = jsonParse( battleDetails.attackDetails );
@@ -141,13 +140,13 @@ function createBattle( attackPlayerDetails, defendPlayerDetails, callback, battl
        {
            action: "createBattle",
            gameId: gameId,
-           attackPlayerDetails: JSON.stringify( attackPlayerDetails ),
-           defendPlayerDetails: JSON.stringify( defendPlayerDetails ),
+           attackPlayerDetails: attackPlayerDetails,
+           defendPlayerDetails: defendPlayerDetails,
            battleStatus: battleStatus
        },
        function( result ) {
-           //todo X - notify defender of battle
-           battleId = jsonParse( result );
+           //todo 4 - notify defender of battle
+           battleId = result;
            callback();
        }
     );
@@ -205,7 +204,7 @@ function roll( dieMax = 12 ) {
 function addRollsToDetails( playerDetails, rolls ) {
     rolls.forEach( r => {
         let unit = playerDetails.units.find( u => u.id === r.id );
-        const hasRolled = !!unit.roll;
+        const hasRolled = Boolean( unit.roll );
         const hitValue = r.isHit ? 1 : 0;
         unit.roll = hasRolled ? Math.min(unit.roll, r.roll) : r.roll;
         unit.hits = hasRolled ? (unit.hits + hitValue) : hitValue;
@@ -244,7 +243,6 @@ function getPlayerStatusReady( callback ) {
             battleId: battleId
         },
         function( response ) {
-            response = jsonParse( response );
             callback( response.attackStatus && response.defendStatus && response.attackStatus === 'R' && response.defendStatus === 'R' );
         }
     );
@@ -308,7 +306,7 @@ function saveAttack( playerDetails, isAttacker, callback ) {
             action: "saveAttack",
             battleId: battleId,
             isAttack: isAttacker,
-            playerDetails: JSON.stringify( playerDetails ),
+            playerDetails: playerDetails
         },
         callback
     );
@@ -327,7 +325,6 @@ function getAttacks( isAttacker, maxTime, callback, timeOutCallback ) {
                    isAttack: isAttacker
                },
                function( result ) {
-                   result = jsonParse( result );
                    if ( result && result.id ) {
                        window.clearInterval(intervalId);
                        callback( result );
@@ -349,7 +346,7 @@ function saveDisbands( playerDetails, isAttacker, callback ) {
             action: "saveDisbands",
             battleId: battleId,
             isAttack: isAttacker,
-            playerDetails: JSON.stringify( playerDetails ),
+            playerDetails: playerDetails
         },
         callback
     );
@@ -368,7 +365,6 @@ function getDisbands( isAttacker, maxTime, callback, timeOutCallback ) {
                    isAttack: isAttacker
                },
                function( result ) {
-                   result = jsonParse( result );
                    if ( result && result.id ) {
                        window.clearInterval(intervalId);
                        callback( result );
@@ -428,7 +424,7 @@ function endBattle( attackPlayerDetails, defendPlayerDetails ) {
        {
            action: "endBattle",
            battleId: battleId,
-           battleInfo: JSON.stringify( battleLog )
+           battleInfo: battleLog
        },
        function() {
            game.battles.push( battleLog );

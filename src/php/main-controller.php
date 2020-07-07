@@ -1,5 +1,8 @@
 <?php
-require_once( "service.php" );
+session_start();
+
+require_once( "common-includes.php" );
+require_once( "main-service.php" );
 require_once( "main-database.php" );
 
 if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
@@ -7,14 +10,7 @@ if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
     $result = null;
 
     try {
-        //todo 4 - Google Sign-In - move to Common
-        if ( isset($_POST['appName']) && isset($_POST['authToken']) && isset($_POST['createNew']) ) {
-            $result = $action( $_POST['appName'], $_POST['authToken'], $_POST['createNew'] );
-        }
-        elseif ( isset($_POST['fileName']) ) {
-            $result = $action( $_POST['fileName'] );
-        }
-        else {
+        if ( !isset($_POST['userId']) || $_POST['userId'] === $_SESSION['userId'] ) {
             //updateGame
             if ( isset($_POST['userId']) && isset($_POST['gameId']) && isset($_POST['game']) ) {
                 $result = $action( $_POST['gameId'], $_POST['game'] );
@@ -39,13 +35,16 @@ if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
             elseif ( isset($_POST['id']) ) {
                 $result = $action( $_POST['id'] );
             }
+            //getOrCreateUser
+            elseif ( isset($_POST['email']) ) {
+                $result = $action( $_POST['email'] );
+            }
             else {
                 $result = $action();
             }
         }
-
-        if ( isset($_POST['userId']) && $_POST['userId'] === getCurrentUser() ) {
-            //todo 4 - apply this check where necessary
+        else {
+            $result = "User not signed-in";
         }
 
         echo json_encode($result);

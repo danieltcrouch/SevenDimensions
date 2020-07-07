@@ -44,7 +44,7 @@ function showAuctionActions() {
     const auctionLot = getNextAuction( game.players );
     if ( auctionLot && !currentPlayer.advancements.auctions.includes( auctionLot.id ) ) {
         const minimum = auctionLot.getMinimumBid();
-        showPrompt( "Auction",
+        showNumberPrompt( "Auction",
             "Enter an amount to bid on " + auctionLot.name + " (minimum: " + minimum + "WB) or 0 to pass:",
             function( response ) {
                 const isCancel = response === undefined;
@@ -154,7 +154,7 @@ function showDoomsdayActions() {
         performElection();
     }
     else if ( event.id === EVENTS[EVENT_GAMBIT].id ) {
-        showPrompt(
+        showNumberPrompt(
             event.name,
             event.description,
             function( response ) {
@@ -168,8 +168,8 @@ function showDoomsdayActions() {
                     }
                 }
                 currentPlayer.turn.hasConvened = true;
-            }
-        ); //todo 4 - Allow making it a number field ad hoc
+            },
+        );
     }
     else if ( event.id === EVENTS[EVENT_FESTIVAL].id ) {
         let tokenCount = ( currentPlayer.units.length > EVENT_FF_UNITS_1 ) ? EVENT_FF_AWARD_1 :
@@ -227,7 +227,7 @@ function showDoomsdayActions() {
     }
     else if ( event === EVENTS[EVENT_MARS].id ) {
         game.players.forEach( p => p.special.insurrection = false );
-        //todo 7 - liquify
+        //todo 2 - liquify
     }
 
     showToaster("Time is slipping...");
@@ -304,7 +304,7 @@ function performPayDayDisaster() {
     showPicks(
         DISASTERS[PAYDAY].name,
         DISASTERS[PAYDAY].description,
-        currentPlayer.units.map( u => `${getUnitType(u.unitTypeId).name} (${u.tileId})` ), //todo X - instead of displaying tileId, sort units by tileId (which should be top-down, left-right)
+        currentPlayer.units.map( u => `${getUnitType(u.unitTypeId).name} (${u.tileId})` ), //todo 4 - instead of displaying tileId, sort units by tileId (which should be top-down, left-right)
         true,
         true,
         function( response ) {

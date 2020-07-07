@@ -18,7 +18,7 @@ function viewVP( player = currentPlayer ) {
         `<div><span style='font-weight: bold'>Victory Points Total:</span> ${id('victoryPointsValue').innerText}</div>
          <div>Districts: ${player.districts.tileIds.length}</div>
          <div>Dimensions: ${player.dimensions.length}</div>
-         <div>Wonders: ${(player.dimensions.filter( d => !!d.wonderTileId ).length * 2)}</div>
+         <div>Wonders: ${(player.dimensions.filter( d => Boolean( d.wonderTileId ) ).length * 2)}</div>
          <div>Hero: ${(hasHero( player.units ) ? "1" : "0")}</div>
          <div>Chaos Cards: ${player.cards.chaos.filter( c => isHeavensGate( c ) ).length}</div>`;
     if ( player.special.highPriestReward || player.special.highPriestVictim ) {

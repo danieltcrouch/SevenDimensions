@@ -86,7 +86,7 @@ function performChaos() {
 }
 
 function performChurch() {
-    //todo X - should I report when another player does something to you on their turn
+    //todo 3 - should I report when another player does something to you on their turn
     const otherPlayerIds = getChaosPlayerVictims().map( p => p.id ).filter( id => id !== currentPlayer.id );
     if ( currentPlayer.religion ) {
         currentPlayer.religion.tileIds.forEach( t => {
@@ -334,7 +334,7 @@ function performGideon() {
                 function( defendTileId ) { return game.players.some( p => p.units.some( u => u.tileId === defendTileId ) ); },
                 function( defendTileId ) {
                     remove( currentPlayer.cards.chaos, CHAOS[42].id );
-                    launchBattle( defendTileId, attackTileId, getPlayer( getEnemyPlayer( attackTileId ).id ) ); //todo X - will this save after the battle?
+                    launchBattle( defendTileId, attackTileId, getPlayer( getEnemyPlayer( attackTileId ).id ) ); //todo 3 - will this save after the battle?
                 }
             );
             showToaster( "Choose a defender." );
@@ -580,12 +580,12 @@ function performParks() { //if you decide this should be limited to players with
     }
 }
 
-function performPenny() { //todo X - may be affected by Midnight
-    showPrompt( //todo X - use Number prompt
+function performPenny() { //todo 4 - may be affected by Midnight
+    showNumberPrompt(
         CHAOS[67].name,
         `Enter an amount to invest (maximum of ${currentPlayer.warBucks}WB)`,
         function( response ) {
-            if ( response <= currentPlayer.warBucks ) {
+            if ( Number.isInteger( response ) && response <= currentPlayer.warBucks ) {
                 currentPlayer.warBucks -= response;
                 currentPlayer.special.gambitBet += response;
                 remove( currentPlayer.cards.chaos, CHAOS[67].id );
@@ -660,7 +660,7 @@ function performPuppeteer() {
 }
 
 function performRInvestment() {
-    showBinaryChoice( //todo X - you should probably just make a modal where you can do this on one screen (pick type and amount)
+    showBinaryChoice( //todo 7 - you should probably just make a modal where you can do this on one screen (pick type and amount)
         "Initiative Tokens",
         "Choose the type you would like to exchange for War-Bucks:", //todo 3 - should update card description to say that you can only exchange one token type
         "Culture",
@@ -670,7 +670,7 @@ function performRInvestment() {
                 const isCulture = response === 0;
                 const maxCount = isCulture ? currentPlayer.initiatives.culturalTokens : currentPlayer.initiatives.politicalTokens;
                 const exchangeValue = calculateVP( currentPlayer );
-                showPrompt( //todo X - use Number prompt
+                showNumberPrompt(
                     CHAOS[75].name,
                     `Enter an amount to exchange up to ${maxCount} (worth ${exchangeValue}WB)`,
                     function( response ) {
@@ -742,7 +742,7 @@ function performSeductress() {
 }
 
 function performShift() {
-    showBinaryChoice( //todo X - you should probably just make a modal where you can do this on one screen (pick type and amount)
+    showBinaryChoice( //todo 7 - you should probably just make a modal where you can do this on one screen (pick type and amount)
         "Initiative Tokens",
         "Choose the type you would like to convert (i.e. get rid of):",
         "Culture",
@@ -751,7 +751,7 @@ function performShift() {
             if ( Number.isInteger(response) ) {
                 const isCulture = response === 0;
                 const maxCount = isCulture ? currentPlayer.initiatives.culturalTokens : currentPlayer.initiatives.politicalTokens;
-                showPrompt( //todo X - use Number prompt
+                showNumberPrompt(
                     CHAOS[81].name,
                     `Enter an amount to covert up to ${maxCount}`,
                     function( response ) {
@@ -909,7 +909,7 @@ function performTSwap() {
         function( tileId ) { return currentPlayer.districts.tileIds.includes( tileId ) && currentPlayer.districts.capital !== tileId; },
         function( rootTileId ) {
             setSpecialAction(
-                function( tileId ) { return hasEnemyDistrict( tileId ); }, //todo X - add Capital check to that function
+                function( tileId ) { return hasEnemyDistrict( tileId ); }, //todo 3 - add Capital check to that function
                 function( tileId ) {
                     const enemy = game.players.find( p => p.districts.tileIds.includes( id ) );
                     remove( enemy.districts.tileIds, tileId );

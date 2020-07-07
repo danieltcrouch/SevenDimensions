@@ -18,7 +18,7 @@ function tileHoverCallback( tileId ) {
 }
 
 function tileClickCallback( tileId ) {
-    //todo X - some of these checks below could be abstracted to constants at the top of the file? Or is that to much less efficient?
+    //todo 6 - some of these checks below could be abstracted to constants at the top of the file? Or is that to much less efficient?
     if ( specialAction && specialAction.isValidTile( tileId ) ) {
         specialAction.callback( tileId );
         specialAction = null;
@@ -108,7 +108,7 @@ function selectUnits( tileSelectType, unitId ) {
             SelectClass.highlightAll( false );
             unselectUnits();
         }
-        //todo X - not working properly (I unselected all units but it still thought there was one)
+        //todo 6 - not working properly (I unselected all units but it still thought there was one)
     }
     else {
         SelectClass.highlightUnit( unitId );
@@ -166,7 +166,7 @@ function getMovingUnits( units, hasAdvancedFlight ) {
 }
 
 function hasEnemyUnits( tileId, includeApostles = false ) {
-    return !!getEnemyPlayer( tileId, includeApostles );
+    return Boolean( getEnemyPlayer( tileId, includeApostles ) );
 }
 
 function hasEnemyDistrict( tileId ) {

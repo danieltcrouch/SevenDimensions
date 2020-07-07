@@ -88,7 +88,6 @@
 <?php include("modals/capital-modal.html"); ?>
 <?php include("modals/market-modal.html"); ?>
 <?php include("modals/battle-modal.html"); ?>
-<?php include("modals/event-modal.html"); ?>
 <?php includeModals(); ?>
 
 <?php include("html/include-domain.html"); ?>
@@ -97,9 +96,10 @@
     const gameId       = "<?php echo $_GET['id']; ?>";
     const testPlayerId = "<?php echo $_GET['testPlayerId']; ?>";
     const newGame      = "<?php echo $_GET['newGame']; ?>";
+    const appName      = "<?php echo getAppCode(); ?>";
 
     docReady(function() {
-        setLoginAttributes( loadGame );
+        setLoginUser( appName, loadGame );
         generateMapSVG( tileClickCallback );
     });
 </script>

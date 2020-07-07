@@ -44,6 +44,7 @@ function receiveFreeAdvancements( advancementCount, player = currentPlayer ) {
 }
 
 function chooseFreeAdvancements( player = currentPlayer ) {
+    //todo 7 - most of this function needs to be redone with better modal interface
     const advancementCount = player.special.free.technologiesOrDoctrines;
     if ( hasAdvancementChoices( player ) ) {
         if ( advancementCount === 1 ) {
@@ -75,7 +76,7 @@ function chooseFreeAdvancements( player = currentPlayer ) {
                 `You have ${advancementCount} free advancements. Choose the furthest Technology you would like to research. All other advancements will be applied toward Doctrines or more Technologies if no Doctrines remain.`,
                 choices.map( t => t.name ),
                 false,
-                false, //todo X - allow None; if chosen, all doctrine
+                false,
                 function( result ) {
                     if ( Number.isInteger( result ) ) {
                         const chosenTechnologies = choices.slice( 0, result );
@@ -130,7 +131,7 @@ function performInquisition() {
         false,
         function( response ) {
             if ( response ) {
-                //todo 7 - Liquify
+                //todo 2 - Liquify
             }
         },
         game.players.filter( p => !hasTechnology( CENTRALIZED_CURRICULUM, p ) )
