@@ -137,3 +137,7 @@ function performInquisition() {
         game.players.filter( p => !hasTechnology( CENTRALIZED_CURRICULUM, p ) )
     );
 }
+
+function getEdenCount( player = currentPlayer ) {
+    return hasGarden( GARDEN_OF_EDEN, player ) ? player.districts.tileIds.length : 0;
+}

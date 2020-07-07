@@ -62,7 +62,7 @@ function viewGardens( player = currentPlayer ) {
     let message = getAdvancementTable(
         GARDENS,
         player.advancements.gardens,
-        function( item ) { return item.getCostOrLocked( player.districts.tileIds.length, hasTechnology( BIODOMES, player ) ); }
+        function( item ) { return item.getCostOrLocked( player.districts.tileIds.length, hasTechnology( BIODOMES, player ), getEdenCount() ); }
     );
     message += "<div style='margin-top: .5em'>(Cost calculated by 7WB times the number of districts; must have at least 2 districts.)</div>";
     showMessage( "Gardens", message, {padding: ".5em 20%"} );
@@ -72,7 +72,7 @@ function viewAuctions( player = currentPlayer ) {
     let message = getAdvancementTable(
         AUCTIONS,
         player.advancements.auctions,
-        function( item ) { return item.getCostOrLocked( game.players ); }
+        function( item ) { return item.getCostOrLocked( game.players, getEdenCount() ); }
     );
     showMessage( "Auction Lots", message, {padding: ".5em 20%"} );
 }
@@ -120,7 +120,7 @@ function getCardTable( data, userData ) {
         }
     }
     if ( !userData.length ) {
-        resultHTML += "<tr><td>There are no cards to display.</td></tr>"
+        resultHTML += "<tr><td></td><td>There are no cards to display.</td></tr>"
     }
     resultHTML += "</tbody></table>";
     return resultHTML;

@@ -44,8 +44,10 @@ function showAuctionActions() {
     const auctionLot = getNextAuction( game.players );
     if ( auctionLot && !currentPlayer.advancements.auctions.includes( auctionLot.id ) ) {
         const minimum = auctionLot.getMinimumBid();
-        showNumberPrompt( "Auction",
-            "Enter an amount to bid on " + auctionLot.name + " (minimum: " + minimum + "WB) or 0 to pass:",
+        showNumberPrompt(
+            "Auction",
+            `You currently have ${currentPlayer.warBucks}WB.<br/>
+            Enter an amount to bid on ${auctionLot.name} (minimum: ${minimum}WB) or 0 to pass:`,
             function( response ) {
                 const isCancel = response === undefined;
                 if ( !(isCancel && hasBid) ) {

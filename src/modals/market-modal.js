@@ -8,7 +8,7 @@ function openMarketModal( currentPlayer, callback ) {
     marketModalValues = currentPlayer;
     marketModalCallback = callback;
     currentVP = calculateVP( currentPlayer );
-    edenCount = hasGarden( GARDEN_OF_EDEN, currentPlayer ) ? currentPlayer.districts.tileIds.length : 0;
+    edenCount = hasGarden( GARDEN_OF_EDEN, currentPlayer ) ? currentPlayer.districts.tileIds.length : 0; //todo 4 - abstract this (this logic is duplicated in display-player.js)
 
     populateUnits();
     populateAdvancements();
@@ -61,8 +61,8 @@ function populateAdvancements() {
     const availableAuctions = AUCTIONS.filter( a => !marketModalValues.advancements.auctions.includes( a.id ) );
     addAllToSelect( 'technologySelect', [NONE_OPTION].concat( availableTechnologies.map( (t) => ({text: t.name, value: t.id}) ) ) );
     addAllToSelect( 'doctrineSelect', [NONE_OPTION].concat( availableDoctrines.map( (d) => ({text: d.name, value: d.id}) ) ) );
-    populateCheckboxes( availableGardens, "gardens", function( item ) { return item.getCostOrLocked( marketModalValues.districts.tileIds.length, hasTechnology( BIODOMES, marketModalValues ), edenCount ); } );
-    populateCheckboxes( availableAuctions, "auctions", function( item ) { return item.getCostOrLocked( game.players, edenCount ); } );
+    populateCheckboxes( availableGardens, "gardens", function( item ) { return item.getCostOrLocked( marketModalValues.districts.tileIds.length, hasTechnology( BIODOMES, marketModalValues ), getEdenCount( marketModalValues ) ); } );
+    populateCheckboxes( availableAuctions, "auctions", function( item ) { return item.getCostOrLocked( game.players, getEdenCount( marketModalValues ) ); } );
 }
 
 function populateCheckboxes( data, wrapperId, costFunction ) {
@@ -133,13 +133,13 @@ function unitChange() {
 }
 
 function technologyChange() {
-    let total = ( getSelectedOption( 'technologySelect' ).index ) * Technology.getAdjustedCost( edenCount );
+    let total = ( getSelectedOption( 'technologySelect' ).index ) * Technology.getAdjustedCost( getEdenCount( marketModalValues ) );
     id('technologyCost').innerText = total + "";
     updateTotal();
 }
 
 function doctrineChange() {
-    let total = ( getSelectedOptionValue( 'doctrineSelect' ).index ) * Doctrine.getAdjustedCost( edenCount );
+    let total = ( getSelectedOptionValue( 'doctrineSelect' ).index ) * Doctrine.getAdjustedCost( getEdenCount( marketModalValues ) );
     id('doctrineCost').innerText = total + "";
     updateTotal();
 }
