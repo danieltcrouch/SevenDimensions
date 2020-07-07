@@ -11,8 +11,8 @@ function setUserType( userType ) {
 
 function startGame() {
     //const gameId = "";
-    //location.assign( "https://seven.religionandstory.com/game.php?id=" + TEST_GAME_ID );
-    location.assign( "https://seven.religionandstory.com/game.php?id=" + TEST_GAME_ID + "&testPlayerId=" + TEST_USERS[0].id );
+    //location.assign( "https://seven.religionandstory.com/game.php?id=" + "00000000000000000000000000000000" );
+    location.assign( "https://seven.religionandstory.com/game.php?id=" + "00000000000000000000000000000000" + "&testPlayerId=" + "00000000000000000000000000000001" );
 }
 
 function initializeGame( gameData ) {
