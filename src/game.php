@@ -3,6 +3,7 @@
 <html>
 <head>
     <?php includeHeadInfo(); ?>
+    <script src="javascript/user.js"></script>
     <script src="javascript/game.js"></script>
 </head>
 
