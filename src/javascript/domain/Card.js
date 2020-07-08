@@ -1,6 +1,6 @@
 class Card extends Purchasable {
     constructor( id, type, name, description, cost ) {
-        super( id, "CARD-" + type, name, function() { return cost; }, function() { Card.getAdjustedCost( cost ); } );
+        super( id, "CARD-" + type, name, function() { return cost; }, function() { return Card.getAdjustedCost( cost ); } );
         this.description = description;
         this.inUse = false;
     }

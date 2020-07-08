@@ -187,7 +187,7 @@ const GARDENS = [
 
 class Auction extends Advancement {
     constructor( id, name, cost, description ) {
-        super( id, "Auction Lot", name, description, function() { return cost; }, function( edenCount ) { Auction.getAdjustedCost( cost, edenCount ); } );
+        super( id, "Auction Lot", name, description, function() { return cost; }, function( edenCount ) { return Auction.getAdjustedCost( cost, edenCount ); } );
     }
 
     static getAdjustedCost( cost, edenCount ) {

@@ -1,6 +1,6 @@
 class UnitType extends Purchasable {
     constructor( id, name, cost, hit, move, max = Number.POSITIVE_INFINITY ) {
-        super( id, "UNIT", name, function() { return cost; }, function( isInflation, hasModifiedPlastics, hasWeaponsManufacturer ) { UnitType.getAdjustedCost( cost, isInflation, hasModifiedPlastics, hasWeaponsManufacturer ); } );
+        super( id, "UNIT", name, function() { return cost; }, function( isInflation, hasModifiedPlastics, hasWeaponsManufacturer ) { return UnitType.getAdjustedCost( id, isInflation, hasModifiedPlastics, hasWeaponsManufacturer ); } );
         this.hit = hit;
         this.move = move;
         this.max = max;
