@@ -16,12 +16,22 @@ class Technology extends Advancement {
         super( id, "Technology", name, description, Technology.getCost, Technology.getAdjustedCost );
     }
 
-    static getCost() { return 7; }
+    static getCost() { return TECHNOLOGY_COST; }
 
     static getAdjustedCost( edenCount ) { return Math.max(7 - edenCount, 1); }
+
+    getCost() {
+        return this.defaultCost();
+    }
+
+    getAdjustedCost( edenCount ) {
+        return this.adjustedCost( edenCount );
+    }
 }
 
 function getTechnology( id ) { return getEntity( id, TECHNOLOGIES ); }
+
+const TECHNOLOGY_COST = 7;
 
 const ADVANCED_FLIGHT_CAPACITY = 4;
 const GLOBAL_NETWORKING_CARD_MAX = 10;
@@ -69,12 +79,22 @@ class Doctrine extends Advancement {
         super( id, "Doctrine", name, description, Doctrine.getCost, Doctrine.getAdjustedCost );
     }
 
-    static getCost() { return 7; }
+    static getCost() { return DOCTRINE_COST; }
 
     static getAdjustedCost( edenCount ) { return Math.max(7 - edenCount, 1); }
+
+    getCost() {
+        return this.defaultCost();
+    }
+
+    getAdjustedCost( edenCount ) {
+        return this.adjustedCost( edenCount );
+    }
 }
 
 function getDoctrine( id ) { return getEntity( id, DOCTRINES ); }
+
+const DOCTRINE_COST = 7;
 
 const CRUSADE_HIT = 2;
 const INQUISITION_VALUE = 20;
@@ -125,7 +145,19 @@ class Garden extends Advancement {
     static isLocked( districtCount ) { return districtCount < 2; }
 
     getCostOrLocked( districtCount, hasBioDomes, edenCount ) {
-        return Purchasable.displayCostLocked( Garden.isLocked( districtCount ), Garden.getAdjustedCost( districtCount, hasBioDomes, edenCount ) );
+        return Purchasable.displayCostLocked( this.isLocked( districtCount ), this.adjustedCost( districtCount, hasBioDomes, edenCount ) );
+    }
+
+    isLocked( districtCount ) {
+        return Garden.isLocked( districtCount );
+    }
+
+    getCost( districtCount ) {
+        return this.defaultCost( districtCount );
+    }
+
+    getAdjustedCost( districtCount, hasBioDomes, edenCount ) {
+        return this.adjustedCost( districtCount, hasBioDomes, edenCount );
     }
 }
 
@@ -167,11 +199,19 @@ class Auction extends Advancement {
     }
 
     getCostOrLocked( players, edenCount ) {
-        return Purchasable.displayCostLocked( this.isLocked( players ), Auction.getAdjustedCost( this.defaultCost(), edenCount ) );
+        return Purchasable.displayCostLocked( this.isLocked( players ), this.adjustedCost( edenCount ) );
     }
 
     isLocked( players ) {
         return !players.some( p => p.advancements.auctionWins.includes( this.id ) );
+    }
+
+    getCost() {
+        return this.defaultCost();
+    }
+
+    getAdjustedCost( edenCount ) {
+        return this.adjustedCost( edenCount );
     }
 
     getMinimumBid() {

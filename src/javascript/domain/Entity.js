@@ -8,6 +8,12 @@ class Entity {
 
 function getEntity( id, list ) { return list.find( i => i.id === id ); }
 
+
+/**** PURCHASABLE ****/
+
+
+const LOCKED_SPAN = "<span style='font-style: italic'>Locked</span>";
+
 class Purchasable extends Entity {
     constructor( id, type, name, defaultCostFunction, adjustedCostFunction = null ) {
         super( id, type, name );
@@ -22,6 +28,18 @@ class Purchasable extends Entity {
     static displayCost( cost ) {
         return Purchasable.displayCostLocked( cost, false );
     }
+
+    //recommended to add getCost([parameter]) function to subclasses
+
+    //recommended to add getAdjustedCost([parameter]) function to subclasses
 }
 
-const LOCKED_SPAN = "<span style='font-style: italic'>Locked</span>";
+
+/**** PIECE ****/
+
+
+class Piece extends Entity {
+    constructor( id, entityType ) {
+        super( id, entityType.type, entityType.name );
+    }
+}

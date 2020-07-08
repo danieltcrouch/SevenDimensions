@@ -1,23 +1,22 @@
-class TileType {
-    constructor( id, type, name, value, count, resourceCount ) {
-        this.id = id;
-        this.type = type;
-        this.name = name;
+class TileType extends Entity {
+    constructor( id, subType, name, value, count, resourceCount ) {
+        super( id, "TILE", name );
+        this.subType = subType;
         this.value = value;
         this.count = count;
         this.resourceCount = resourceCount;
     }
 
     static getDisplayName( tileType ) {
-        return tileType.isNatureTile() ? tileType.type : tileType.name;
+        return tileType.isNatureTile() ? tileType.subType : tileType.name;
     }
 
     isNatureTile( includeVolcanoes = false ) {
-        return this.type === "Nature" && ( includeVolcanoes || this !== TILE_TYPES[VOLCANO] );
+        return this.subType === "Nature" && ( includeVolcanoes || this.id !== TILE_TYPES[VOLCANO].id );
     }
 }
 
-function getTileType( id ) { return TILE_TYPES.find( i => i.id === id ); }
+function getTileType( id ) { return getEntity( id, TILE_TYPES ); }
 
 const VOLCANO  = 0;
 const CAPITAL  = 6;
@@ -39,9 +38,9 @@ const TILE_TYPES = [
 /**** ENTITY ****/
 
 
-class Tile extends Entity {
+class Tile extends Piece {
     constructor( id, tileTypeId, resourceIds ) {
-        super( id, "TILE", getTileType( tileTypeId ).name );
+        super( id, getTileType( tileTypeId ) );
         this.tileTypeId = tileTypeId;
         this.resourceIds = resourceIds ? ( Array.isArray( resourceIds ) ? resourceIds : [ resourceIds ] ) : [];
     }

@@ -1,5 +1,5 @@
 class UnitType extends Purchasable {
-    constructor( id, name, cost, hit, move, max ) {
+    constructor( id, name, cost, hit, move, max = Number.POSITIVE_INFINITY ) {
         super( id, "UNIT", name, function() { return cost; }, function( isInflation, hasModifiedPlastics, hasWeaponsManufacturer ) { UnitType.getAdjustedCost( cost, isInflation, hasModifiedPlastics, hasWeaponsManufacturer ); } );
         this.hit = hit;
         this.move = move;
@@ -16,12 +16,12 @@ class UnitType extends Purchasable {
         return this.defaultCost();
     }
 
-    getAdjustedCost( id, isInflation, hasModifiedPlastics, hasWeaponsManufacturer ) {
-        return UnitType.getAdjustedCost( this.id, isInflation, hasModifiedPlastics, hasWeaponsManufacturer );
+    getAdjustedCost( isInflation, hasModifiedPlastics, hasWeaponsManufacturer ) {
+        return this.adjustedCost( this.id, isInflation, hasModifiedPlastics, hasWeaponsManufacturer );
     }
 }
 
-function getUnitType( id ) { return UNIT_TYPES.find( u => u.id === id ); }
+function getUnitType( id ) { return getEntity( id, UNIT_TYPES ); }
 
 const APOSTLE      = 0;
 const REAPER       = 1;
@@ -48,9 +48,9 @@ const UNIT_TYPES = [
 /**** ENTITY ****/
 
 
-class Unit {
+class Unit extends Piece {
     constructor( id, unitTypeId, tileId ) {
-        this.id = id;
+        super( id, getUnitType( unitTypeId ) );
         this.unitTypeId = unitTypeId;
         this.tileId = tileId;
         this.movesRemaining = getUnitType( unitTypeId ).move;

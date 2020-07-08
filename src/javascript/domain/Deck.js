@@ -48,9 +48,7 @@ class Deck {
     }
 
     insertCards( ...cards ) {
-        for ( let i = 0; i< cards.length; i++ ) {
-            this.insertCard( cards[i] );
-        }
+        this.cards.push( cards );
     }
 
     insertCard( card, random = false ) {
