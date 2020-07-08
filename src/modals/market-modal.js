@@ -61,8 +61,8 @@ function populateAdvancements() {
     const availableAuctions = AUCTIONS.filter( a => !marketModalValues.advancements.auctions.includes( a.id ) );
     addAllToSelect( 'technologySelect', [NONE_OPTION].concat( availableTechnologies.map( (t) => ({text: t.name, value: t.id}) ) ) );
     addAllToSelect( 'doctrineSelect', [NONE_OPTION].concat( availableDoctrines.map( (d) => ({text: d.name, value: d.id}) ) ) );
-    populateCheckboxes( availableGardens, "gardens", function( item ) { return item.getCostOrLocked( marketModalValues.districts.tileIds.length, hasTechnology( BIODOMES, marketModalValues ), getEdenCount( marketModalValues ) ); } );
-    populateCheckboxes( availableAuctions, "auctions", function( item ) { return item.getCostOrLocked( game.players, getEdenCount( marketModalValues ) ); } );
+    populateCheckboxes( availableGardens, "garden", function( item ) { return item.getCostOrLocked( marketModalValues.districts.tileIds.length, hasTechnology( BIODOMES, marketModalValues ), getEdenCount( marketModalValues ) ); } );
+    populateCheckboxes( availableAuctions, "auction", function( item ) { return item.getCostOrLocked( game.players, getEdenCount( marketModalValues ) ); } );
 }
 
 function populateCheckboxes( data, wrapperId, costFunction ) {
@@ -101,7 +101,7 @@ function populateOther() {
 
     populateCheckboxes(
         WONDERS.filter( w => !game.players.some( p => p.dimensions.some( d => getWonderFromDimension(d.id).id === w.id && d.wonderTileId ) ) ),
-        "wonders",
+        "wonder",
         function( item ) { return item.getCostOrLocked( marketModalValues, [], hasDoctrine( MONUMENTS_TO_GOD, marketModalValues ) ); }
     );
 
@@ -128,7 +128,7 @@ function unitChange() {
             game.state.events.inflation, hasTechnology( MODIFIED_PLASTICS, marketModalValues ), hasAuctionLot( WEAPONS_MANUFACTURER, marketModalValues )
         ) * unitCounts[i].value;
     }
-    id('unitsCost').innerText = total + "";
+    id('unitCost').innerText = total + "";
     updateTotal();
 }
 
@@ -168,13 +168,13 @@ function chaosChange() {
 
 function updateTotal() {
     marketTotal =
-        parseInt( id('cInitTokenCount').innerText ) +
-        parseInt( id('pInitTokenCount').innerText ) +
-        parseInt( id('unitsCost').innerText ) +
+        parseInt( id('cInitTokenCost').innerText ) +
+        parseInt( id('pInitTokenCost').innerText ) +
+        parseInt( id('unitCost').innerText ) +
         parseInt( id('technologyCost').innerText ) +
         parseInt( id('doctrineCost').innerText ) +
-        parseInt( id('gardensCost').innerText ) +
-        parseInt( id('auctionsCost').innerText ) +
+        parseInt( id('gardenCost').innerText ) +
+        parseInt( id('auctionCost').innerText ) +
         parseInt( id('cardCost').innerText ) +
         parseInt( id('wonderCost').innerText );
     id('totalCost').innerText = marketTotal + "";
@@ -321,11 +321,13 @@ function assignPurchases() {
 }
 
 function clearTotals() {
-    id('unitsCost').innerText      = "0";
+    id('cInitTokenCost').innerText = "0";
+    id('pInitTokenCost').innerText = "0";
+    id('unitCost').innerText       = "0";
     id('technologyCost').innerText = "0";
     id('doctrineCost').innerText   = "0";
-    id('gardensCost').innerText    = "0";
-    id('auctionsCost').innerText   = "0";
+    id('gardenCost').innerText     = "0";
+    id('auctionCost').innerText    = "0";
     id('cardCost').innerText       = "0";
     id('wonderCost').innerText     = "0";
     id('totalCost').innerText      = "0";

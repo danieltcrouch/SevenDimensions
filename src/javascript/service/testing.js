@@ -3,10 +3,10 @@ const TEST_GAME_ID = "00000000000000000000000000000000";
 const TEST_USERS = [
     { id: "00000000000000000000000000000001", username: "daniel" },
     { id: "00000000000000000000000000000002", username: "michael" },
-    { id: "00000000000000000000000000000003", username: "stephen" },
-    { id: "00000000000000000000000000000004", username: "lauren" },
-    { id: "00000000000000000000000000000005", username: "tina" },
-    { id: "00000000000000000000000000000006", username: "jimmy" }
+    //{ id: "00000000000000000000000000000003", username: "stephen" },
+    //{ id: "00000000000000000000000000000004", username: "lauren" },
+    //{ id: "00000000000000000000000000000005", username: "tina" },
+    //{ id: "00000000000000000000000000000006", username: "jimmy" }
 ];
 
 function readTestFile( callbackFunction ) {

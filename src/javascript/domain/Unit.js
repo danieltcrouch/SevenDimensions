@@ -1,12 +1,23 @@
-class UnitType {
+class UnitType extends Purchasable {
     constructor( id, name, cost, hit, move, max ) {
-        this.id = id;
-        this.type = "UNIT";
-        this.name = name;
-        this.cost = cost;
+        super( id, "UNIT", name, function() { return cost; }, function( isInflation, hasModifiedPlastics, hasWeaponsManufacturer ) { UnitType.getAdjustedCost( cost, isInflation, hasModifiedPlastics, hasWeaponsManufacturer ); } );
         this.hit = hit;
         this.move = move;
         this.max = max;
+    }
+
+    static getAdjustedCost( id, isInflation, hasModifiedPlastics, hasWeaponsManufacturer ) {
+        return hasWeaponsManufacturer ? WEAPONS_MANUFACTURER_VALUE : (
+            getUnitType( id ).defaultCost() + ( isInflation ? 1 : 0 ) + ( hasModifiedPlastics && id === UNIT_TYPES[BOOMER].id ? -1 : 0 )
+        );
+    }
+
+    getCost() {
+        return this.defaultCost();
+    }
+
+    getAdjustedCost( id, isInflation, hasModifiedPlastics, hasWeaponsManufacturer ) {
+        return UnitType.getAdjustedCost( this.id, isInflation, hasModifiedPlastics, hasWeaponsManufacturer );
     }
 }
 
@@ -37,36 +48,25 @@ const UNIT_TYPES = [
 /**** ENTITY ****/
 
 
-class Unit extends Purchasable {
+class Unit {
     constructor( id, unitTypeId, tileId ) {
-        const unitType = getUnitType( unitTypeId );
-        super( id, unitType.type, unitType.name, Unit.getCost, Unit.getAdjustedCost );
+        this.id = id;
         this.unitTypeId = unitTypeId;
         this.tileId = tileId;
-        this.movesRemaining = unitType.move;
+        this.movesRemaining = getUnitType( unitTypeId ).move;
         this.hitDeflections = 0;
     }
 
-    static getCost( unitTypeId ) {
-        return getUnitType( unitTypeId ).cost;
-    }
-
-    static getAdjustedCost( unitTypeId, isInflation, hasModifiedPlastics, hasWeaponsManufacturer ) {
-        return hasWeaponsManufacturer ? WEAPONS_MANUFACTURER_VALUE : (
-            getUnitType( unitTypeId ).cost + ( isInflation ? 1 : 0 ) + ( hasModifiedPlastics && this.id === UNIT_TYPES[BOOMER].id ? -1 : 0 )
-        );
-    }
-
     getCost() {
-        return Unit.getCost( this.unitTypeId );
+        return getUnitType( this.unitTypeId ).defaultCost();
     }
 
     getAdjustedCost( isInflation, hasModifiedPlastics, hasWeaponsManufacturer ) {
-        return Unit.getAdjustedCost( this.unitTypeId, isInflation, hasModifiedPlastics, hasWeaponsManufacturer );
+        return getUnitType( this.unitTypeId ).adjustedCost( isInflation, hasModifiedPlastics, hasWeaponsManufacturer );
     }
 
     getUnitType() {
-        return getUnitType( this.tileTypeId );
+        return getUnitType( this.unitTypeId );
     }
 }
 
@@ -77,7 +77,6 @@ class Unit extends Purchasable {
 class Hero extends Unit {
     constructor( id, name, description ) {
         super( id, UNIT_TYPES[HERO].id, null );
-        this.type = this.type + "-Hero";
         this.name = name;
         this.description = description;
     }
