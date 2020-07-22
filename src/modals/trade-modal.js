@@ -1,16 +1,16 @@
 let tradeId;
 let isPlayer1;
-let currentPlayerDetails;
+let currentPlayerTDetails; //todo 7 - remove "T" when modal namespace issue removed
 let currentTradeDetails;
-let enemyPlayerDetails;
+let enemyPlayerTDetails;
 let enemyTradeDetails;
 let tradeModalCallback;
 
 function openTradeModal( currentPlayer, enemyPlayer, currentTradeValue, enemyTradeValue, tradeIdValue, isPlayer1Value, callback ) {
     tradeId = tradeIdValue;
     isPlayer1 = isPlayer1Value;
-    currentPlayerDetails = currentPlayer;
-    enemyPlayerDetails = enemyPlayer;
+    currentPlayerTDetails = currentPlayer;
+    enemyPlayerTDetails = enemyPlayer;
     currentTradeDetails = currentTradeValue;
     enemyTradeDetails = enemyTradeValue;
     tradeModalCallback = callback;
@@ -33,42 +33,42 @@ function openTradeModal( currentPlayer, enemyPlayer, currentTradeValue, enemyTra
 }
 
 function populatePlaceholders() {
-    id('currentWCount').placeholder  = currentPlayerDetails.warBucks;
-    id('currentWCount').max          = currentPlayerDetails.warBucks;
-    id('currentRACount').placeholder = getAetherCount(     currentPlayerDetails.resources );
-    id('currentRACount').max         = getAetherCount(     currentPlayerDetails.resources );
-    id('currentRCCount').placeholder = getChronotineCount( currentPlayerDetails.resources );
-    id('currentRCCount').max         = getChronotineCount( currentPlayerDetails.resources );
-    id('currentRUCount').placeholder = getUnobtaniumCount( currentPlayerDetails.resources );
-    id('currentRUCount').max         = getUnobtaniumCount( currentPlayerDetails.resources );
-    id('currentICCount').placeholder = currentPlayerDetails.initiatives.culturalTokens;
-    id('currentICCount').max         = currentPlayerDetails.initiatives.culturalTokens;
-    id('currentIPCount').placeholder = currentPlayerDetails.initiatives.politicalTokens;
-    id('currentIPCount').max         = currentPlayerDetails.initiatives.politicalTokens;
-    id('enemyWCount').placeholder    = enemyPlayerDetails.warBucks;
-    id('enemyWCount').max            = enemyPlayerDetails.warBucks;
-    id('enemyRACount').placeholder   = getAetherCount(     enemyPlayerDetails.resources );
-    id('enemyRACount').max           = getAetherCount(     enemyPlayerDetails.resources );
-    id('enemyRCCount').placeholder   = getChronotineCount( enemyPlayerDetails.resources );
-    id('enemyRCCount').max           = getChronotineCount( enemyPlayerDetails.resources );
-    id('enemyRUCount').placeholder   = getUnobtaniumCount( enemyPlayerDetails.resources );
-    id('enemyRUCount').max           = getUnobtaniumCount( enemyPlayerDetails.resources );
-    id('enemyICCount').placeholder   = enemyPlayerDetails.initiatives.culturalTokens;
-    id('enemyICCount').max           = enemyPlayerDetails.initiatives.culturalTokens;
-    id('enemyIPCount').placeholder   = enemyPlayerDetails.initiatives.politicalTokens;
-    id('enemyIPCount').max           = enemyPlayerDetails.initiatives.politicalTokens;
+    id('currentWCount').placeholder  = currentPlayerTDetails.warBucks;
+    id('currentWCount').max          = currentPlayerTDetails.warBucks;
+    id('currentRACount').placeholder = getAetherCount(     currentPlayerTDetails.resources );
+    id('currentRACount').max         = getAetherCount(     currentPlayerTDetails.resources );
+    id('currentRCCount').placeholder = getChronotineCount( currentPlayerTDetails.resources );
+    id('currentRCCount').max         = getChronotineCount( currentPlayerTDetails.resources );
+    id('currentRUCount').placeholder = getUnobtaniumCount( currentPlayerTDetails.resources );
+    id('currentRUCount').max         = getUnobtaniumCount( currentPlayerTDetails.resources );
+    id('currentICCount').placeholder = currentPlayerTDetails.initiatives.culturalTokens;
+    id('currentICCount').max         = currentPlayerTDetails.initiatives.culturalTokens;
+    id('currentIPCount').placeholder = currentPlayerTDetails.initiatives.politicalTokens;
+    id('currentIPCount').max         = currentPlayerTDetails.initiatives.politicalTokens;
+    id('enemyWCount').placeholder    = enemyPlayerTDetails.warBucks;
+    id('enemyWCount').max            = enemyPlayerTDetails.warBucks;
+    id('enemyRACount').placeholder   = getAetherCount(     enemyPlayerTDetails.resources );
+    id('enemyRACount').max           = getAetherCount(     enemyPlayerTDetails.resources );
+    id('enemyRCCount').placeholder   = getChronotineCount( enemyPlayerTDetails.resources );
+    id('enemyRCCount').max           = getChronotineCount( enemyPlayerTDetails.resources );
+    id('enemyRUCount').placeholder   = getUnobtaniumCount( enemyPlayerTDetails.resources );
+    id('enemyRUCount').max           = getUnobtaniumCount( enemyPlayerTDetails.resources );
+    id('enemyICCount').placeholder   = enemyPlayerTDetails.initiatives.culturalTokens;
+    id('enemyICCount').max           = enemyPlayerTDetails.initiatives.culturalTokens;
+    id('enemyIPCount').placeholder   = enemyPlayerTDetails.initiatives.politicalTokens;
+    id('enemyIPCount').max           = enemyPlayerTDetails.initiatives.politicalTokens;
 }
 
 function populateUnits() {
-    const currentData = UNIT_TYPES.filter( ut => currentPlayerDetails.units.some( u => u.unitTypeId === ut.id ) ).map( ut => ({id: ut.id, name: ut.name, max: currentPlayerDetails.units.filter(u => u.unitTypeId === ut.id).length}) );
+    const currentData = UNIT_TYPES.filter( ut => currentPlayerTDetails.units.some( u => u.unitTypeId === ut.id ) ).map( ut => ({id: ut.id, name: ut.name, max: currentPlayerTDetails.units.filter(u => u.unitTypeId === ut.id).length}) );
     populateUnitInputs( currentData, "currentUnitWrapper" );
-    const enemyData = UNIT_TYPES.filter( ut => enemyPlayerDetails.units.some( u => u.unitTypeId === ut.id ) ).map( ut => ({id: ut.id, name: ut.name, max: enemyPlayerDetails.units.filter(u => u.unitTypeId === ut.id).length}) );
+    const enemyData = UNIT_TYPES.filter( ut => enemyPlayerTDetails.units.some( u => u.unitTypeId === ut.id ) ).map( ut => ({id: ut.id, name: ut.name, max: enemyPlayerTDetails.units.filter(u => u.unitTypeId === ut.id).length}) );
     populateUnitInputs( enemyData, "enemyUnitWrapper" );
 }
 
 function populateUnitInputs( unitTypes, wrapperId ) {
     let wrapper = id(wrapperId);
-    wrapper.innerHTML = "";
+    wrapper.innerHTML = unitTypes.length ? "" : "None";
     for ( let i = 0; i < unitTypes.length; i++ ) {
         let unit = unitTypes[i];
         const id = wrapperId + "-" + unit.id;
@@ -96,28 +96,28 @@ function populateUnitInputs( unitTypes, wrapperId ) {
 }
 
 function populateAdvancements() {
-    const currentData = currentPlayerDetails.advancements.technologies.map( a => getTechnology( a ) )
-        .concat( currentPlayerDetails.advancements.doctrines.map( a => getDoctrine( a ) ) )
-        .concat( currentPlayerDetails.advancements.gardens.map( a => getGarden( a ) ) )
-        .concat( currentPlayerDetails.advancements.auctions.map( a => getAuctionLot( a ) ) );
+    const currentData = currentPlayerTDetails.advancements.technologies.map( a => getTechnology( a ) )
+        .concat( currentPlayerTDetails.advancements.doctrines.map( a => getDoctrine( a ) ) )
+        .concat( currentPlayerTDetails.advancements.gardens.map( a => getGarden( a ) ) )
+        .concat( currentPlayerTDetails.advancements.auctions.map( a => getAuctionLot( a ) ) );
     populateCheckboxes( currentData, "currentAdvancementWrapper" );
-    const enemyData = enemyPlayerDetails.advancements.technologies.map( a => getTechnology( a ) )
-        .concat( enemyPlayerDetails.advancements.doctrines.map( a => getDoctrine( a ) ) )
-        .concat( enemyPlayerDetails.advancements.gardens.map( a => getGarden( a ) ) )
-        .concat( enemyPlayerDetails.advancements.auctions.map( a => getAuctionLot( a ) ) );
+    const enemyData = enemyPlayerTDetails.advancements.technologies.map( a => getTechnology( a ) )
+        .concat( enemyPlayerTDetails.advancements.doctrines.map( a => getDoctrine( a ) ) )
+        .concat( enemyPlayerTDetails.advancements.gardens.map( a => getGarden( a ) ) )
+        .concat( enemyPlayerTDetails.advancements.auctions.map( a => getAuctionLot( a ) ) );
     populateCheckboxes( enemyData, "enemyAdvancementWrapper" );
 }
 
 function populateCards() {
-    populateCheckboxes( currentPlayerDetails.cards.chaos.map( c => getChaosCard( c ) ), "currentCardsWrapper" );
+    populateCheckboxes( currentPlayerTDetails.cards.chaos.map( c => getChaosCard( c ) ), "currentCardsWrapper" );
 
-    id('enemyCardCount').placeholder = enemyPlayerDetails.cards.chaos.length;
-    id('enemyCardCount').max         = enemyPlayerDetails.cards.chaos.length;
+    id('enemyCardCount').placeholder = enemyPlayerTDetails.cards.chaos.length;
+    id('enemyCardCount').max         = enemyPlayerTDetails.cards.chaos.length;
 }
 
 function populateCheckboxes( data, wrapperId ) {
     let wrapper = id( wrapperId );
-    wrapper.innerHTML = "";
+    wrapper.innerHTML = data.length ? "" : "None";
     for ( let i = 0; i < data.length; i++ ) {
         const id = wrapperId + "-" + data[i].type + "-" + data[i].id;
         let div = document.createElement( "DIV" );
@@ -182,7 +182,7 @@ function showTradeDetails( isExistingTrade ) {
 
 function updateDetails() {
     currentTradeDetails = {
-        id:                 currentPlayerDetails.id,
+        id:                 currentPlayerTDetails.id,
         warBucks:           parseInt( id('currentWCount').value ),
         resources:          [
             {id: RESOURCES[0].id, count: parseInt( id('currentRUCount').value )},
@@ -199,7 +199,7 @@ function updateDetails() {
         chaos:              nm('currentCardsWrapper').filter( c => c.checked ).map( c => c.id.split('-')[2] )
     };
     enemyTradeDetails = {
-        id:                 enemyPlayerDetails.id,
+        id:                 enemyPlayerTDetails.id,
         warBucks:           parseInt( id('enemyWCount').value ),
         resources:          [
             {id: RESOURCES[0].id, count: parseInt( id('enemyRUCount').value )},
@@ -237,7 +237,7 @@ function validateOffer() {
     }
 
     let isValid = true;
-    if ( isTradeValid( currentPlayerDetails, trade ) ) {
+    if ( isTradeValid( currentPlayerTDetails, trade ) ) {
         isValid = false;
         showToaster( "Your trade details are invalid" );
     }
@@ -245,10 +245,10 @@ function validateOffer() {
         isValid = false;
         showToaster( "The other player’s trade details are invalid" );
     }
-    else if ( validateReception( currentPlayerDetails, enemyTradeDetails, true ) ) {
+    else if ( validateReception( currentPlayerTDetails, enemyTradeDetails, true ) ) {
         isValid = false;
     }
-    else if ( validateReception( enemyPlayerDetails, currentTradeDetails, false ) ) {
+    else if ( validateReception( enemyPlayerTDetails, currentTradeDetails, false ) ) {
         isValid = false;
     }
 
@@ -262,9 +262,9 @@ function acceptTrade() {
             currentTradeDetails.chaos = selectedCards.slice( 0, currentTradeDetails.chaos.length );
         }
 
-        debitTrade( currentPlayerDetails, currentTradeDetails );
+        debitTrade( currentPlayerTDetails, currentTradeDetails );
 
-        saveAccept( tradeId, (isPlayer1?currentTradeDetails:enemyTradeDetails), (isPlayer1?enemyPlayerDetails:currentTradeDetails), isPlayer1 );
+        saveAccept( tradeId, (isPlayer1?currentTradeDetails:enemyTradeDetails), (isPlayer1?enemyPlayerTDetails:currentTradeDetails), isPlayer1 );
         tradeModalCallback = function( currentPlayerDetailsValue ) {
             currentPlayer = currentPlayerDetailsValue;
             reloadPage( true );
@@ -281,7 +281,7 @@ function declineTrade() {
 
 function counterTrade() {
     if ( validateOffer() ) {
-        saveOffer( tradeId, (isPlayer1?currentTradeDetails:enemyTradeDetails), (isPlayer1?enemyPlayerDetails:currentTradeDetails), isPlayer1 );
+        saveOffer( tradeId, (isPlayer1?currentTradeDetails:enemyTradeDetails), (isPlayer1?enemyPlayerTDetails:currentPlayerTDetails), isPlayer1 );
         closeOutTradeModal();
     }
 }
@@ -295,5 +295,5 @@ function submitTrade() {
 
 function closeOutTradeModal() {
     closeModalJS( "tradeModal" );
-    tradeModalCallback( currentPlayerDetails, enemyPlayerDetails );
+    tradeModalCallback( currentPlayerTDetails, enemyPlayerTDetails );
 }

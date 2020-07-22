@@ -89,6 +89,7 @@
 <?php include("modals/capital-modal.html"); ?>
 <?php include("modals/market-modal.html"); ?>
 <?php include("modals/battle-modal.html"); ?>
+<?php include("modals/trade-modal.html"); ?>
 <?php includeModals(); ?>
 
 <?php include("html/include-domain.html"); ?>

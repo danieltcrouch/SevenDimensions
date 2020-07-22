@@ -9,7 +9,7 @@
                 <span id="close" class="close">&times;</span>
             </div>
             <div id="modalBody" class="modal-body">
-                <div style="margin-bottom: 1em; font-weight: bold">Trade From:</div>
+                <div style="font-weight: bold">Trade From:</div>
                 <div id="currentAssets">
                     <div><label for="currentWCount"  style="display: inline-block; width: 6em">War-Bucks   </label><input id="currentWCount"  type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0"></div>
                     <div><label for="currentRACount" style="display: inline-block; width: 6em">Aether      </label><input id="currentRACount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0"></div>
@@ -17,11 +17,14 @@
                     <div><label for="currentRUCount" style="display: inline-block; width: 6em">Unobtanium  </label><input id="currentRUCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0"></div>
                     <div><label for="currentICCount" style="display: inline-block; width: 11em">Cultural Initiative Token</label><input  id="currentICCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0"></div>
                     <div><label for="currentIPCount" style="display: inline-block; width: 11em">Political Initiative Token</label><input id="currentIPCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0"></div>
+                    <div><span style="font-style: italic">Units:</span></div>
                     <div id="currentUnitWrapper"></div>
+                    <div><span style="font-style: italic">Advancements:</span></div>
                     <div id="currentAdvancementWrapper"></div>
+                    <div><span style="font-style: italic">Cards:</span></div>
                     <div id="currentCardsWrapper"></div>
                 </div>
-                <div style="margin-bottom: 1em; font-weight: bold">Trade To:</div>
+                <div style="margin-top: 1em; font-weight: bold">Trade To:</div>
                 <div id="enemyAssets">
                     <div><label for="enemyWCount"  style="display: inline-block; width: 6em">War-Bucks   </label><input id="enemyWCount"  type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0"></div>
                     <div><label for="enemyRACount" style="display: inline-block; width: 6em">Aether      </label><input id="enemyRACount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0"></div>
@@ -29,9 +32,14 @@
                     <div><label for="enemyRUCount" style="display: inline-block; width: 6em">Unobtanium  </label><input id="enemyRUCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0"></div>
                     <div><label for="enemyICCount" style="display: inline-block; width: 11em">Cultural Initiative Token</label><input  id="enemyICCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0"></div>
                     <div><label for="enemyIPCount" style="display: inline-block; width: 11em">Political Initiative Token</label><input id="enemyIPCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0"></div>
+                    <div><span style="font-style: italic">Units:</span></div>
                     <div id="enemyUnitWrapper"></div>
+                    <div><span style="font-style: italic">Advancements:</span></div>
                     <div id="enemyAdvancementWrapper"></div>
-                    <div><label for="enemyCardCount" style="display: inline-block; width: 6em">Chaos Cards</label><input id="enemyCardCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0"></div>
+                    <div>
+                        <div><span style="font-style: italic">Cards:</span></div>
+                        <label for="enemyCardCount" style="display: inline-block; width: 6em">Chaos</label><input id="enemyCardCount" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0">
+                    </div>
                 </div>
             </div>
             <div id="modalSubmit" class="modal-submit center">

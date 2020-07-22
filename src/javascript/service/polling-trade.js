@@ -1,4 +1,6 @@
 function startTrade() {
+    //todo 7 - when I cancel, the background gray background doesn't disappear
+    //todo 7 - when I submit player selection, modal does not disappear
     pickPlayers(
         false,
         false,
@@ -9,7 +11,9 @@ function startTrade() {
                     getPlayer( response )
                 );
             }
-        }
+        },
+        game.players.filter( p => p.id !== currentPlayer.id ), //todo 1 - adds players to list (needs to reset)
+        "Select a player to trade with:"
     );
 }
 

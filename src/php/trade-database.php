@@ -46,7 +46,7 @@ function getCurrentTrades( $gameId, $userId )
     $statement->bindParam(':userId', $userId);
     $statement->execute();
 
-    $result = $statement->fetch();
+    $result = $statement->fetchAll();
 
     $connection = null;
     return $result;

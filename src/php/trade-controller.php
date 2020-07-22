@@ -1,6 +1,6 @@
 <?php
 require_once( "common-includes.php" );
-require_once( "conflict-database.php" );
+require_once( "trade-database.php" );
 
 if ( isset($_POST['action']) && function_exists( $_POST['action'] ) ) {
     $action = $_POST['action'];

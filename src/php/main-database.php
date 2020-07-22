@@ -35,13 +35,14 @@ function getUser( $email )
 function loadGame( $gameId )
 {
     $query =
-   "SELECT m.id, s.stateJson, mp.mapJson, p.id \"playerId\", p.playerJson, b.id \"conflictId\", b.attackDetails
+   "SELECT m.id, s.stateJson, mp.mapJson, p.id \"playerId\", p.playerJson, b.id \"conflictId\", b.attackDetails, t.id \"tradeId\", t.details1
     FROM meta m
     	JOIN state s  ON s.gameId = m.id
         JOIN map mp   ON mp.gameId = m.id
         JOIN player p ON p.gameId = m.id AND p.active = 1
-        LEFT OUTER JOIN battle b ON b.gameId = m.id AND b.battleStatus IS NULL
-    WHERE m.id = :gameId ";
+        LEFT OUTER JOIN conflict b ON b.gameId = m.id AND b.conflictStatus IS NULL
+        LEFT OUTER JOIN trade t ON t.gameId = m.id AND t.tradeStatus = 'C'
+    WHERE m.id = :gameId "; //todo 1 - Make complete status NULL rather than 'C'; details1 should have summary
 
     $connection = getConnection();
     $statement = $connection->prepare( $query );
@@ -56,11 +57,13 @@ function loadGame( $gameId )
         'state'   => json_decode( $result['stateJson'] ),
         'board'   => json_decode( $result['mapJson'] ),
         'players' => [],
-        'battles' => []
+        'battles' => [],
+        'trades'  => []
     ];
 
     $playerIds = [];
     $battleIds = [];
+    $tradeIds = [];
     for ( $i = 0; $i < count( $results ); $i++ )
     {
         if ( !in_array($results[$i]['playerId'], $playerIds) )
@@ -68,10 +71,15 @@ function loadGame( $gameId )
             array_push( $game['players'], json_decode( $results[$i]['playerJson'] ) );
             array_push( $playerIds, $results[$i]['playerId'] );
         }
-        if ( !in_array($results[$i]['conflictId'], $battleIds) )
+        if ( $results[$i]['conflictId'] && !in_array($results[$i]['conflictId'], $battleIds) )
         {
             array_push( $game['battles'], json_decode( $results[$i]['attackDetails'] ) );
             array_push( $battleIds, $results[$i]['conflictId'] );
+        }
+        if ( $results[$i]['tradeId'] && !in_array($results[$i]['tradeId'], $tradeIds) )
+        {
+            array_push( $game['trades'], json_decode( $results[$i]['details1'] ) );
+            array_push( $tradeIds, $results[$i]['tradeId'] );
         }
     }
 
@@ -134,11 +142,12 @@ function updateGame( $gameId, $game )
     $game = json_decode( $game );
     $stateJson = json_encode( $game->state );
     $mapJson   = json_encode( $game->board );
-    $players  = $game->players; //should work as empty if no players are sent in
+    $players = $game->players; //should work as empty if no players are sent in
 
-    $updateMeta     = "UPDATE meta   SET round = :round, phase = :phase, subPhase = :subPhase, turn = :turn WHERE id = :gameId";
-    $updateState    = "UPDATE state  SET stateJson = :stateJson WHERE gameId = :gameId";
-    $updateMap      = "UPDATE map    SET mapJson = :mapJson     WHERE gameId = :gameId";
+    $updateMeta  = "UPDATE meta   SET round = :round, phase = :phase, subPhase = :subPhase, turn = :turn WHERE id = :gameId";
+    $updateState = "UPDATE state  SET stateJson = :stateJson WHERE gameId = :gameId";
+    $updateMap   = "UPDATE map    SET mapJson = :mapJson     WHERE gameId = :gameId";
+    //todo 4 - delete conflicts and trades for newGame
 
     $query =
         "$updateMeta;\n

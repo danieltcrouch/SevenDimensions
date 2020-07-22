@@ -587,6 +587,7 @@ function showTrade() {
         messageHTML = `
                 <div style="font-weight: bold">Current Trades:</div>
                 <div>${getCurrentTradesDisplay()}</div>
+                <br/>
                 <div class="link" onclick="startTrade()">Start Trade Deal</div>
         `;
     }
