@@ -1,0 +1,299 @@
+let tradeId;
+let isPlayer1;
+let currentPlayerDetails;
+let currentTradeDetails;
+let enemyPlayerDetails;
+let enemyTradeDetails;
+let tradeModalCallback;
+
+function openTradeModal( currentPlayer, enemyPlayer, currentTradeValue, enemyTradeValue, tradeIdValue, isPlayer1Value, callback ) {
+    tradeId = tradeIdValue;
+    isPlayer1 = isPlayer1Value;
+    currentPlayerDetails = currentPlayer;
+    enemyPlayerDetails = enemyPlayer;
+    currentTradeDetails = currentTradeValue;
+    enemyTradeDetails = enemyTradeValue;
+    tradeModalCallback = callback;
+
+    populatePlaceholders();
+    populateUnits();
+    populateAdvancements();
+    populateCards();
+
+    const isExistingTrade = Boolean(tradeId);
+    show('submitButton',  !isExistingTrade );
+    show('acceptButton',  isExistingTrade );
+    show('counterButton', isExistingTrade );
+    show('declineButton', isExistingTrade );
+    showTradeDetails( isExistingTrade );
+
+    show( "tradeModal", true, "block" );
+    setCloseHandlersJS( "tradeModal" );
+    blurBackground();
+}
+
+function populatePlaceholders() {
+    id('currentWCount').placeholder  = currentPlayerDetails.warBucks;
+    id('currentWCount').max          = currentPlayerDetails.warBucks;
+    id('currentRACount').placeholder = getAetherCount(     currentPlayerDetails.resources );
+    id('currentRACount').max         = getAetherCount(     currentPlayerDetails.resources );
+    id('currentRCCount').placeholder = getChronotineCount( currentPlayerDetails.resources );
+    id('currentRCCount').max         = getChronotineCount( currentPlayerDetails.resources );
+    id('currentRUCount').placeholder = getUnobtaniumCount( currentPlayerDetails.resources );
+    id('currentRUCount').max         = getUnobtaniumCount( currentPlayerDetails.resources );
+    id('currentICCount').placeholder = currentPlayerDetails.initiatives.culturalTokens;
+    id('currentICCount').max         = currentPlayerDetails.initiatives.culturalTokens;
+    id('currentIPCount').placeholder = currentPlayerDetails.initiatives.politicalTokens;
+    id('currentIPCount').max         = currentPlayerDetails.initiatives.politicalTokens;
+    id('enemyWCount').placeholder    = enemyPlayerDetails.warBucks;
+    id('enemyWCount').max            = enemyPlayerDetails.warBucks;
+    id('enemyRACount').placeholder   = getAetherCount(     enemyPlayerDetails.resources );
+    id('enemyRACount').max           = getAetherCount(     enemyPlayerDetails.resources );
+    id('enemyRCCount').placeholder   = getChronotineCount( enemyPlayerDetails.resources );
+    id('enemyRCCount').max           = getChronotineCount( enemyPlayerDetails.resources );
+    id('enemyRUCount').placeholder   = getUnobtaniumCount( enemyPlayerDetails.resources );
+    id('enemyRUCount').max           = getUnobtaniumCount( enemyPlayerDetails.resources );
+    id('enemyICCount').placeholder   = enemyPlayerDetails.initiatives.culturalTokens;
+    id('enemyICCount').max           = enemyPlayerDetails.initiatives.culturalTokens;
+    id('enemyIPCount').placeholder   = enemyPlayerDetails.initiatives.politicalTokens;
+    id('enemyIPCount').max           = enemyPlayerDetails.initiatives.politicalTokens;
+}
+
+function populateUnits() {
+    const currentData = UNIT_TYPES.filter( ut => currentPlayerDetails.units.some( u => u.unitTypeId === ut.id ) ).map( ut => ({id: ut.id, name: ut.name, max: currentPlayerDetails.units.filter(u => u.unitTypeId === ut.id).length}) );
+    populateUnitInputs( currentData, "currentUnitWrapper" );
+    const enemyData = UNIT_TYPES.filter( ut => enemyPlayerDetails.units.some( u => u.unitTypeId === ut.id ) ).map( ut => ({id: ut.id, name: ut.name, max: enemyPlayerDetails.units.filter(u => u.unitTypeId === ut.id).length}) );
+    populateUnitInputs( enemyData, "enemyUnitWrapper" );
+}
+
+function populateUnitInputs( unitTypes, wrapperId ) {
+    let wrapper = id(wrapperId);
+    wrapper.innerHTML = "";
+    for ( let i = 0; i < unitTypes.length; i++ ) {
+        let unit = unitTypes[i];
+        const id = wrapperId + "-" + unit.id;
+        let div = document.createElement( "DIV" );
+        let label = document.createElement( "LABEL" );
+        label.htmlFor = id;
+        label.style.display = "inline-block";
+        label.style.width = "10em";
+        label.innerText = unit.name;
+        let input = document.createElement( "INPUT" );
+        input.id = id;
+        input.name = wrapperId + "-unitCounts";
+        input.type = "number";
+        input.classList.add( "input" );
+        input.style.width = "3em";
+        input.style.margin = ".1em";
+        input.style.padding = ".1em";
+        input.min = "0";
+        input.max = unit.max;
+        input.placeholder = unit.max;
+        div.appendChild( label );
+        div.appendChild( input );
+        wrapper.appendChild( div );
+    }
+}
+
+function populateAdvancements() {
+    const currentData = currentPlayerDetails.advancements.technologies.map( a => getTechnology( a ) )
+        .concat( currentPlayerDetails.advancements.doctrines.map( a => getDoctrine( a ) ) )
+        .concat( currentPlayerDetails.advancements.gardens.map( a => getGarden( a ) ) )
+        .concat( currentPlayerDetails.advancements.auctions.map( a => getAuctionLot( a ) ) );
+    populateCheckboxes( currentData, "currentAdvancementWrapper" );
+    const enemyData = enemyPlayerDetails.advancements.technologies.map( a => getTechnology( a ) )
+        .concat( enemyPlayerDetails.advancements.doctrines.map( a => getDoctrine( a ) ) )
+        .concat( enemyPlayerDetails.advancements.gardens.map( a => getGarden( a ) ) )
+        .concat( enemyPlayerDetails.advancements.auctions.map( a => getAuctionLot( a ) ) );
+    populateCheckboxes( enemyData, "enemyAdvancementWrapper" );
+}
+
+function populateCards() {
+    populateCheckboxes( currentPlayerDetails.cards.chaos.map( c => getChaosCard( c ) ), "currentCardsWrapper" );
+
+    id('enemyCardCount').placeholder = enemyPlayerDetails.cards.chaos.length;
+    id('enemyCardCount').max         = enemyPlayerDetails.cards.chaos.length;
+}
+
+function populateCheckboxes( data, wrapperId ) {
+    let wrapper = id( wrapperId );
+    wrapper.innerHTML = "";
+    for ( let i = 0; i < data.length; i++ ) {
+        const id = wrapperId + "-" + data[i].type + "-" + data[i].id;
+        let div = document.createElement( "DIV" );
+        let input = document.createElement( "INPUT" );
+        input.id = id;
+        input.name = wrapperId;
+        input.type = "checkbox";
+        let label = document.createElement( "LABEL" );
+        label.htmlFor = id;
+        label.innerHTML = data[i].name;
+        div.appendChild( input );
+        div.appendChild( label );
+        wrapper.appendChild( div );
+    }
+}
+
+function showTradeDetails( isExistingTrade ) {
+    if ( isExistingTrade ) {
+        id('currentWCount').value = currentTradeDetails.warBucks;
+        id('currentRUCount').value = currentTradeDetails.resources.find( r => r.id === RESOURCES[0].id ).count;
+        id('currentRCCount').value = currentTradeDetails.resources.find( r => r.id === RESOURCES[1].id ).count;
+        id('currentRACount').value = currentTradeDetails.resources.find( r => r.id === RESOURCES[2].id ).count;
+        id('currentICCount').value = currentTradeDetails.culturalTokens;
+        id('currentIPCount').value = currentTradeDetails.politicalTokens;
+        currentTradeDetails.units.forEach( u => id(`currentUnitWrapper-${u.id}`).value = u.count );
+        currentTradeDetails.technologies.forEach( a => id(`currentAdvancementWrapper-Technology-${a}` ).checked = true );
+        currentTradeDetails.doctrines.forEach(    a => id(`currentAdvancementWrapper-Doctrine-${a}`   ).checked = true );
+        currentTradeDetails.gardens.forEach(      a => id(`currentAdvancementWrapper-Garden-${a}`     ).checked = true );
+        currentTradeDetails.auctions.forEach(     a => id(`currentAdvancementWrapper-Auction Lot-${a}`).checked = true );
+        if ( Array.isArray( currentTradeDetails.chaos ) ) {
+            currentTradeDetails.chaos.forEach( c => id(`currentCardsWrapper-Chaos-${c}`).checked = true );
+        }
+        else {
+            const cardInputs = nm('currentCardsWrapper');
+            for ( let i = 0; i < currentTradeDetails.chaos.length; i++ ) {
+                cardInputs[i].checked = true;
+            }
+        }
+
+        id('enemyWCount').value = enemyTradeDetails.warBucks;
+        id('enemyRUCount').value = enemyTradeDetails.resources.find( r => r.id === RESOURCES[0].id ).count;
+        id('enemyRCCount').value = enemyTradeDetails.resources.find( r => r.id === RESOURCES[1].id ).count;
+        id('enemyRACount').value = enemyTradeDetails.resources.find( r => r.id === RESOURCES[2].id ).count;
+        id('enemyICCount').value = enemyTradeDetails.culturalTokens;
+        id('enemyIPCount').value = enemyTradeDetails.politicalTokens;
+        enemyTradeDetails.units.forEach( u => id(`enemyUnitWrapper-${u.id}`).value = u.count );
+        enemyTradeDetails.technologies.forEach( a => id(`enemyAdvancementWrapper-Technology-${a}` ).checked = true );
+        enemyTradeDetails.doctrines.forEach(    a => id(`enemyAdvancementWrapper-Doctrine-${a}`   ).checked = true );
+        enemyTradeDetails.gardens.forEach(      a => id(`enemyAdvancementWrapper-Garden-${a}`     ).checked = true );
+        enemyTradeDetails.auctions.forEach(     a => id(`enemyAdvancementWrapper-Auction Lot-${a}`).checked = true );
+        if ( Array.isArray( enemyTradeDetails.chaos ) ) {
+            enemyTradeDetails.chaos.forEach( c => id(`enemyCardsWrapper-Chaos-${c}`).checked = true );
+        }
+        else {
+            const cardInputs = nm('enemyCardsWrapper');
+            for ( let i = 0; i < enemyTradeDetails.chaos.length; i++ ) {
+                cardInputs[i].checked = true;
+            }
+        }
+    }
+}
+
+function updateDetails() {
+    currentTradeDetails = {
+        id:                 currentPlayerDetails.id,
+        warBucks:           parseInt( id('currentWCount').value ),
+        resources:          [
+            {id: RESOURCES[0].id, count: parseInt( id('currentRUCount').value )},
+            {id: RESOURCES[1].id, count: parseInt( id('currentRCCount').value )},
+            {id: RESOURCES[2].id, count: parseInt( id('currentRACount').value )}
+        ],
+        culturalTokens:     parseInt( id('currentICCount').value ),
+        politicalTokens:    parseInt( id('currentIPCount').value ),
+        units:              nm('currentUnitWrapper-unitCounts').map( ui => ({id: ui.id.split('-')[1], count: (ui.value || 0)}) ),
+        technologies:       nm('currentAdvancementWrapper').filter( a => a.id.split('-')[1] === TECHNOLOGIES[0].type ).filter( a => a.checked ).map( a => a.id.split('-')[2] ),
+        doctrines:          nm('currentAdvancementWrapper').filter( a => a.id.split('-')[1] === DOCTRINES[0].type    ).filter( a => a.checked ).map( a => a.id.split('-')[2] ),
+        gardens:            nm('currentAdvancementWrapper').filter( a => a.id.split('-')[1] === GARDENS[0].type      ).filter( a => a.checked ).map( a => a.id.split('-')[2] ),
+        auctions:           nm('currentAdvancementWrapper').filter( a => a.id.split('-')[1] === AUCTIONS[0].type     ).filter( a => a.checked ).map( a => a.id.split('-')[2] ),
+        chaos:              nm('currentCardsWrapper').filter( c => c.checked ).map( c => c.id.split('-')[2] )
+    };
+    enemyTradeDetails = {
+        id:                 enemyPlayerDetails.id,
+        warBucks:           parseInt( id('enemyWCount').value ),
+        resources:          [
+            {id: RESOURCES[0].id, count: parseInt( id('enemyRUCount').value )},
+            {id: RESOURCES[1].id, count: parseInt( id('enemyRCCount').value )},
+            {id: RESOURCES[2].id, count: parseInt( id('enemyRACount').value )}
+        ],
+        culturalTokens:     parseInt( id('enemyICCount').value ),
+        politicalTokens:    parseInt( id('enemyIPCount').value ),
+        units:              nm('enemyUnitWrapper-unitCounts').map( ui => ({id: ui.id.split('-')[1], count: (ui.value || 0)}) ),
+        technologies:       nm('enemyAdvancementWrapper').filter( a => a.id.split('-')[1] === TECHNOLOGIES[0].type ).filter( a => a.checked ).map( a => a.id.split('-')[2] ),
+        doctrines:          nm('enemyAdvancementWrapper').filter( a => a.id.split('-')[1] === DOCTRINES[0].type    ).filter( a => a.checked ).map( a => a.id.split('-')[2] ),
+        gardens:            nm('enemyAdvancementWrapper').filter( a => a.id.split('-')[1] === GARDENS[0].type      ).filter( a => a.checked ).map( a => a.id.split('-')[2] ),
+        auctions:           nm('enemyAdvancementWrapper').filter( a => a.id.split('-')[1] === AUCTIONS[0].type     ).filter( a => a.checked ).map( a => a.id.split('-')[2] ),
+        chaos:              updateEnemyCardDetails()
+    };
+}
+
+function updateEnemyCardDetails() {
+    const cardCount = Math.min( parseInt( id('enemyCardCount').value ), enemyPlayerDetails.cards.chaos.length );
+    let result = enemyTradeDetails ? enemyTradeDetails.cards : [];
+    if ( result.length < cardCount ) {
+        const availableCards = enemyPlayerDetails.cards.chaos.filter( c => !result.includes( c ) );
+        for ( let i = 0; i < (cardCount - result.length); i++ ) {
+            result.push( availableCards[i] );
+        }
+    }
+    return result;
+}
+
+function validateOffer() {
+    updateDetails();
+    const trade = {
+        details1: isPlayer1?currentTradeDetails:enemyTradeDetails,
+        details2: isPlayer1?enemyTradeDetails:currentTradeDetails
+    }
+
+    let isValid = true;
+    if ( isTradeValid( currentPlayerDetails, trade ) ) {
+        isValid = false;
+        showToaster( "Your trade details are invalid" );
+    }
+    else if ( isTradeValid( enemyPlayerDetails, trade ) ) {
+        isValid = false;
+        showToaster( "The other player’s trade details are invalid" );
+    }
+    else if ( validateReception( currentPlayerDetails, enemyTradeDetails, true ) ) {
+        isValid = false;
+    }
+    else if ( validateReception( enemyPlayerDetails, currentTradeDetails, false ) ) {
+        isValid = false;
+    }
+
+    return isValid;
+}
+
+function acceptTrade() {
+    if ( validateOffer() ) {
+        const selectedCards = nm('currentCardsWrapper').map( c => c.id.split('-')[2] );
+        if ( selectedCards.length >= currentTradeDetails.chaos.length ) {
+            currentTradeDetails.chaos = selectedCards.slice( 0, currentTradeDetails.chaos.length );
+        }
+
+        debitTrade( currentPlayerDetails, currentTradeDetails );
+
+        saveAccept( tradeId, (isPlayer1?currentTradeDetails:enemyTradeDetails), (isPlayer1?enemyPlayerDetails:currentTradeDetails), isPlayer1 );
+        tradeModalCallback = function( currentPlayerDetailsValue ) {
+            currentPlayer = currentPlayerDetailsValue;
+            reloadPage( true );
+            showMessage( "Warning", "Your half of the trade has been debited from you.<br/>Before the trade can fully go through, the other player must ensure that they did not trade away their offer. Do not end your turn until the trade has gone all the way through." );
+        }
+        closeOutTradeModal();
+    }
+}
+
+function declineTrade() {
+    saveDecline( tradeId, isPlayer1 );
+    closeOutTradeModal();
+}
+
+function counterTrade() {
+    if ( validateOffer() ) {
+        saveOffer( tradeId, (isPlayer1?currentTradeDetails:enemyTradeDetails), (isPlayer1?enemyPlayerDetails:currentTradeDetails), isPlayer1 );
+        closeOutTradeModal();
+    }
+}
+
+function submitTrade() {
+    if ( validateOffer() ) {
+        createTrade( currentTradeDetails, enemyTradeDetails );
+        closeOutTradeModal();
+    }
+}
+
+function closeOutTradeModal() {
+    closeModalJS( "tradeModal" );
+    tradeModalCallback( currentPlayerDetails, enemyPlayerDetails );
+}

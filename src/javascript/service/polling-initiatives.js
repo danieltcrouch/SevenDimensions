@@ -1,15 +1,11 @@
+/*** GUI ***/
+
+
 function performAnnex() {
     setSpecialAction(
         function( tileId ) { return hasEnemyDistrict( tileId ) && !hasInitiative( selectedTile, tileId, true ) && getAdjacentTiles( selectedTile ).includes( tileId ); },
         performAnnexCallback
     );
-}
-
-function hasInitiative( fromTileId, toTileId, checkPolitical ) {
-    return game.players.some( p => {
-        let activeInitiatives = checkPolitical ? p.initiatives.politicalActive : p.initiatives.culturalActive;
-        return activeInitiatives.includes( i => i.from === fromTileId && (!checkPolitical || i.to === toTileId) );
-    }  );
 }
 
 function performAnnexCallback( tileId ) {
@@ -40,6 +36,10 @@ function performAnnexCallback( tileId ) {
     }
 }
 
+
+/*** SERVICE ***/
+
+
 function startAnnex( tokenCount, fromTileId, toTileId ) {
     const value = tokenCount * VALUE_OF_ANNEX * (currentPlayer.special.assimilation?ASSIMILATION_VALUE:1);
     currentPlayer.special.assimilation = false;
@@ -59,7 +59,7 @@ function startAnnex( tokenCount, fromTileId, toTileId ) {
         culturalActive: culturalActive.length ? culturalActive[0] : 0, //reaperCount
         units: enemyPlayer.units.filter( u => u.tileId === toTileId )
     };
-    createBattle(
+    createConflict(
         currentPlayerDetails,
         enemyPlayerDetails,
         function() {
@@ -82,7 +82,7 @@ function openAnnexDisplay( currentName, enemyName, currentPlayer, enemyPlayer, i
         showMessage( "Annexation", "Waiting on defending player..." );
         getInitiative(
             isAttacker,
-            FIRST_TIMEOUT,
+            CONFLICT_TIMEOUT,
             function( enemyPlayerDetails ) {
                 endAnnex( currentPlayer, enemyPlayerDetails );
             },
@@ -99,97 +99,68 @@ function openAnnexDisplay( currentName, enemyName, currentPlayer, enemyPlayer, i
 }
 
 function saveInitiative( playerDetails, isAttacker, callback ) {
-    postCallEncoded(
-        "php/battle-controller.php",
-        {
-            action: "saveInitiative",
-            battleId: battleId,
-            isAttack: isAttacker,
-            playerDetails: playerDetails
-        },
-        callback
-    );
+    saveAction( "Initiative", playerDetails, isAttacker, callback );
 }
 
 function getInitiative( isAttacker, maxTime, callback, timeOutCallback ) {
-    setLimitedInterval(
-        DELAY,
+    getAction(
+        "Initiative",
+        isAttacker,
         maxTime,
-        function( intervalId ) {
-            postCallEncoded(
-               "php/battle-controller.php",
-               {
-                   action: "getInitiative",
-                   battleId: battleId,
-                   isAttack: isAttacker
-               },
-               function( result ) {
-                   if ( result && result.id ) {
-                       window.clearInterval(intervalId);
-                       callback( result );
-                   }
-               }
-            );
+        callback,
+        function( intervalId, result ) {
+            if ( result && result.id ) {
+                window.clearInterval(intervalId);
+                callback( result );
+            }
         },
         timeOutCallback
     );
 }
 
 function endAnnex( attackPlayerDetails, defendPlayerDetails ) {
-    const attackResult = !defendPlayerDetails.isSuccess ? "W" : "L";
-    const battleLog = {
-        id: battleId,
-        round: game.state.round,
-        result: attackResult,
-        attackTile: attackPlayerDetails.tileId,
-        defendTile: defendPlayerDetails.tileId,
-        attackPlayerId: attackPlayerDetails.id,
-        defendPlayerId: defendPlayerDetails.id,
-        attackStrength: attackPlayerDetails.attackStrength
-    };
-    postCallEncoded(
-       "php/battle-controller.php",
-       {
-           action: "endBattle",
-           battleId: battleId,
-           battleInfo: battleLog
-       },
-       function() {
-           //game.battles.push( battleLog );
+    const annexResult = !defendPlayerDetails.isSuccess ? "W" : "L";
+    endConflict(
+        attackPlayerDetails,
+        defendPlayerDetails,
+        annexResult,
+        null,
+        null,
+        attackPlayerDetails.attackStrength,
+        function( annexLog, attackPlayerDetails, defendPlayerDetails, annexResult ) {
+            currentPlayer.initiatives.politicalTokens -= attackPlayerDetails.politicalTokens;
+            currentPlayer.initiatives.politicalActive.push({from: attackPlayerDetails.tileId, to: defendPlayerDetails.tileId});
 
-           currentPlayer.initiatives.politicalTokens -= attackPlayerDetails.politicalTokens;
-           currentPlayer.initiatives.politicalActive.push({from: attackPlayerDetails.tileId, to: defendPlayerDetails.tileId});
+            const defendPlayer = getPlayer( defendPlayerDetails.id );
+            if ( annexResult === "W" ) {
+                swapDistrict( defendPlayerDetails.id, attackPlayerDetails.id, defendPlayerDetails.tileId );
+                defendPlayer.units.forEach( u => {
+                    if ( u.tileId === defendPlayerDetails.tileId && u.unitTypeId !== UNIT_TYPES[APOSTLE].id ) {
+                        removeUnit( u, currentPlayer );
+                    }
+                } );
+            }
+            else {
+                defendPlayer.warBucks -= defendPlayerDetails.defense.warBucks;
+                defendPlayer.units.forEach( u => {
+                    if ( defendPlayerDetails.defense.units.includes( u.id ) ) {
+                        removeUnit( u, defendPlayer );
+                    }
+                } );
 
-           const defendPlayer = getPlayer( defendPlayerDetails.id );
-           if ( attackResult === "W" ) {
-               swapDistrict( defendPlayerDetails.id, attackPlayerDetails.id, defendPlayerDetails.tileId );
-               defendPlayer.units.forEach( u => {
-                   if ( u.tileId === defendPlayerDetails.tileId && u.unitTypeId !== UNIT_TYPES[APOSTLE].id ) {
-                       removeUnit( u, currentPlayer );
-                   }
-               } );
-           }
-           else {
-               defendPlayer.warBucks -= defendPlayerDetails.defense.warBucks;
-               defendPlayer.units.forEach( u => {
-                   if ( defendPlayerDetails.defense.units.includes( u.id ) ) {
-                       removeUnit( u, defendPlayer );
-                   }
-               } );
-
-               if ( defendPlayerDetails.defense.culturalTokens ) {
-                   defendPlayer.initiatives.culturalTokens -= defendPlayerDetails.defense.culturalTokens;
-                   const remainingReapers = Math.min( (defendPlayerDetails.defense.culturalTokens * REAPERS_IN_CR), (defendPlayerDetails.defendStrength - attackPlayerDetails.attackStrength) );
-                   defendPlayer.initiatives.culturalActive.push( {
-                       tileId: defendPlayerDetails.tileId,
-                       reaperCount: remainingReapers
-                   } );
-               }
-               else {
-                   defendPlayer.initiatives.culturalActive.find( i => i.tileId === defendPlayerDetails.tileId ).reaperCount -= defendPlayerDetails.defense.culturalActive;
-               }
-           }
-       }
+                if ( defendPlayerDetails.defense.culturalTokens ) {
+                    defendPlayer.initiatives.culturalTokens -= defendPlayerDetails.defense.culturalTokens;
+                    const remainingReapers = Math.min( (defendPlayerDetails.defense.culturalTokens * REAPERS_IN_CR), (defendPlayerDetails.defendStrength - attackPlayerDetails.attackStrength) );
+                    defendPlayer.initiatives.culturalActive.push( {
+                        tileId: defendPlayerDetails.tileId,
+                        reaperCount: remainingReapers
+                    } );
+                }
+                else {
+                    defendPlayer.initiatives.culturalActive.find( i => i.tileId === defendPlayerDetails.tileId ).reaperCount -= defendPlayerDetails.defense.culturalActive;
+                }
+            }
+        }
     );
 }
 
@@ -234,4 +205,15 @@ function getLowestResistance( annexStrength, playerDetails ) {
             units: isSuccess ? unitsUsed : [],
         }
     };
+}
+
+
+/*** HELPER ***/
+
+
+function hasInitiative( fromTileId, toTileId, checkPolitical ) {
+    return game.players.some( p => {
+        let activeInitiatives = checkPolitical ? p.initiatives.politicalActive : p.initiatives.culturalActive;
+        return activeInitiatives.includes( i => i.from === fromTileId && (!checkPolitical || i.to === toTileId) );
+    }  );
 }

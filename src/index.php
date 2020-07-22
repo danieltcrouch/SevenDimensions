@@ -3,7 +3,7 @@
 <html>
 <head>
     <?php includeHeadInfo(); ?>
-    <script src="javascript/user.js"></script>
+    <script src="javascript/service/user.js"></script>
 </head>
 
 <body>

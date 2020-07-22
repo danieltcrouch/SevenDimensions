@@ -96,6 +96,7 @@ function getDoctrine( id ) { return getEntity( id, DOCTRINES ); }
 
 const DOCTRINE_COST = 7;
 
+const KAMIKAZE_HIT = 3;
 const CRUSADE_HIT = 2;
 const INQUISITION_VALUE = 20;
 

@@ -57,11 +57,12 @@ function getNewGame( testPlayers = TEST_USERS ) {
         },
         board: newMap,
         players: newPlayers,
-        battles: []
+        battles: [],
+        trades: []
     };
 }
 
-function generateNewPlayers( testPlayers ) {
+function generateNewPlayers( testPlayers ) { //todo 6 - split testing and setup logic
     if ( !testPlayers[0].factionId ) {
         const randomFactionIds = FACTIONS.map( f => f.id ).sort( () => 0.5 - Math.random() );
         testPlayers.forEach( (p,index) => p.factionId = randomFactionIds[index] );

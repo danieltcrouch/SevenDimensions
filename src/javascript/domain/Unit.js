@@ -23,6 +23,12 @@ class UnitType extends Purchasable {
 
 function getUnitType( id ) { return getEntity( id, UNIT_TYPES ); }
 
+function getUnitPower( hitValue ) {
+    const maxPower = 13;
+    hitValue = hitValue === 0 ? maxPower : hitValue; //assume 0 is Apostle
+    return maxPower - hitValue;
+}
+
 const APOSTLE      = 0;
 const REAPER       = 1;
 const BOOMER       = 2;

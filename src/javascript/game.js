@@ -5,10 +5,7 @@
 //  Chaos Cards are always played on your turn
 //  Several Chaos Cards have been altered
 
-//[Push Changes and light test]
 //todo 1 - Trading
-//  Options: Accept, Counter, Decline
-//  Use polling
 //[Push Changes and light test]
 //todo 2 - Liquify Modal
 //  Units (in tile?), money, initiative tokens, chaos cards, resources -- it uses whatever is passed in -> if (details.money) {}
@@ -21,14 +18,17 @@
 //  Only allow council-specific cards during harvest
 //  Make sure abilities don't affect untouchable players and tiles
 //  (add to rules: Prophetic Vision, can buy garden with only 1 district)
+//  can only be played on your turn and for async turns chaos cards that only affect that player
 //[Push Changes and light test]
 //todo 4 - Various
-//  Can't start battle while battleId is present
+//  Can't start battle while conflictId is present
 //  Some stuff is set-up for "Midnight" while other stuff is not
 //  Diplomatic Immunity from initiatives
 //[Push Changes and light test]
 //todo 5 - Faction & Office Abilities
-//  ...
+//  Faction
+//  Hero
+//  Office
 //[Push Changes and light test]
 //todo 6 - Specific Cleaning
 //  clean up test files; clean up player/state JSON to consolidate where flags are (make "global" object on each player and state?)
@@ -82,7 +82,9 @@ function loadGameCallback( response ) {
 
     loadRecurringEffects();
     popModals();
-    pollForBattles();
+
+    poll( getCurrentConflict );
+    poll( getCurrentTrades );
 }
 
 function convertClasses( game ) {
@@ -173,10 +175,6 @@ function popModals() {
     }
 }
 
-function pollForBattles() {
-    window.setInterval( getCurrentBattle, PASSIVE_DELAY );
-}
-
 
 /*** SUBMIT ***/
 
@@ -184,7 +182,7 @@ function pollForBattles() {
 function submit() {
     let isValidToSubmit = true;
 
-    const isAsyncTurn = isMarketAuctionPhase() || isPreExpansionPhase() || isHarvestPhase() || isCouncilPhase();
+    const isAsyncTurn = isAsyncPhase();
     if ( !isAsyncTurn && !isPlayerTurn() ) {
         isValidToSubmit = false;
         showToaster( "It is not your turn." );
@@ -192,6 +190,20 @@ function submit() {
     else if ( currentPlayer.turn.hasSubmitted ) {
         isValidToSubmit = false;
         showToaster( "Player has already submitted." );
+    }
+    else if ( game.trades.filter( t => t.details1.id === currentPlayer.id || t.details2.id === currentPlayer.id ).some( t => t.tradeStatus === 'O' || t.tradeStatus === 'P' ) ) {
+        isValidToSubmit = false;
+        showConfirm(
+            "Warning",
+            "You currently have outstanding trade deals. By ending your turn, all deals will be declined. Are you sure you would like to end your turn?",
+            function(response) {
+                if ( response ) {
+                    declineActiveTrades();
+                    game.trades.filter( t => t.details1.id === currentPlayer.id || t.details2.id === currentPlayer.id ).forEach( t => t.tradeStatus = 'C' );
+                    submit();
+                }
+            }
+        );
     }
     else if ( isMarketPhase() ) {
         if ( isMarketAuctionPhase() ) {
@@ -783,6 +795,10 @@ function isHarvestPhase() { return game.state.phase === PHASE_HARVEST; }
 function isCouncilPhase() { return game.state.phase === PHASE_COUNCIL; }
 function isCouncilSubPhase() { return game.state.phase === PHASE_COUNCIL && game.state.subPhase === SUBPHASE_COUNCIL; }
 function isDoomsdayClockPhase() { return game.state.phase === PHASE_COUNCIL && game.state.subPhase === SUBPHASE_COUNCIL_DOOMSDAY; }
+
+function isAsyncPhase( includeCouncil = true ) {
+    return isMarketAuctionPhase() || isPreExpansionPhase() || isHarvestPhase() || (includeCouncil && isCouncilPhase());
+}
 
 function getTurn( index ) {
     let result;

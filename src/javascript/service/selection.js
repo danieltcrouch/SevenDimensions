@@ -183,35 +183,19 @@ function isDefenderImmune( tileId ) {
     return isImmune;
 }
 
-function getTilesByThreat( enemyPlayerId = null, player = currentPlayer ) {
-    let result = [];
-    const allTiles = game.board.map( t => t.id );
-    const impassableTiles = allTiles.filter( t => isImpassibleTile( t, !hasTechnology( ADAPTIVE_MAPPING, getPlayer( enemyPlayerId ) ), false ) );
-    const controlledTiles = getControlledTiles( player );
-    const enemyTiles = allTiles.filter( t => {
+function getEnemyUnits( player = currentPlayer, enemyPlayerId = null ) {
+    return game.players.filter( p => p.id !== player.id ).filter( p => !enemyPlayerId || p.id === enemyPlayerId ).reduce( (all,p) => all.concat(p.units), [] );
+}
+
+function getEnemyTiles( enemyPlayerId ) {
+    return game.board.map( t => t.id ).filter( t => {
         let isEnemyTile = false;
-        if ( !controlledTiles.includes( t.id ) ) {
-            const enemy = getEnemyPlayer( t.id );
-            if ( enemy && (!enemyPlayerId || enemy.id === enemyPlayerId) ) {
-                isEnemyTile = true;
-            }
+        const enemy = getEnemyPlayer( t.id );
+        if ( enemy && (!enemyPlayerId || enemy.id === enemyPlayerId) ) {
+            isEnemyTile = true;
         }
         return isEnemyTile;
     } );
-    enemyTiles.forEach( et => {
-        const tile = {
-            tileId: et,
-            distance: Number.POSITIVE_INFINITY
-        };
-        controlledTiles.forEach( ct => {
-            const distance = calculateShortestPath( ct, et, allTiles, impassableTiles, 10 ).length;
-            if ( distance > 0 && distance < tile.distance ) {
-                tile.distance = distance;
-            }
-        } );
-        result.push( tile );
-    } );
-    return result.sort( (t1,t2) => t1.distance - t2.distance ).map( t => t.tileId );
 }
 
 function getControlledTiles( player = currentPlayer ) {

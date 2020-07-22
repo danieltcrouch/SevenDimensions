@@ -35,7 +35,7 @@ function getUser( $email )
 function loadGame( $gameId )
 {
     $query =
-   "SELECT m.id, s.stateJson, mp.mapJson, p.id \"playerId\", p.playerJson, b.id \"battleId\", b.attackDetails
+   "SELECT m.id, s.stateJson, mp.mapJson, p.id \"playerId\", p.playerJson, b.id \"conflictId\", b.attackDetails
     FROM meta m
     	JOIN state s  ON s.gameId = m.id
         JOIN map mp   ON mp.gameId = m.id
@@ -68,10 +68,10 @@ function loadGame( $gameId )
             array_push( $game['players'], json_decode( $results[$i]['playerJson'] ) );
             array_push( $playerIds, $results[$i]['playerId'] );
         }
-        if ( !in_array($results[$i]['battleId'], $battleIds) )
+        if ( !in_array($results[$i]['conflictId'], $battleIds) )
         {
             array_push( $game['battles'], json_decode( $results[$i]['attackDetails'] ) );
-            array_push( $battleIds, $results[$i]['battleId'] );
+            array_push( $battleIds, $results[$i]['conflictId'] );
         }
     }
 

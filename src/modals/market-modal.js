@@ -2,13 +2,11 @@ let marketModalValues;
 let marketModalCallback;
 let marketTotal;
 let currentVP;
-let edenCount;
 
 function openMarketModal( currentPlayer, callback ) {
     marketModalValues = currentPlayer;
     marketModalCallback = callback;
     currentVP = calculateVP( currentPlayer );
-    edenCount = hasGarden( GARDEN_OF_EDEN, currentPlayer ) ? currentPlayer.districts.tileIds.length : 0; //todo 4 - abstract this (this logic is duplicated in display-player.js)
 
     populateUnits();
     populateAdvancements();
@@ -224,75 +222,67 @@ function convert() {
 }
 
 function purchase() {
-    if ( marketTotal > marketModalValues.warBucks ) {
-        showToaster( "Cannot afford purchase" );
-    }
-    else {
-        const technologyDoctrineCount = getSelectedOption( "technologySelect" ).index + getSelectedOption( "doctrineSelect" ).index;
-        const advancementsInCartCount = technologyDoctrineCount + nm('gardens').filter( c => c.checked ).length + nm('auctions').filter( c => c.checked ).length;
-        const cardsInCartCount = parseInt( id('cardCount').value );
-        const advancementMax = hasTechnology( GLOBAL_NETWORKING, marketModalValues ) ? GLOBAL_NETWORKING_ADVANCEMENT_MAX : MAX_ADVANCEMENTS;
-        const cardMax = hasTechnology( GLOBAL_NETWORKING, marketModalValues ) ? GLOBAL_NETWORKING_CARD_MAX : MAX_CARDS;
-        if ( technologyDoctrineCount && + marketModalValues.special.free.technologiesOrDoctrines ) {
-            showToaster( "Cannot purchase Technologies or Doctrines while you have free advancements available" );
+    let purchaseDetails = {
+        warBucksSpent: marketTotal,
+        initiatives: {
+            culturalTokens:  id( 'cInitTokenCount' ).value,
+            politicalTokens: id( 'pInitTokenCount' ).value
+        },
+        units: nm('unitCounts').map( ui => ({id: ui.id.split('-')[1], count: (ui.value || 0)}) ),
+        advancements: {
+            technologies: TECHNOLOGIES.filter( t => !marketModalValues.advancements.technologies.includes( t.id ) ).slice( 0, getSelectedOption( "technologySelect" ).index ).map( t => t.id ),
+            doctrines:    DOCTRINES.filter( d =>    !marketModalValues.advancements.doctrines.includes(    d.id ) ).slice( 0, getSelectedOption( "doctrineSelect"   ).index ).map( d => d.id ),
+            gardens:      nm('gardens').filter(  c => c.checked ).map( c => c.id.split('-')[1] ),
+            auctions:     nm('auctions').filter( c => c.checked ).map( c => c.id.split('-')[1] )
+        },
+        cards: { length: parseInt( id('cardCount').value ) }
+    };
+
+    let isValid = validateReception( marketModalValues, purchaseDetails, true );
+    if ( isValid ) {
+        if ( purchaseDetails.warBucksSpent > marketModalValues.warBucks ) {
+            isValid = false;
+            showToaster( "You do not have enough War-Bucks" );
         }
-        else if ( advancementsInCartCount + marketModalValues.turn.purchasedAdvancementCount > advancementMax ) {
-            showToaster( "Cannot purchase more than " + advancementMax + " advancements" );
-        }
-        else if ( cardsInCartCount + marketModalValues.turn.purchasedCardCount > cardMax ) {
-            showToaster( "Cannot purchase more than " + cardMax + " cards" );
-        }
-        else if ( marketModalValues.special.dark && advancementsInCartCount ) {
-            showToaster( "Cannot purchase advancements this round (Chaos Card: Dark Ages)" );
-        }
-        else if ( game.state.special.exclusiveCardClub && game.state.special.exclusiveCardClub !== marketModalValues.id && cardsInCartCount ) {
-            showToaster( "Cannot purchase cards this round (Chaos Card: Exclusive Card Club)" );
-        }
-        else {
-            let isValid = true;
-            let unitCounts = nm('unitCounts');
-            for ( let i = 0; i < unitCounts.length; i++ ) {
-                const unitInput = unitCounts[i];
-                const currentCount = marketModalValues.units.filter( u => u.unitTypeId === UNIT_TYPES[i].id ).length + unitInput.value;
-                if ( unitInput.max && currentCount > unitInput.max ) {
-                    isValid = false;
-                    showToaster( "Too many units of a type" );
-                }
+        if ( isValid ) {
+            const technologyDoctrineCount = getSelectedOption( "technologySelect" ).index + getSelectedOption( "doctrineSelect" ).index;
+            const advancementsInCartCount = technologyDoctrineCount + nm('gardens').filter( c => c.checked ).length + nm('auctions').filter( c => c.checked ).length;
+            const cardsInCartCount = parseInt( id('cardCount').value );
+            if ( technologyDoctrineCount && + marketModalValues.special.free.technologiesOrDoctrines ) {
+                isValid = false;
+                showToaster( "You cannot purchase Technologies or Doctrines while you have free advancements available" );
+            }
+            else if ( marketModalValues.special.dark && advancementsInCartCount ) {
+                isValid = false;
+                showToaster( "You cannot purchase advancements this round (Chaos Card: Dark Ages)" );
+            }
+            else if ( game.state.special.exclusiveCardClub && game.state.special.exclusiveCardClub !== marketModalValues.id && cardsInCartCount ) {
+                isValid = false;
+                showToaster( "You cannot purchase cards this round (Chaos Card: Exclusive Card Club)" );
             }
 
             if ( isValid ) {
-                marketModalValues.warBucks -= marketTotal;
-                assignPurchases();
+                assignPurchases( purchaseDetails );
                 closeOutMarketModal();
             }
         }
     }
 }
 
-function assignPurchases() {
-    marketModalValues.initiatives.culturalTokens +=  id('cInitTokenCount').value;
-    marketModalValues.initiatives.politicalTokens += id('pInitTokenCount').value;
+function assignPurchases( purchaseDetails ) {
+    marketModalValues.warBucks -= purchaseDetails.warBucksSpent;
 
-    const unitInputs = nm('unitCounts');
-    for ( let i = 0; i < unitInputs.length; i++ ) {
-        const unitInput = unitInputs[i];
-        const unitTypeId = unitInput.id.split('-')[1];
-        const count = unitInput.value || 0;
-        addUnitGroup( count, unitTypeId, DEFAULT_TILE, marketModalValues, false );
-    }
+    marketModalValues.initiatives.culturalTokens  += purchaseDetails.initiatives.culturalTokens;
+    marketModalValues.initiatives.politicalTokens += purchaseDetails.initiatives.politicalTokens;
 
-    const newTechnologyCount = getSelectedOption( "technologySelect" ).index;
-    const newTechnologyIds = TECHNOLOGIES.filter( t => !marketModalValues.advancements.technologies.includes( t.id ) ).slice( 0, newTechnologyCount ).map( t => t.id );
-    const newDoctrineCount = getSelectedOption( "doctrineSelect" ).index;
-    const newDoctrineIds = DOCTRINES.filter( d => !marketModalValues.advancements.doctrines.includes( d.id ) ).slice( 0, newDoctrineCount ).map( d => d.id );
-    const newGardenIds = nm('gardens').filter( c => c.checked ).map( c => c.id.split('-')[1] );
-    const newAuctionIds = nm('auctions').filter( c => c.checked ).map( c => c.id.split('-')[1] );
-    marketModalValues.advancements.technologies = marketModalValues.advancements.technologies.concat( newTechnologyIds );
-    marketModalValues.advancements.doctrines    = marketModalValues.advancements.doctrines.concat( newDoctrineIds );
-    marketModalValues.advancements.gardens      = marketModalValues.advancements.gardens.concat( newGardenIds );
-    marketModalValues.advancements.auctions     = marketModalValues.advancements.auctions.concat( newAuctionIds );
+    purchaseDetails.units.forEach( u => addUnitGroup( u.count, u.id, DEFAULT_TILE, marketModalValues, false ) );
 
-    let religionDoctrineIds = newDoctrineIds.filter( id => id === DOCTRINES[WHISPERS_IN_THE_DESERT].id || id === DOCTRINES[WHISPERS_IN_THE_MOUNTAINS].id || id === DOCTRINES[WHISPERS_IN_DISTANT_LANDS].id );
+    marketModalValues.advancements.technologies = marketModalValues.advancements.technologies.concat( purchaseDetails.advancements.technologies );
+    marketModalValues.advancements.doctrines    = marketModalValues.advancements.doctrines.concat(    purchaseDetails.advancements.doctrines );
+    marketModalValues.advancements.gardens      = marketModalValues.advancements.gardens.concat(      purchaseDetails.advancements.gardens );
+    marketModalValues.advancements.auctions     = marketModalValues.advancements.auctions.concat(     purchaseDetails.advancements.auctions );
+
+    let religionDoctrineIds = purchaseDetails.advancements.doctrines.filter( id => id === DOCTRINES[WHISPERS_IN_THE_DESERT].id || id === DOCTRINES[WHISPERS_IN_THE_MOUNTAINS].id || id === DOCTRINES[WHISPERS_IN_DISTANT_LANDS].id );
     if ( religionDoctrineIds.length && !marketModalValues.religion ) {
         const currentReligionIds = game.players.map( p => p.religion ? p.religion.id : null ).filter( Boolean );
         for ( let i = 0; i < religionDoctrineIds.length; i++ ) {
@@ -307,7 +297,7 @@ function assignPurchases() {
     }
 
     //Equal chance of getting recently discarded card
-    const newCardIds = Deck.getCurrentDeck( CHAOS, game.players.map( p => p.cards.chaos ) ).getRandomCards( parseInt( id('cardCount').value ) ).map( c => c.id );
+    const newCardIds = Deck.getCurrentDeck( CHAOS, game.players.map( p => p.cards.chaos ) ).getRandomCards( purchaseDetails.cards.length ).map( c => c.id );
     marketModalValues.cards.chaos = marketModalValues.cards.chaos.concat( newCardIds );
 
     const newWonderIds = nm('wonders').filter( c => c.checked ).map( c => c.id.split('-')[1] );
@@ -316,7 +306,7 @@ function assignPurchases() {
         marketModalValues.dimensions.find( d => d.id === dimensionId ).wonderTileId = DEFAULT_TILE;
     } );
 
-    performPurchasedAdvancements( marketModalValues, newTechnologyIds, newDoctrineIds, newGardenIds, newAuctionIds );
+    performPurchasedAdvancements( marketModalValues, purchaseDetails.advancements.technologies, purchaseDetails.advancements.doctrines, purchaseDetails.advancements.gardens, purchaseDetails.advancements.auctions );
     performPurchasedCards( marketModalValues, newCardIds );
 }
 

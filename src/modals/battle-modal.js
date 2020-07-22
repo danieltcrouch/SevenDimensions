@@ -265,7 +265,7 @@ function attack() {
 function getOpponentAttack() {
     getAttacks(
         isAttacker,
-        isAttacker ? ( isFirstRound ? FIRST_TIMEOUT : ( isAiActivated ? AI_TIMEOUT : NORMAL_TIMEOUT ) ) : MAX_TIMEOUT,
+        isAttacker ? ( isFirstRound ? CONFLICT_TIMEOUT : ( isAiActivated ? AI_TIMEOUT : SUBSEQUENT_TIMEOUT ) ) : MAX_TIMEOUT,
         function( enemyPlayerDetails ) {
             updateAI( false );
             getOpponentAttackCallback( enemyPlayerDetails );
@@ -321,7 +321,7 @@ function disband() {
 function getOpponentDisband() {
     getDisbands(
         isAttacker,
-        isAttacker ? ( isAiActivated ? AI_TIMEOUT : NORMAL_TIMEOUT ) : MAX_TIMEOUT,
+        isAttacker ? ( isAiActivated ? AI_TIMEOUT : SUBSEQUENT_TIMEOUT ) : MAX_TIMEOUT,
         function( enemyPlayerDetails ) {
             updateAI( false );
             getOpponentDisbandCallback( enemyPlayerDetails );
@@ -420,7 +420,7 @@ function retreat() {
 }
 
 function closeOutBattleModal() {
-    battleId = null;
+    conflictId = null;
 
     closeModalJS( "battleModal" );
     battleModalCallback( currentPlayerDetails, enemyPlayerDetails );
