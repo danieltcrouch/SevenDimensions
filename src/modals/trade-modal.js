@@ -218,10 +218,10 @@ function updateDetails() {
 }
 
 function updateEnemyCardDetails() {
-    const cardCount = Math.min( parseInt( id('enemyCardCount').value ), enemyPlayerDetails.cards.chaos.length );
+    const cardCount = Math.min( parseInt( id('enemyCardCount').value ), enemyPlayerTDetails.cards.chaos.length );
     let result = enemyTradeDetails ? enemyTradeDetails.cards : [];
     if ( result.length < cardCount ) {
-        const availableCards = enemyPlayerDetails.cards.chaos.filter( c => !result.includes( c ) );
+        const availableCards = enemyPlayerTDetails.cards.chaos.filter( c => !result.includes( c ) );
         for ( let i = 0; i < (cardCount - result.length); i++ ) {
             result.push( availableCards[i] );
         }
@@ -241,7 +241,7 @@ function validateOffer() {
         isValid = false;
         showToaster( "Your trade details are invalid" );
     }
-    else if ( isTradeValid( enemyPlayerDetails, trade ) ) {
+    else if ( isTradeValid( enemyPlayerTDetails, trade ) ) {
         isValid = false;
         showToaster( "The other player’s trade details are invalid" );
     }
