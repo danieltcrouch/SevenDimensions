@@ -173,10 +173,6 @@ function popModals() {
     else if ( isDoomsdayClockPhase() && game.state.event <= EVENT_MARS && !currentPlayer.turn.hasSubmitted ) {
         showDoomsdayActions();
     }
-
-    if ( game.trades.filter( t => (t.tradeStatus === 'O' || t.tradeStatus === 'P') && (t.details1.id === currentPlayer.id || t.details2.id === currentPlayer.id) ).length ) {
-        showToaster("You have current trades.");
-    }
 }
 
 
@@ -195,7 +191,7 @@ function submit() {
         isValidToSubmit = false;
         showToaster( "Player has already submitted." );
     }
-    else if ( game.trades.filter( t => t.details1.id === currentPlayer.id || t.details2.id === currentPlayer.id ).some( t => t.tradeStatus === 'O' || t.tradeStatus === 'P' ) ) {
+    else if ( currentTrades.length ) {
         isValidToSubmit = false;
         showConfirm(
             "Warning",
@@ -203,7 +199,7 @@ function submit() {
             function(response) {
                 if ( response ) {
                     declineActiveTrades();
-                    game.trades.filter( t => t.details1.id === currentPlayer.id || t.details2.id === currentPlayer.id ).forEach( t => t.tradeStatus = 'C' );
+                    currentPlayer.forEach( t => t.tradeStatus = 'C' );
                     submit();
                 }
             }

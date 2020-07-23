@@ -1,3 +1,5 @@
+let currentTrades = null;
+
 function startTrade() {
     closeModalJS( "modal" );
     pickPlayers(
@@ -11,7 +13,7 @@ function startTrade() {
                 );
             }
         },
-        game.players.filter( p => p.id !== currentPlayer.id ), //todo 1 - adds players to list (needs to reset)
+        game.players.filter( p => p.id !== currentPlayer.id ),
         "Select a player to trade with:"
     );
     //todo 7 - when I cancel, the background gray background doesn't disappear
@@ -20,7 +22,7 @@ function startTrade() {
 
 function continueTrade( tradeId ) {
     closeModalJS( "modal" );
-    const trade = game.trades.find( t => t.id === tradeId );
+    const trade = currentTrades.find( t => t.id === tradeId );
     const currentId = trade.details1.id === currentPlayer.id ? '1' : '2';
     const otherPlayer = currentId === '1' ? getPlayer( trade.details2.id ) : getPlayer( trade.details1.id );
     openTradeModal(
@@ -38,7 +40,7 @@ function continueTrade( tradeId ) {
 
 
 function createTrade( tradeFromDetails, tradeToDetails ) {
-    game.trades.push( {
+    currentTrades.push( {
         details1: tradeFromDetails,
         details2: tradeToDetails,
         status1: 'O',
@@ -75,7 +77,7 @@ function getCurrentTrades() {
 }
 
 function saveOffer( tradeId, details1, details2, isPlayer1 ) {
-    const trade = game.trades.find( t => t.id === tradeId );
+    const trade = currentTrades.find( t => t.id === tradeId );
     trade.details1 = details1;
     trade.details1 = details2;
     trade.status1 = isPlayer1?'O':'W';
@@ -97,7 +99,7 @@ function saveOffer( tradeId, details1, details2, isPlayer1 ) {
 }
 
 function saveAccept( tradeId, details1, details2, isPlayer1 ) {
-    const trade = game.trades.find( t => t.id === tradeId );
+    const trade = currentTrades.find( t => t.id === tradeId );
     trade.details1 = details1;
     trade.details1 = details2;
     trade.status1 = isPlayer1?'A':null;
@@ -119,7 +121,7 @@ function saveAccept( tradeId, details1, details2, isPlayer1 ) {
 }
 
 function saveAcceptStatus( tradeId, isPlayer1, callback = function() {} ) {
-    const trade = game.trades.find( t => t.id === tradeId );
+    const trade = currentTrades.find( t => t.id === tradeId );
     trade.status1 = 'A';
     trade.status2 = 'A';
     trade.tradeStatus = 'P';
@@ -137,7 +139,7 @@ function saveAcceptStatus( tradeId, isPlayer1, callback = function() {} ) {
 }
 
 function saveDecline( tradeId, isPlayer1, callback = function() {} ) {
-    const trade = game.trades.find( t => t.id === tradeId );
+    const trade = currentTrades.find( t => t.id === tradeId );
     trade.status1 = isPlayer1?'D':null;
     trade.status2 = isPlayer1?null:'D';
     trade.tradeStatus = 'P';
@@ -155,17 +157,28 @@ function saveDecline( tradeId, isPlayer1, callback = function() {} ) {
 }
 
 function endTrade( tradeId, callback = function() {} ) {
-    const trade = game.trades.find( t => t.id === tradeId );
+    const trade = currentTrades.find( t => t.id === tradeId );
+    trade.details1 = {
+        round: game.state.round,
+        player1: trade.details1.id,
+        player2: trade.details2.id,
+        result1: trade.status1,
+        result2: trade.status2
+    };
+    trade.details2 = null;
     trade.status1 = null;
     trade.status2 = null;
-    trade.tradeStatus = 'C';
+    trade.tradeStatus = null;
+    game.trades.push( trade );
     postCallEncoded(
         "php/trade-controller.php",
         {
-            action: "saveStatus",
+            action: "saveTrade",
             tradeId: tradeId,
-            status1: trade.status1,
-            status2: trade.status2,
+            details1: trade.details1,
+            details2: trade.details2,
+            status1:  trade.status1,
+            status2:  trade.status2,
             tradeStatus: trade.tradeStatus
         },
         callback
@@ -173,7 +186,7 @@ function endTrade( tradeId, callback = function() {} ) {
 }
 
 function declineActiveTrades() {
-    game.trades.filter( t => t.tradeStatus === 'P' || t.tradeStatus === 'O' ).forEach( t => {
+    currentTrades.forEach( t => {
         const isPlayer1 = t.details1.id === currentPlayer.id;
         const hasAcceptDebited = t.tradeStatus === 'P' && (isPlayer1?t.status1==='A':t.status2==='A') && (isPlayer1?t.status2===null:t.status1===null);
         saveDecline( t.id, isPlayer1, function() {
@@ -189,45 +202,48 @@ function declineActiveTrades() {
 
 
 function updateCurrentTrades( trades ) {
-    let hasReceivedOffer = false;
-    let hasOfferChanged = false;
+    let hasOfferBeenResponded = false;
+    let hasOfferBeenCountered = false;
+    const firstView = currentTrades === null;
+    const tradeCount = !firstView ? currentTrades.length : 0;
+
     trades.forEach( t => {
         t.details1 = jsonParse( t.details1 );
         t.details2 = jsonParse( t.details2 );
-        if ( game.trades.some( gt => gt.id === t.id ) ) {
-            const index = game.trades.findIndex( gt => gt.id === t.id );
-            if ( game.trades[index].status1 !== t.status1 ||
-                 game.trades[index].status2 !== t.status2 ||
-                 game.trades[index].tradeStatus !== t.tradeStatus ) {
-                hasOfferChanged = true;
+
+        if ( !hasOfferBeenCountered ) {
+            const oldTrade = currentTrades.find( ct => ct.id === t.id );
+            if ( oldTrade ) {
+                const isPlayer1 = t.details1.id === currentPlayer.id;
+                const enemyStatusOld = isPlayer1 ? oldTrade.status2 : oldTrade.status1;
+                const enemyStatusNew = isPlayer1 ? t.status2 : t.status1;
+                hasOfferBeenCountered = ( enemyStatusNew === 'O' && enemyStatusOld === 'W' );
             }
-            game.trades[index] = t;
-        }
-        else {
-            game.trades.push( t );
-            hasReceivedOffer = true;
         }
 
-        performAutomaticTradeActions( t );
+        let hasOfferResponse = performAutomaticTradeActions( t );
+        hasOfferBeenResponded = hasOfferBeenResponded || hasOfferResponse;
     } );
+    currentTrades = trades;
 
-    if ( hasOfferChanged ) {
-        showToaster( "Your trade offer status has changed." );
+    if ( hasOfferBeenResponded ) {
+        showToaster( "An offer has been accepted or declined." );
     }
-    else if ( hasReceivedOffer ) {
-        showToaster( "You have received a new trade offer." );
+    else if ( hasOfferBeenCountered || currentTrades.length > tradeCount ) {
+        showToaster( "You have trade deals to view." );
     }
-    if ( hasOfferChanged || hasReceivedOffer ) {
-        refreshTrade();
-    }
+
+    refreshTrade();
 }
 
 function performAutomaticTradeActions( trade ) {
+    let hasOfferBeenResponded = false;
     if ( trade.tradeStatus === 'P' ) {
         const isPlayer1 = trade.details1.id === currentPlayer.id;
         const currentStatus = isPlayer1 ? trade.status1 : trade.status2;
         const enemyStatus   = isPlayer1 ? trade.status2 : trade.status1;
         if ( currentStatus === null && enemyStatus ) { //other player has responded
+            hasOfferBeenResponded = true;
             if ( enemyStatus === 'A' ) {
                 if ( isTradeValid( currentPlayer, trade ) ) {
                     debitTrade(  currentPlayer, isPlayer1?trade.details1:trade.details2 );
@@ -246,7 +262,7 @@ function performAutomaticTradeActions( trade ) {
             if ( enemyStatus === 'A' ) {
                 creditTrade( currentPlayer, isPlayer1?trade.details2:trade.details1 );
             }
-            else {
+            else if ( currentStatus === 'A' ) {
                 creditTrade( currentPlayer, isPlayer1?trade.details1:trade.details2 ); //get debit back
             }
             endTrade( trade.id );
@@ -256,6 +272,7 @@ function performAutomaticTradeActions( trade ) {
         const isPlayer1 = trade.details1.id === currentPlayer.id;
         saveDecline( trade.id, isPlayer1 );
     }
+    return hasOfferBeenResponded;
 }
 
 function isTradeValid( player, trade ) {
@@ -344,5 +361,5 @@ function creditTrade( player, tradeDetails ) {
 //  player: W/O (waiting, offer)
 //trade: P (pending)
 //  player: A/D/Null (accepted, declined)
-//trade: C (complete)
+//trade: Null (complete)
 //  player: Null

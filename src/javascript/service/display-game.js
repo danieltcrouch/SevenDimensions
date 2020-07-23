@@ -595,13 +595,20 @@ function showTrade() {
 }
 
 function getCurrentTradesDisplay() {
-    let result = game.trades.filter( t => (t.tradeStatus === 'O' || t.tradeStatus === 'P') && (t.details1.id === currentPlayer.id || t.details2.id === currentPlayer.id) );
-    return result.length ? result.map( t => {
-        const currentId = t.details1.id === currentPlayer.id ? '1' : '2';
-        const currentTurn = currentId === '1' ? (t.status1 === 'W' || !t.status1) : (t.status2 === 'W' || !t.status2); //Waiting in offer stage; Null in pending completion stage
-        const enemyName = getPlayer( currentId === '1' ? t.details2.id : t.details1.id ).username;
-        return `<span ${currentTurn ? "class=\"link\" onclick=\"continueTrade('" + t.id + "')\"" : ""}>${enemyName} ${!currentTurn ? "(Waiting...)" : ""}</span><br/>\n`;
-    } ) : "None";
+    let result;
+    if ( currentTrades !== null ) {
+        result = currentTrades.filter( t => t.tradeStatus === 'O' || t.tradeStatus === 'P' );
+        return result.length ? result.map( t => {
+            const currentId = t.details1.id === currentPlayer.id ? '1' : '2';
+            const currentTurn = currentId === '1' ? (t.status1 === 'W' || !t.status1) : (t.status2 === 'W' || !t.status2); //Waiting in offer stage; Null in pending completion stage
+            const enemyName = getPlayer( currentId === '1' ? t.details2.id : t.details1.id ).username;
+            return `<span ${currentTurn ? "class=\"link\" onclick=\"continueTrade('" + t.id + "')\"" : ""}>${enemyName} ${!currentTurn ? "(Waiting...)" : ""}</span><br/>\n`;
+        } ) : "None";
+    }
+    else {
+        result = "Still loading...";
+    }
+    return result;
 }
 
 function refreshTrade() {

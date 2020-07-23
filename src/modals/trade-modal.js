@@ -207,7 +207,7 @@ function updateDetails() {
 
 function updateEnemyCardDetails() {
     const cardCount = Math.min( parseInt( id('enemyCardCount').value || 0 ), enemyPlayerTDetails.cards.chaos.length );
-    let result = enemyTradeDetails ? enemyTradeDetails.cards : [];
+    let result = enemyTradeDetails ? enemyTradeDetails.chaos : [];
     if ( result.length < cardCount ) {
         const availableCards = enemyPlayerTDetails.cards.chaos.filter( c => !result.includes( c ) );
         for ( let i = 0; i < (cardCount - result.length); i++ ) {
@@ -269,7 +269,7 @@ function declineTrade() {
 
 function counterTrade() {
     if ( validateOffer() ) {
-        saveOffer( tradeId, (isPlayer1?currentTradeDetails:enemyTradeDetails), (isPlayer1?enemyPlayerTDetails:currentPlayerTDetails), isPlayer1 );
+        saveOffer( tradeId, (isPlayer1?currentTradeDetails:enemyTradeDetails), (isPlayer1?enemyTradeDetails:currentTradeDetails), isPlayer1 );
         closeOutTradeModal();
     }
 }

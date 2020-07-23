@@ -41,8 +41,8 @@ function loadGame( $gameId )
         JOIN map mp   ON mp.gameId = m.id
         JOIN player p ON p.gameId = m.id AND p.active = 1
         LEFT OUTER JOIN conflict b ON b.gameId = m.id AND b.conflictStatus IS NULL
-        LEFT OUTER JOIN trade t ON t.gameId = m.id AND t.tradeStatus = 'C'
-    WHERE m.id = :gameId "; //todo 1 - Make complete status NULL rather than 'C'; details1 should have summary
+        LEFT OUTER JOIN trade t ON t.gameId = m.id AND t.tradeStatus IS NULL
+    WHERE m.id = :gameId ";
 
     $connection = getConnection();
     $statement = $connection->prepare( $query );
