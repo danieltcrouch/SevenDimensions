@@ -192,6 +192,8 @@ function updateCurrentTrades( trades ) {
     let hasReceivedOffer = false;
     let hasOfferChanged = false;
     trades.forEach( t => {
+        t.details1 = jsonParse( t.details1 );
+        t.details2 = jsonParse( t.details2 );
         if ( game.trades.some( gt => gt.id === t.id ) ) {
             const index = game.trades.findIndex( gt => gt.id === t.id );
             if ( game.trades[index].status1 !== t.status1 ||
@@ -275,16 +277,16 @@ function isTradeValid( player, trade ) {
     else if ( tradeDetails.units.some( u => u.count > player.units.filter( cu => cu.unitTypeId === u.id ).length ) ) {
         isValid = false;
     }
-    else if ( tradeDetails.technologies.some( a => !player.advancements.technologies.includes( a ) ) ) {
+    else if ( tradeDetails.advancements.technologies.some( a => !player.advancements.technologies.includes( a ) ) ) {
         isValid = false;
     }
-    else if ( tradeDetails.doctrines.some( a => !player.advancements.doctrines.includes( a ) ) ) {
+    else if ( tradeDetails.advancements.doctrines.some( a => !player.advancements.doctrines.includes( a ) ) ) {
         isValid = false;
     }
-    else if ( tradeDetails.gardens.some( a => !player.advancements.gardens.includes( a ) ) ) {
+    else if ( tradeDetails.advancements.gardens.some( a => !player.advancements.gardens.includes( a ) ) ) {
         isValid = false;
     }
-    else if ( tradeDetails.auctions.some( a => !player.advancements.auctions.includes( a ) ) ) {
+    else if ( tradeDetails.advancements.auctions.some( a => !player.advancements.auctions.includes( a ) ) ) {
         isValid = false;
     }
     else if ( tradeDetails.chaos.length > player.cards.chaos.length ) {
@@ -323,11 +325,15 @@ function creditTrade( player, tradeDetails ) {
     tradeDetails.units.forEach( u => {
         addUnitGroup( u.count, u.id, DEFAULT_TILE, player, false );
     } );
-    player.advancements.technologies.concat( tradeDetails.technologies );
-    player.advancements.doctrines.concat(    tradeDetails.doctrines );
-    player.advancements.gardens.concat(      tradeDetails.gardens );
-    player.advancements.auctions.concat(     tradeDetails.auctions );
-    player.turn.purchasedAdvancementCount += tradeDetails.technologies.length + tradeDetails.doctrines.length + tradeDetails.gardens.length + tradeDetails.auctions.length;
+    player.advancements.technologies.concat( tradeDetails.advancements.technologies );
+    player.advancements.doctrines.concat(    tradeDetails.advancements.doctrines );
+    player.advancements.gardens.concat(      tradeDetails.advancements.gardens );
+    player.advancements.auctions.concat(     tradeDetails.advancements.auctions );
+    player.turn.purchasedAdvancementCount +=
+        tradeDetails.advancements.technologies.length +
+        tradeDetails.advancements.doctrines.length +
+        tradeDetails.advancements.gardens.length +
+        tradeDetails.advancements.auctions.length;
     player.cards.chaos.concat( tradeDetails.chaos );
     player.turn.purchasedCardCount += tradeDetails.chaos.length
 

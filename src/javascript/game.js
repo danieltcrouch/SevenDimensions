@@ -173,6 +173,10 @@ function popModals() {
     else if ( isDoomsdayClockPhase() && game.state.event <= EVENT_MARS && !currentPlayer.turn.hasSubmitted ) {
         showDoomsdayActions();
     }
+
+    if ( game.trades.filter( t => (t.tradeStatus === 'O' || t.tradeStatus === 'P') && (t.details1.id === currentPlayer.id || t.details2.id === currentPlayer.id) ).length ) {
+        showToaster("You have current trades.");
+    }
 }
 
 

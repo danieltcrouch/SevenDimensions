@@ -14,7 +14,7 @@ function validateReception( playerDetails, receptionDetails, isCurrentPlayer, di
         displayToasterCheck( displayToaster, isCurrentPlayer ? `You cannot have over ${advancementMax} advancements` : `Player cannot have over ${advancementMax} advancements` );
         isValid = false;
     }
-    else if ( ( receptionDetails.cards.length + playerDetails.turn.purchasedCardCount ) > cardMax ) {
+    else if ( ( receptionDetails.chaos.length + playerDetails.turn.purchasedCardCount ) > cardMax ) {
         displayToasterCheck( displayToaster, isCurrentPlayer ? `You cannot gain over ${cardMax} cards this turn` : `Player cannot gain over ${cardMax} cards` );
         isValid = false;
     }

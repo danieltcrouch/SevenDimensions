@@ -605,7 +605,7 @@ function getCurrentTradesDisplay() {
 }
 
 function refreshTrade() {
-    if ( id('modal').display !== "none" && id('modalHeader').innerText === "Trade" ) {
+    if ( id('modal').style.display !== "none" && id('modal').querySelector( '#modalHeader' ).innerText === "Trade" ) {
         showTrade();
     }
 }

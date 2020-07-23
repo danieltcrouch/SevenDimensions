@@ -235,7 +235,7 @@ function purchase() {
             gardens:      nm('gardens').filter(  c => c.checked ).map( c => c.id.split('-')[1] ),
             auctions:     nm('auctions').filter( c => c.checked ).map( c => c.id.split('-')[1] )
         },
-        cards: { length: parseInt( id('cardCount').value ) }
+        chaos: { length: parseInt( id('cardCount').value ) }
     };
 
     let isValid = validateReception( marketModalValues, purchaseDetails, true );
