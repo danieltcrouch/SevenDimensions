@@ -40,6 +40,7 @@ function continueTrade( tradeId ) {
 
 
 function createTrade( tradeFromDetails, tradeToDetails ) {
+    currentTrades = currentTrades || [];
     currentTrades.push( {
         details1: tradeFromDetails,
         details2: tradeToDetails,
@@ -94,7 +95,9 @@ function saveOffer( tradeId, details1, details2, isPlayer1 ) {
             status2: trade.status2,
             tradeStatus: trade.tradeStatus
         },
-        function() {}
+        function() {
+            showToaster( "Counter offer sent" );
+        }
     );
 }
 
@@ -112,18 +115,18 @@ function saveAccept( tradeId, details1, details2, isPlayer1 ) {
             tradeId: tradeId,
             details1: details1,
             details2: details2,
-            status1: trade.status1,
-            status2: trade.status2,
+            status1: trade.status1 || "",
+            status2: trade.status2 || "",
             tradeStatus: trade.tradeStatus
         },
         function() {}
     );
 }
 
-function saveAcceptStatus( tradeId, isPlayer1, callback = function() {} ) {
+function saveComplete( tradeId, isPlayer1, callback = function() {} ) {
     const trade = currentTrades.find( t => t.id === tradeId );
-    trade.status1 = 'A';
-    trade.status2 = 'A';
+    trade.status1 = isPlayer1?'C':'A';
+    trade.status2 = isPlayer1?'A':'C';
     trade.tradeStatus = 'P';
     postCallEncoded(
         "php/trade-controller.php",
@@ -148,8 +151,8 @@ function saveDecline( tradeId, isPlayer1, callback = function() {} ) {
         {
             action: "saveStatus",
             tradeId: tradeId,
-            status1: trade.status1,
-            status2: trade.status2,
+            status1: trade.status1 || "",
+            status2: trade.status2 || "",
             tradeStatus: trade.tradeStatus
         },
         callback
@@ -175,11 +178,11 @@ function endTrade( tradeId, callback = function() {} ) {
         {
             action: "saveTrade",
             tradeId: tradeId,
-            details1: trade.details1,
-            details2: trade.details2,
-            status1:  trade.status1,
-            status2:  trade.status2,
-            tradeStatus: trade.tradeStatus
+            details1: trade.details1 || "",
+            details2: trade.details2 || "",
+            status1:  trade.status1 || "",
+            status2:  trade.status2 || "",
+            tradeStatus: trade.tradeStatus || ""
         },
         callback
     );
@@ -205,14 +208,16 @@ function updateCurrentTrades( trades ) {
     let hasOfferBeenResponded = false;
     let hasOfferBeenCountered = false;
     const firstView = currentTrades === null;
-    const tradeCount = !firstView ? currentTrades.length : 0;
+    const oldTrades = currentTrades;
+    const tradeCount = !firstView ? oldTrades.length : 0;
+    currentTrades = trades;
 
-    trades.forEach( t => {
+    currentTrades.forEach( t => {
         t.details1 = jsonParse( t.details1 );
         t.details2 = jsonParse( t.details2 );
 
-        if ( !hasOfferBeenCountered ) {
-            const oldTrade = currentTrades.find( ct => ct.id === t.id );
+        if ( !hasOfferBeenCountered && oldTrades ) {
+            const oldTrade = oldTrades.find( ct => ct.id === t.id );
             if ( oldTrade ) {
                 const isPlayer1 = t.details1.id === currentPlayer.id;
                 const enemyStatusOld = isPlayer1 ? oldTrade.status2 : oldTrade.status1;
@@ -221,10 +226,8 @@ function updateCurrentTrades( trades ) {
             }
         }
 
-        let hasOfferResponse = performAutomaticTradeActions( t );
-        hasOfferBeenResponded = hasOfferBeenResponded || hasOfferResponse;
+        hasOfferBeenResponded = performAutomaticTradeActions( t, firstView ) || hasOfferBeenResponded;
     } );
-    currentTrades = trades;
 
     if ( hasOfferBeenResponded ) {
         showToaster( "An offer has been accepted or declined." );
@@ -236,19 +239,24 @@ function updateCurrentTrades( trades ) {
     refreshTrade();
 }
 
-function performAutomaticTradeActions( trade ) {
+function performAutomaticTradeActions( trade, firstView ) {
     let hasOfferBeenResponded = false;
     if ( trade.tradeStatus === 'P' ) {
         const isPlayer1 = trade.details1.id === currentPlayer.id;
         const currentStatus = isPlayer1 ? trade.status1 : trade.status2;
         const enemyStatus   = isPlayer1 ? trade.status2 : trade.status1;
+
+        if ( firstView && currentStatus === 'A' ) {
+            debitTrade( currentPlayer, isPlayer1?trade.details1:trade.details2 ); //they ended session and got back what should be debited from them
+        }
+
         if ( currentStatus === null && enemyStatus ) { //other player has responded
             hasOfferBeenResponded = true;
             if ( enemyStatus === 'A' ) {
                 if ( isTradeValid( currentPlayer, trade ) ) {
                     debitTrade(  currentPlayer, isPlayer1?trade.details1:trade.details2 );
                     creditTrade( currentPlayer, isPlayer1?trade.details2:trade.details1 );
-                    saveAcceptStatus( trade.id, isPlayer1 );
+                    saveComplete( trade.id, isPlayer1 );
                 }
                 else {
                     saveDecline( trade.id, isPlayer1 );
@@ -258,8 +266,9 @@ function performAutomaticTradeActions( trade ) {
                 endTrade( trade.id );
             }
         }
-        else if ( currentStatus && enemyStatus ) { //both players have responded
-            if ( enemyStatus === 'A' ) {
+        else if ( currentStatus && enemyStatus && currentStatus !== 'C' ) { //both players have responded (and
+            hasOfferBeenResponded = true;
+            if ( enemyStatus === 'C' ) {
                 creditTrade( currentPlayer, isPlayer1?trade.details2:trade.details1 );
             }
             else if ( currentStatus === 'A' ) {
@@ -342,24 +351,24 @@ function creditTrade( player, tradeDetails ) {
     tradeDetails.units.forEach( u => {
         addUnitGroup( u.count, u.id, DEFAULT_TILE, player, false );
     } );
-    player.advancements.technologies.concat( tradeDetails.advancements.technologies );
-    player.advancements.doctrines.concat(    tradeDetails.advancements.doctrines );
-    player.advancements.gardens.concat(      tradeDetails.advancements.gardens );
-    player.advancements.auctions.concat(     tradeDetails.advancements.auctions );
+    player.advancements.technologies.push( ...tradeDetails.advancements.technologies );
+    player.advancements.doctrines.push(    ...tradeDetails.advancements.doctrines );
+    player.advancements.gardens.push(      ...tradeDetails.advancements.gardens );
+    player.advancements.auctions.push(     ...tradeDetails.advancements.auctions );
     player.turn.purchasedAdvancementCount +=
         tradeDetails.advancements.technologies.length +
         tradeDetails.advancements.doctrines.length +
         tradeDetails.advancements.gardens.length +
         tradeDetails.advancements.auctions.length;
-    player.cards.chaos.concat( tradeDetails.chaos );
+    player.cards.chaos.push( ...tradeDetails.chaos );
     player.turn.purchasedCardCount += tradeDetails.chaos.length
 
     reloadPage(true);
 }
 
-//trade: O (Offer)
+//trade: O (offer)
 //  player: W/O (waiting, offer)
 //trade: P (pending)
-//  player: A/D/Null (accepted, declined)
+//  player: A/C/D/Null (accepted, completed (for the passive accept), declined)
 //trade: Null (complete)
 //  player: Null

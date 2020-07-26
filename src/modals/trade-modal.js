@@ -136,31 +136,52 @@ function populateCheckboxes( data, wrapperId ) {
 
 function showTradeDetails( isExistingTrade ) {
     if ( isExistingTrade ) {
-        id('currentWCount').value = currentTradeDetails.warBucks;
+        id('currentWCount').value = currentTradeDetails.warBucks || null;
         id('currentRUCount').value = currentTradeDetails.resources.find( r => r.id === RESOURCES[0].id ).count || null;
         id('currentRCCount').value = currentTradeDetails.resources.find( r => r.id === RESOURCES[1].id ).count || null;
         id('currentRACount').value = currentTradeDetails.resources.find( r => r.id === RESOURCES[2].id ).count || null;
         id('currentICCount').value = currentTradeDetails.culturalTokens  || null;
         id('currentIPCount').value = currentTradeDetails.politicalTokens || null;
         currentTradeDetails.units.filter( u => u.count ).forEach( u => id(`currentUnitWrapper-${u.id}`).value = u.count );
-        currentTradeDetails.advancements.technologies.forEach( a => id(`currentAdvancementWrapper-Technology-${a}` ).checked = true );
-        currentTradeDetails.advancements.doctrines.forEach(    a => id(`currentAdvancementWrapper-Doctrine-${a}`   ).checked = true );
-        currentTradeDetails.advancements.gardens.forEach(      a => id(`currentAdvancementWrapper-Garden-${a}`     ).checked = true );
-        currentTradeDetails.advancements.auctions.forEach(     a => id(`currentAdvancementWrapper-Auction Lot-${a}`).checked = true );
-        currentTradeDetails.chaos.forEach( c => id(`currentCardsWrapper-Chaos-${c}`).checked = true );
+        currentTradeDetails.advancements.technologies.forEach( a => id(`currentAdvancementWrapper-ADV-Technology-${a}` ).checked = true );
+        currentTradeDetails.advancements.doctrines.forEach(    a => id(`currentAdvancementWrapper-ADV-Doctrine-${a}`   ).checked = true );
+        currentTradeDetails.advancements.gardens.forEach(      a => id(`currentAdvancementWrapper-ADV-Garden-${a}`     ).checked = true );
+        currentTradeDetails.advancements.auctions.forEach(     a => id(`currentAdvancementWrapper-ADV-Auction Lot-${a}`).checked = true );
+        currentTradeDetails.chaos.forEach( c => id(`currentCardsWrapper-CARD-Chaos-${c}`).checked = true );
 
-        id('enemyWCount').value = enemyTradeDetails.warBucks;
+        id('enemyWCount').value = enemyTradeDetails.warBucks || null;
         id('enemyRUCount').value = enemyTradeDetails.resources.find( r => r.id === RESOURCES[0].id ).count || null;
         id('enemyRCCount').value = enemyTradeDetails.resources.find( r => r.id === RESOURCES[1].id ).count || null;
         id('enemyRACount').value = enemyTradeDetails.resources.find( r => r.id === RESOURCES[2].id ).count || null;
         id('enemyICCount').value = enemyTradeDetails.culturalTokens  || null;
         id('enemyIPCount').value = enemyTradeDetails.politicalTokens || null;
         enemyTradeDetails.units.filter( u => u.count ).forEach( u => id(`enemyUnitWrapper-${u.id}`).value = u.count );
-        enemyTradeDetails.advancements.technologies.forEach( a => id(`enemyAdvancementWrapper-Technology-${a}` ).checked = true );
-        enemyTradeDetails.advancements.doctrines.forEach(    a => id(`enemyAdvancementWrapper-Doctrine-${a}`   ).checked = true );
-        enemyTradeDetails.advancements.gardens.forEach(      a => id(`enemyAdvancementWrapper-Garden-${a}`     ).checked = true );
-        enemyTradeDetails.advancements.auctions.forEach(     a => id(`enemyAdvancementWrapper-Auction Lot-${a}`).checked = true );
+        enemyTradeDetails.advancements.technologies.forEach( a => id(`enemyAdvancementWrapper-ADV-Technology-${a}` ).checked = true );
+        enemyTradeDetails.advancements.doctrines.forEach(    a => id(`enemyAdvancementWrapper-ADV-Doctrine-${a}`   ).checked = true );
+        enemyTradeDetails.advancements.gardens.forEach(      a => id(`enemyAdvancementWrapper-ADV-Garden-${a}`     ).checked = true );
+        enemyTradeDetails.advancements.auctions.forEach(     a => id(`enemyAdvancementWrapper-ADV-Auction Lot-${a}`).checked = true );
         id(`enemyCardCount`).value = enemyTradeDetails.chaos.length || null;
+    }
+    else {
+        id('currentWCount').value = "";
+        id('currentRUCount').value = "";
+        id('currentRCCount').value = "";
+        id('currentRACount').value = "";
+        id('currentICCount').value = "";
+        id('currentIPCount').value = "";
+        nm('currentUnitWrapper-unitCounts').forEach( u => u.value = "" );
+        nm('currentAdvancementWrapper').forEach( a => a.checked = false );
+        nm('currentCardsWrapper').forEach( a => a.checked = false );
+
+        id('enemyWCount').value = "";
+        id('enemyRUCount').value = "";
+        id('enemyRCCount').value = "";
+        id('enemyRACount').value = "";
+        id('enemyICCount').value = "";
+        id('enemyIPCount').value = "";
+        nm('enemyUnitWrapper-unitCounts').forEach( u => u.value = "" );
+        nm('enemyAdvancementWrapper').forEach( a => a.checked = false );
+        id('enemyCardCount').value = "";
     }
 }
 
@@ -175,14 +196,14 @@ function updateDetails() {
         ],
         culturalTokens:     parseInt( id('currentICCount').value || 0 ),
         politicalTokens:    parseInt( id('currentIPCount').value || 0 ),
-        units:              nm('currentUnitWrapper-unitCounts').map( ui => ({id: ui.id.split('-')[1], count: (ui.value || 0)}) ),
+        units:              nm('currentUnitWrapper-unitCounts').map( ui => ({id: ui.id.split('-')[1], count: parseInt(ui.value || 0)}) ),
         advancements: {
-            technologies:       nm('currentAdvancementWrapper').filter( a => a.id.split('-')[1] === TECHNOLOGIES[0].type ).filter( a => a.checked ).map( a => a.id.split('-')[2] ),
-            doctrines:          nm('currentAdvancementWrapper').filter( a => a.id.split('-')[1] === DOCTRINES[0].type    ).filter( a => a.checked ).map( a => a.id.split('-')[2] ),
-            gardens:            nm('currentAdvancementWrapper').filter( a => a.id.split('-')[1] === GARDENS[0].type      ).filter( a => a.checked ).map( a => a.id.split('-')[2] ),
-            auctions:           nm('currentAdvancementWrapper').filter( a => a.id.split('-')[1] === AUCTIONS[0].type     ).filter( a => a.checked ).map( a => a.id.split('-')[2] )
+            technologies:       nm('currentAdvancementWrapper').filter( a => a.id.split('-')[2] === TECHNOLOGIES[0].type.split('-')[1] ).filter( a => a.checked ).map( a => a.id.split('-')[3] ),
+            doctrines:          nm('currentAdvancementWrapper').filter( a => a.id.split('-')[2] === DOCTRINES[0].type.split('-')[1]    ).filter( a => a.checked ).map( a => a.id.split('-')[3] ),
+            gardens:            nm('currentAdvancementWrapper').filter( a => a.id.split('-')[2] === GARDENS[0].type.split('-')[1]      ).filter( a => a.checked ).map( a => a.id.split('-')[3] ),
+            auctions:           nm('currentAdvancementWrapper').filter( a => a.id.split('-')[2] === AUCTIONS[0].type.split('-')[1]     ).filter( a => a.checked ).map( a => a.id.split('-')[3] )
         },
-        chaos:              nm('currentCardsWrapper').filter( c => c.checked ).map( c => c.id.split('-')[2] )
+        chaos:              nm('currentCardsWrapper').filter( c => c.checked ).map( c => c.id.split('-')[3] )
     };
     enemyTradeDetails = {
         id:                 enemyPlayerTDetails.id,
@@ -194,12 +215,12 @@ function updateDetails() {
         ],
         culturalTokens:     parseInt( id('enemyICCount').value || 0 ),
         politicalTokens:    parseInt( id('enemyIPCount').value || 0 ),
-        units:              nm('enemyUnitWrapper-unitCounts').map( ui => ({id: ui.id.split('-')[1], count: (ui.value || 0)}) ),
+        units:              nm('enemyUnitWrapper-unitCounts').map( ui => ({id: ui.id.split('-')[1], count: parseInt(ui.value || 0)}) ),
         advancements: {
-            technologies: nm('enemyAdvancementWrapper').filter( a => a.id.split('-')[1] === TECHNOLOGIES[0].type ).filter( a => a.checked ).map( a => a.id.split('-')[2] ),
-            doctrines:    nm('enemyAdvancementWrapper').filter( a => a.id.split('-')[1] === DOCTRINES[0].type    ).filter( a => a.checked ).map( a => a.id.split('-')[2] ),
-            gardens:      nm('enemyAdvancementWrapper').filter( a => a.id.split('-')[1] === GARDENS[0].type      ).filter( a => a.checked ).map( a => a.id.split('-')[2] ),
-            auctions:     nm('enemyAdvancementWrapper').filter( a => a.id.split('-')[1] === AUCTIONS[0].type     ).filter( a => a.checked ).map( a => a.id.split('-')[2] )
+            technologies: nm('enemyAdvancementWrapper').filter( a => a.id.split('-')[2] === TECHNOLOGIES[0].type.split('-')[1] ).filter( a => a.checked ).map( a => a.id.split('-')[3] ),
+            doctrines:    nm('enemyAdvancementWrapper').filter( a => a.id.split('-')[2] === DOCTRINES[0].type.split('-')[1]    ).filter( a => a.checked ).map( a => a.id.split('-')[3] ),
+            gardens:      nm('enemyAdvancementWrapper').filter( a => a.id.split('-')[2] === GARDENS[0].type.split('-')[1]      ).filter( a => a.checked ).map( a => a.id.split('-')[3] ),
+            auctions:     nm('enemyAdvancementWrapper').filter( a => a.id.split('-')[2] === AUCTIONS[0].type.split('-')[1]     ).filter( a => a.checked ).map( a => a.id.split('-')[3] )
         },
         chaos:              updateEnemyCardDetails()
     };
@@ -217,8 +238,11 @@ function updateEnemyCardDetails() {
     return result;
 }
 
-function validateOffer() {
-    updateDetails();
+function validateOffer( updateTradeDetails = true ) {
+    if ( updateTradeDetails ) {
+        updateDetails();
+    }
+
     const trade = {
         details1: isPlayer1?currentTradeDetails:enemyTradeDetails,
         details2: isPlayer1?enemyTradeDetails:currentTradeDetails
@@ -244,15 +268,15 @@ function validateOffer() {
 }
 
 function acceptTrade() {
-    if ( validateOffer() ) {
-        const selectedCards = nm('currentCardsWrapper').map( c => c.id.split('-')[2] );
-        if ( selectedCards.length >= currentTradeDetails.chaos.length ) {
-            currentTradeDetails.chaos = selectedCards.slice( 0, currentTradeDetails.chaos.length );
-        }
+    const selectedCards = nm('currentCardsWrapper').filter( c => c.checked ).map( c => c.id.split('-')[3] ); //allows user to pick/change cards
+    if ( selectedCards.length === currentTradeDetails.chaos.length ) {
+        currentTradeDetails.chaos = selectedCards.slice( 0, currentTradeDetails.chaos.length );
+    }
 
+    if ( validateOffer( false ) ) {
         debitTrade( currentPlayerTDetails, currentTradeDetails );
 
-        saveAccept( tradeId, (isPlayer1?currentTradeDetails:enemyTradeDetails), (isPlayer1?enemyPlayerTDetails:currentTradeDetails), isPlayer1 );
+        saveAccept( tradeId, (isPlayer1?currentTradeDetails:enemyTradeDetails), (isPlayer1?enemyTradeDetails:currentTradeDetails), isPlayer1 );
         tradeModalCallback = function( currentPlayerDetailsValue ) {
             currentPlayer = currentPlayerDetailsValue;
             reloadPage( true );

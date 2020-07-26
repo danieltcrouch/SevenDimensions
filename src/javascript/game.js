@@ -4,6 +4,8 @@
 //  Scandal Disaster removes tokens evenly (no choice)
 //  Chaos Cards are always played on your turn
 //  Several Chaos Cards have been altered
+//  With the exceptions of trading and battling, progress is lost between sessions;
+//      the results of battling and trading are also lost if the session is lost
 
 //todo 1 - Trading
 //[Push Changes and light test]
@@ -46,6 +48,7 @@
 //  ...
 //todo XXX - Begin testing with Brothers; Work; FWC
 //todo X - refactor and clean up: Common, Seven, Reviews, Bracket, Overflow (Football and Turing can be ignored for now)
+//todo X - create a toaster queue (you can create one but it won't show until the current one is done)
 
 const COLORS = ["red", "green", "blue", "purple", "orange", "teal", "gold"];
 
@@ -72,7 +75,7 @@ function loadGame() {
     }
 }
 
-function loadGameCallback( response ) {
+function loadGameCallback( response, internalLoad = false ) {
     game = response;
     convertClasses( game );
 
@@ -80,8 +83,10 @@ function loadGameCallback( response ) {
     loadMap();
     loadUser();
 
-    loadRecurringEffects();
-    popModals();
+    if ( !internalLoad ) {
+        loadRecurringEffects();
+        popModals();
+    }
 
     poll( getCurrentConflict );
     poll( getCurrentTrades );
@@ -543,7 +548,7 @@ function updateGame() {
 
 function reloadPage( internal = false ) {
     if ( internal ) {
-        loadGameCallback( game );
+        loadGameCallback( game, true );
     }
     else {
         postCallEncoded(

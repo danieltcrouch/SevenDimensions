@@ -56,8 +56,12 @@ function saveTrade( $tradeId, $details1, $details2, $status1, $status2, $tradeSt
 {
     $details1 = json_decode( $details1 );
     $details2 = json_decode( $details2 );
-    $details1Json = json_encode( $details1 );
-    $details2Json = json_encode( $details2 );
+    $details1Json = $details1 ? json_encode( $details1 ) : "";
+    $details2Json = $details2 ? json_encode( $details2 ) : "";
+
+    $details2Json = getNullValue($details2Json);
+    $status1 = getNullValue($status1);
+    $status2 = getNullValue($status2);
 
     $query = "UPDATE trade 
               SET details1 = :details1Json, details2 = :details2Json, status1 = :status1 , status2 = :status2 , tradeStatus = :tradeStatus 
@@ -79,6 +83,9 @@ function saveTrade( $tradeId, $details1, $details2, $status1, $status2, $tradeSt
 
 function saveStatus( $tradeId, $status1, $status2, $tradeStatus )
 {
+    $status1 = getNullValue($status1);
+    $status2 = getNullValue($status2);
+
     $query = "UPDATE trade 
               SET status1 = :status1 , status2 = :status2 , tradeStatus = :tradeStatus 
               WHERE id = :tradeId ";
