@@ -46,13 +46,15 @@ function updateExpansionButtons() {
         id('ability').classList.remove( "staticInverseButton" );
     }
     else {
+        id('ability').classList.remove( "staticInverseButton" );
         id('ability').classList.add( "staticInverseButton" );
     }
 
-    if ( selectedTile && selectedUnits.length === 0 && currentPlayer.initiatives.politicalTokens > 0 ) {
+    if ( selectedTile && currentPlayer.districts.tileIds.includes( selectedTile.id ) && selectedUnits.length === 0 && currentPlayer.initiatives.politicalTokens > 0 ) {
         id('annex').classList.remove( "staticInverseButton" );
     }
     else {
+        id('annex').classList.remove( "staticInverseButton" );
         id('annex').classList.add( "staticInverseButton" );
     }
 }

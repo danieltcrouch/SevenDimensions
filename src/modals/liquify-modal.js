@@ -12,6 +12,11 @@ function openLiquifyModal( currentPlayer, requiredValue, callback = function() {
     populateUnits();
     populateCards();
 
+    show( 'requiredMessage', Boolean(requiredValue) );
+    if ( requiredValue ) {
+        id('requiredMessage').innerText = `Must match value of ${requiredValue}WB. `;
+    }
+
     show( "liquifyModal", true, "block" );
     setCloseHandlersJS( "liquifyModal" );
     blurBackground();
@@ -26,24 +31,32 @@ function populatePlaceholders() {
 
     id('countWB').placeholder  = liquifyModalValues.warBucks || 0;
     id('countWB').max          = liquifyModalValues.warBucks || 0;
-    id('countRA').placeholder = getAetherCount(     liquifyModalValues.resources );
-    id('countRA').max         = getAetherCount(     liquifyModalValues.resources );
-    id('countRC').placeholder = getChronotineCount( liquifyModalValues.resources );
-    id('countRC').max         = getChronotineCount( liquifyModalValues.resources );
-    id('countRU').placeholder = getUnobtaniumCount( liquifyModalValues.resources );
-    id('countRU').max         = getUnobtaniumCount( liquifyModalValues.resources );
+    if ( liquifyModalValues.resources ) {
+        id('countRA').placeholder = getAetherCount(     liquifyModalValues.resources );
+        id('countRA').max         = getAetherCount(     liquifyModalValues.resources );
+        id('countRC').placeholder = getChronotineCount( liquifyModalValues.resources );
+        id('countRC').max         = getChronotineCount( liquifyModalValues.resources );
+        id('countRU').placeholder = getUnobtaniumCount( liquifyModalValues.resources );
+        id('countRU').max         = getUnobtaniumCount( liquifyModalValues.resources );
+    }
     id('countIC').placeholder = hasInitiatives ? liquifyModalValues.initiatives.culturalTokens : 0;
     id('countIC').max         = hasInitiatives ? liquifyModalValues.initiatives.culturalTokens : 0;
 }
 
 function populateUnits() {
-    const isOneTile = liquifyModalValues.units.every( u => u.tileId === liquifyModalValues.units[0].tileId );
-    const data = liquifyModalValues.units.map( u => ({id: u.id, type: "Unit", name: u.getUnitType().name + (!isOneTile?` (Tile ${u.tileId})`:"")}) );
+    let data = [];
+    if ( liquifyModalValues.units ) {
+        const isOneTile = liquifyModalValues.units.every( u => u.tileId === liquifyModalValues.units[0].tileId );
+        data = liquifyModalValues.units.map( u => ({id: u.id, type: "Unit", name: u.getUnitType().name + (!isOneTile?` (Tile ${u.tileId})`:"")}) );
+    }
     populateCheckboxes( data, "unitWrapper" );
 }
 
 function populateCards() {
-    const data = liquifyModalValues.cards.chaos.map( c => getChaosCard( c ) ).map( c => ({id: c.id, type: "Chaos", name: c.name}) );
+    let data = [];
+    if ( liquifyModalValues.cards ) {
+        data = liquifyModalValues.cards.chaos.map( c => getChaosCard( c ) ).map( c => ({id: c.id, type: "Chaos", name: c.name}) );
+    }
     populateCheckboxes( data, "cardWrapper" );
 }
 

@@ -3,7 +3,7 @@
 
 function performAnnex() {
     setSpecialAction(
-        function( tileId ) { return hasEnemyDistrict( tileId ) && !hasInitiative( selectedTile, tileId, true ) && getAdjacentTiles( selectedTile ).includes( tileId ); },
+        function( tileId ) { return hasEnemyDistrict( tileId ) && !hasInitiative( selectedTile.id, tileId, true ) && getAdjacentTiles( selectedTile.id ).includes( tileId ); },
         performAnnexCallback
     );
 }
@@ -85,18 +85,24 @@ function openAnnexDisplay( currentName, enemyName, currentPlayer, enemyPlayer, i
             CONFLICT_TIMEOUT,
             function( enemyPlayerDetails ) {
                 endAnnex( currentPlayer, enemyPlayerDetails );
+                if ( id('modal').style.display !== "none" && id('modal').querySelector( '#modalHeader' ).innerText === "Annexation" ) {
+                    closeModalJS( "modal" ); //todo X - get Modal guid that you can close if it is still displaying
+                }
             },
             function() {
                 endAnnex( currentPlayer, getLowestResistance( currentPlayer.attackStrength, enemyPlayer ) );
+                if ( id('modal').style.display !== "none" && id('modal').querySelector( '#modalHeader' ).innerText === "Annexation" ) {
+                    closeModalJS( "modal" );
+                }
         } );
     }
     else {
-        const useTokens = Boolean( currentPlayer.initiatives.culturalActive.find( c => c.tileId === currentPlayer.tileId ) );
+        const useTokens = currentPlayer.culturalActive === 0;
         openLiquifyModal(
             {
                 warBucks: currentPlayer.warBucks,
                 initiativeTokens: useTokens ? currentPlayer.initiativeTokens : ( currentPlayer.initiatives.culturalActive.find( c => c.tileId === currentPlayer.tileId ).reaperCount / REAPERS_IN_CR ),
-                units: currentPlayer.units.filter( u => u.tileId === currentPlayer.tileId ),
+                units: currentPlayer.units.filter( u => u.tileId === currentPlayer.tileId ).map( u => new Unit( u.id, u.unitTypeId, u.tileId ) ),
             },
             currentPlayer.attackStrength,
             function( total, assets ) {
@@ -115,7 +121,9 @@ function openAnnexDisplay( currentName, enemyName, currentPlayer, enemyPlayer, i
                         }
                     },
                     false,
-                    function(){}
+                    function(){
+                        conflictId = null;
+                    }
                 );
             }
         );
@@ -157,10 +165,10 @@ function endAnnex( attackPlayerDetails, defendPlayerDetails ) {
 
             const defendPlayer = getPlayer( defendPlayerDetails.id );
             if ( annexResult === "W" ) {
-                swapDistrict( defendPlayerDetails.id, attackPlayerDetails.id, defendPlayerDetails.tileId );
+                swapDistrict( defendPlayer, currentPlayer, defendPlayerDetails.tileId );
                 defendPlayer.units.forEach( u => {
                     if ( u.tileId === defendPlayerDetails.tileId && u.unitTypeId !== UNIT_TYPES[APOSTLE].id ) {
-                        removeUnit( u, currentPlayer );
+                        removeUnit( u, defendPlayer );
                     }
                 } );
             }

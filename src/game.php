@@ -90,6 +90,7 @@
 <?php include("modals/market-modal.html"); ?>
 <?php include("modals/battle-modal.html"); ?>
 <?php include("modals/trade-modal.html"); ?>
+<?php include("modals/liquify-modal.html"); ?>
 <?php includeModals(); ?>
 
 <?php include("html/include-domain.html"); ?>
