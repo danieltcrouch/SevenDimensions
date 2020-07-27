@@ -7,13 +7,7 @@
 //  With the exceptions of trading and battling, progress is lost between sessions;
 //      the results of battling and trading are also lost if the session is lost
 
-//todo 1 - Trading
-//[Push Changes and light test]
 //todo 2 - Liquify Modal
-//  Units (in tile?), money, initiative tokens, chaos cards, resources -- it uses whatever is passed in -> if (details.money) {}
-//      Organize units by tile and tile description
-//  parameters so it is useful for Mars (all units), Inquisitions (all the above), Annex (units in tile, civil resist, money)
-//  Needs to return all things liquified, including an array of unit IDs, as well as the total value of all things liquified
 //[Push Changes and light test]
 //todo 3 - Chaos Abilities
 //  need to display card descriptions somewhere
@@ -49,6 +43,7 @@
 //todo XXX - Begin testing with Brothers; Work; FWC
 //todo X - refactor and clean up: Common, Seven, Reviews, Bracket, Overflow (Football and Turing can be ignored for now)
 //todo X - create a toaster queue (you can create one but it won't show until the current one is done)
+//todo X - refactor Liquify to disband or something that won't be underlined
 
 const COLORS = ["red", "green", "blue", "purple", "orange", "teal", "gold"];
 
@@ -166,7 +161,10 @@ function loadRecurringEffects() {
 }
 
 function popModals() {
-    if ( isMarketAuctionPhase() && !Number.isInteger( currentPlayer.turn.auctionBid ) ) {
+    if ( currentPlayer.special.inquisition ) {
+        launchInquisition();
+    }
+    else if ( isMarketAuctionPhase() && !Number.isInteger( currentPlayer.turn.auctionBid ) ) {
         showAuctionActions();
         if ( currentPlayer.advancements.auctionWins.includes( AUCTIONS[game.state.round].id ) ) {
             showToaster("You won this round's auction!");
@@ -195,6 +193,10 @@ function submit() {
     else if ( currentPlayer.turn.hasSubmitted ) {
         isValidToSubmit = false;
         showToaster( "Player has already submitted." );
+    }
+    else if ( currentPlayer.special.inquisition ) {
+        isValidToSubmit = false;
+        showToaster( "Must complete Inquisition by liquifying assets." );
     }
     else if ( currentTrades.length ) {
         isValidToSubmit = false;
@@ -439,8 +441,10 @@ function completeSubPhase() {
                         winners.forEach( p => p.warBucks += (EVENT_MARS_GRAND_REWARD / winners.length) );
                     }
                     else {
-                        game.players.forEach( p => p.warBucks = Math.max( (p.warBucks - EVENT_MARS_COST), 0 ) );
-                        //todo 2 - liquify units - helper function
+                        game.players.forEach( p => {
+                            p.warBucks = Math.max( (p.warBucks - EVENT_MARS_COST), 0 );
+                            removeAssets( p.special.liquify, p );
+                        } );
                     }
                     game.players.forEach( p => p.special.liquify = null );
                 }
@@ -452,10 +456,17 @@ function completeSubPhase() {
 
             //Round End
             game.players.forEach( p => {
+                p.turn.purchasedAdvancementCount = 0;
+                p.turn.purchasedCardCount        = 0;
+                p.turn.hasReaped               = false;
+                p.turn.hasConvened             = false;
+                p.turn.hasPerformedDivineRight = false;
+
                 p.special.bulldozer = false;
                 p.special.cease = false;
                 p.special.dark = false;
                 p.special.exhaust = null;
+                p.special.insurrection = false;
                 p.special.scourge = false;
                 p.special.shutUp = false;
                 p.special.shutUpProtect = false;

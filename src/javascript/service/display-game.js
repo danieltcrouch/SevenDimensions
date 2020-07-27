@@ -228,8 +228,16 @@ function showDoomsdayActions() {
         );
     }
     else if ( event === EVENTS[EVENT_MARS].id ) {
-        game.players.forEach( p => p.special.insurrection = false );
-        //todo 2 - liquify
+        openLiquifyModal(
+            {
+                units: currentPlayer.units
+            },
+            null,
+            function(total, assets) {
+                currentPlayer.special.liquify.value = total;
+                currentPlayer.special.liquify.units = assets.units;
+            }
+        );
     }
 
     showToaster("Time is slipping...");
@@ -351,8 +359,8 @@ function showAbilities() { //todo 3 - do these take into account Capital impassi
 function getAdvancementAbilities() {
     let result = [];
     if ( isMarketAuctionPhase() ) {
-        if ( hasDoctrine( DIVINE_RIGHT ) ) {
-            result.push( { name: "Inquisition", ability: performInquisition } );
+        if ( hasDoctrine( DIVINE_RIGHT ) && !currentPlayer.turn.hasPerformedDivineRight ) {
+            result.push( { name: "Inquisition", ability: performInquisitionAbility } );
         }
     }
     return result.length ? result.map( i => `<span class="link" onclick="${i.ability}">${i.name}</span><br/>\n` ) : "None";

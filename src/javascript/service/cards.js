@@ -659,6 +659,14 @@ function performPuppeteer() {
     );
 }
 
+function performInquisitionChaos() {
+    performInquisition(
+        function() {
+
+        }
+    );
+}
+
 function performRInvestment() {
     showBinaryChoice( //todo 7 - you should probably just make a modal where you can do this on one screen (pick type and amount)
         "Initiative Tokens",

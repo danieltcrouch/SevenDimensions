@@ -91,10 +91,34 @@ function openAnnexDisplay( currentName, enemyName, currentPlayer, enemyPlayer, i
         } );
     }
     else {
-        //todo 2 - Liquify
-        //  Need to convert modal results to accepted format
-        //  Don't pass in any culturalTokens if already used that round
-        saveInitiative( getLowestResistance( currentPlayer.attackStrength, enemyPlayer ) /* todo 2 - use until Liquify ready */, false, function(){} );
+        const useTokens = Boolean( currentPlayer.initiatives.culturalActive.find( c => c.tileId === currentPlayer.tileId ) );
+        openLiquifyModal(
+            {
+                warBucks: currentPlayer.warBucks,
+                initiativeTokens: useTokens ? currentPlayer.initiativeTokens : ( currentPlayer.initiatives.culturalActive.find( c => c.tileId === currentPlayer.tileId ).reaperCount / REAPERS_IN_CR ),
+                units: currentPlayer.units.filter( u => u.tileId === currentPlayer.tileId ),
+            },
+            currentPlayer.attackStrength,
+            function( total, assets ) {
+                const isSuccess = total >= currentPlayer.attackStrength;
+                saveInitiative(
+                    {
+                        id: currentPlayer.id,
+                        tileId: currentPlayer.tileId,
+                        isSuccess: isSuccess,
+                        defendStrength: isSuccess ? total : 0,
+                        defense: {
+                            warBucks: isSuccess ? assets.warBucks : 0,
+                            culturalTokens: ( isSuccess && useTokens )  ? assets.initiatives.culturalTokens : 0,
+                            culturalActive: ( isSuccess && !useTokens ) ? ( assets.initiatives.culturalTokens * REAPERS_IN_CR ) : 0,
+                            units: isSuccess ? assets.units : [],
+                        }
+                    },
+                    false,
+                    function(){}
+                );
+            }
+        );
     }
 }
 
@@ -162,49 +186,6 @@ function endAnnex( attackPlayerDetails, defendPlayerDetails ) {
             }
         }
     );
-}
-
-function getLowestResistance( annexStrength, playerDetails ) {
-    let runningTotal = 0;
-
-    let tokensUsed = 0;
-    if ( playerDetails.culturalTokens ) {
-        tokensUsed = Math.min( Math.floor( annexStrength / REAPERS_IN_CR ), playerDetails.culturalTokens );
-        runningTotal += tokensUsed * REAPERS_IN_CR;
-    }
-    let reapersUsed = 0;
-    if ( playerDetails.culturalActive ) {
-        reapersUsed = Math.min( (annexStrength - runningTotal), playerDetails.culturalActive );
-        runningTotal += reapersUsed;
-    }
-    let bucksUsed = 0;
-    if ( playerDetails.warBucks ) {
-        bucksUsed = Math.min( (annexStrength - runningTotal), playerDetails.warBucks );
-        runningTotal += bucksUsed;
-    }
-    let unitsUsed = [];
-    if ( playerDetails.units.length ) {
-        playerDetails.units.sort( (u1,u2) => u1.getCost() - u2.getCost() );
-        for ( let i = 0; i < playerDetails.units.length && runningTotal < annexStrength; i++ ) {
-            const unit = playerDetails.units[i];
-            unitsUsed.push( unit );
-            runningTotal += unit.getCost();
-        }
-    }
-
-    const isSuccess = runningTotal >= annexStrength;
-    return {
-        id: playerDetails.id,
-        tileId: playerDetails.tileId,
-        isSuccess: isSuccess,
-        defendStrength: isSuccess ? runningTotal : 0,
-        defense: {
-            warBucks: isSuccess ? bucksUsed : 0,
-            culturalTokens: isSuccess ? tokensUsed : 0,
-            culturalActive: isSuccess ? reapersUsed : 0,
-            units: isSuccess ? unitsUsed : [],
-        }
-    };
 }
 
 

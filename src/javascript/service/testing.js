@@ -124,7 +124,8 @@ function generateNewPlayers( testPlayers ) { //todo 6 - split testing and setup 
                     purchasedCardCount: 0,
                     auctionBid: null, //WB value (0 if passed)
                     hasReaped: false,
-                    hasConvened: false
+                    hasConvened: false,
+                    hasPerformedDivineRight: false
                 },
                 special: {
                     shutUp: false,
@@ -135,6 +136,7 @@ function generateNewPlayers( testPlayers ) { //todo 6 - split testing and setup 
                     gambitBet: 0,
                     insurrection: false,
                     disbandedUnits: [],
+                    inquisition: 0,
                     assimilation: false,
                     benefactor: false,
                     bulldozer: false,

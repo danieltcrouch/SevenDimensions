@@ -1,0 +1,38 @@
+<!-- Common modals must be included for CSS -->
+<script src="modals/liquify-modal.js"></script>
+
+<div id="liquifyModal" class="modal-wrapper">
+    <div class="modal-foreground">
+        <div class="modal-box" style="max-height: 80%">
+            <div class="modal-header">
+                <span id="modalHeader" class="subtitle">Liquify</span>
+                <span id="close" class="close">&times;</span>
+            </div>
+            <div id="modalBody" class="modal-body">
+                <div style="font-weight: bold">Choose assets to liquify:</div>
+                <div id="currentAssets">
+                    <div id="displayWB"><label for="countWB"  style="display: inline-block; width: 6em">War-Bucks  </label><input id="countWB" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0" onchange="updateTotal()"></div>
+                    <div id="displayR">
+                        <label for="countRA" style="display: inline-block; width: 6em">Aether      </label><input id="countRA" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0" onchange="updateTotal()">
+                        <label for="countRC" style="display: inline-block; width: 6em">Chronotine  </label><input id="countRC" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0" onchange="updateTotal()">
+                        <label for="countRU" style="display: inline-block; width: 6em">Unobtanium  </label><input id="countRU" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0" onchange="updateTotal()">
+                    </div>
+                    <div id="displayIC"><label for="countIC" style="display: inline-block; width: 11em">Cultural Initiative Token</label><input id="countIC" type="number" class="input" style="width: 3em; margin: .1em; padding: .1em" min="0" placeholder="0" onchange="updateTotal()"></div>
+                    <div id="displayUnits">
+                        <div><span style="margin-left: .5em; margin-top: .1em; font-style: italic">Units:</span></div>
+                        <div id="unitWrapper"></div>
+                    </div>
+                    <div id="displayCards">
+                        <div><span style="margin-left: .5em; margin-top: .1em; font-style: italic">Cards:</span></div>
+                        <div id="cardWrapper"></div>
+                    </div>
+                </div>
+                <div><span style="font-weight: bold">Total: </span><span id="liquifyTotal">0</span>WB</div>
+            </div>
+            <div id="modalSubmit" class="modal-submit center">
+                <button id="liquifyButton"   class="button" style="width: 8em" onclick="submitLiquify()" >Submit</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-background"></div>
+</div>

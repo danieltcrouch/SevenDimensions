@@ -70,3 +70,54 @@ function getUnitsByExposure( player = currentPlayer, enemyPlayerId = null, prior
     } );
     return result.sort( (u1,u2) => u1.rating - u2.rating ).map( u => u.id );
 }
+
+function getLowestResistance( annexStrength, playerDetails ) {
+    let runningTotal = 0;
+
+    let tokensUsed = 0;
+    if ( playerDetails.culturalTokens ) {
+        tokensUsed = Math.min( Math.floor( annexStrength / REAPERS_IN_CR ), playerDetails.culturalTokens );
+        runningTotal += tokensUsed * REAPERS_IN_CR;
+    }
+    let reapersUsed = 0;
+    if ( playerDetails.culturalActive ) {
+        reapersUsed = Math.min( (annexStrength - runningTotal), playerDetails.culturalActive );
+        runningTotal += reapersUsed;
+    }
+    let bucksUsed = 0;
+    if ( playerDetails.warBucks ) {
+        bucksUsed = Math.min( (annexStrength - runningTotal), playerDetails.warBucks );
+        runningTotal += bucksUsed;
+    }
+    let unitsUsed = [];
+    if ( playerDetails.units.length ) {
+        playerDetails.units.sort( (u1,u2) => u1.getCost() - u2.getCost() );
+        for ( let i = 0; i < playerDetails.units.length && runningTotal < annexStrength; i++ ) {
+            const unit = playerDetails.units[i];
+            unitsUsed.push( unit );
+            runningTotal += unit.getCost();
+        }
+    }
+
+    const isSuccess = runningTotal >= annexStrength;
+    return {
+        id: playerDetails.id,
+        tileId: playerDetails.tileId,
+        isSuccess: isSuccess,
+        defendStrength: isSuccess ? runningTotal : 0,
+        defense: {
+            warBucks: isSuccess ? bucksUsed : 0,
+            culturalTokens: isSuccess ? tokensUsed : 0,
+            culturalActive: isSuccess ? reapersUsed : 0,
+            units: isSuccess ? unitsUsed : [],
+        }
+    };
+}
+
+function getLowestDisbands( units, disbandCount ) {
+    return units.sort( (a,b) => parseInt(a.unitTypeId) - parseInt(b.unitTypeId) ).slice(0, disbandCount);
+}
+
+function getLowestAssets( value ) {
+    //
+}

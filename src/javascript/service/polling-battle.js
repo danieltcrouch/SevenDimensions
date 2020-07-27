@@ -370,7 +370,3 @@ function countHits( currentUnits, enemyUnits ) {
     const livingUnits = currentUnits.filter( u => !u.disbanded ).length;
     return Math.min( hits, livingUnits );
 }
-
-function getLowestDisbands( units, disbandCount ) {
-    return units.sort( (a,b) => parseInt(a.unitTypeId) - parseInt(b.unitTypeId) ).slice(0, disbandCount);
-}

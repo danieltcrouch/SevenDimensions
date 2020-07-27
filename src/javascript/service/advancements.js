@@ -125,17 +125,77 @@ function chooseFreeInitiatives( player = currentPlayer ) {
 /*** ABILITIES ***/
 
 
-function performInquisition() {
+function performInquisitionAbility() {
+    performInquisition(
+        INQUISITION_VALUE,
+        function() {
+            currentPlayer.turn.hasPerformedDivineRight = true;
+        }
+    );
+}
+
+function performInquisition( value = INQUISITION_VALUE, callback = function() {} ) {
     pickPlayers(
         false,
         false,
         function( response ) {
             if ( response ) {
-                //todo 2 - Liquify
+                const enemy = getPlayer( response );
+                if ( isAsyncPhase() || enemy.turn.hasSubmitted ) {
+                    const assets = getLowestAssets( value );
+                    removeAssets( assets, enemy );
+                }
+                else {
+                    enemy.special.inquisition = value;
+                }
+                callback();
             }
         },
         game.players.filter( p => !hasTechnology( CENTRALIZED_CURRICULUM, p ) )
     );
+}
+
+function launchInquisition() {
+    openLiquifyModal(
+        {
+            warBucks: currentPlayer.warBucks,
+            resources: currentPlayer.resources,
+            initiativeTokens: currentPlayer.initiativeTokens,
+            units: currentPlayer.units,
+            cards: currentPlayer.cards
+        },
+        currentPlayer.special.inquisition,
+        function(total, assets) {
+            if ( total ) {
+                removeAssets( assets );
+            }
+            else {
+                launchInquisition();
+            }
+        }
+    );
+}
+
+function removeAssets( assets, player = currentPlayer ) {
+    if ( assets.warBucks ) {
+        player.warBucks -= assets.warBucks;
+    }
+    if ( assets.resources ) {
+        assets.resources.forEach( r => {
+            if ( r.count ) {
+                player.resources.find( cr => cr.id === r.id ).count -= r.count;
+            }
+        } );
+    }
+    if ( assets.initiatives ) {
+        player.initiatives.culturalTokens -= assets.initiatives.culturalTokens;
+    }
+    if ( assets.units ) {
+        assets.units.forEach( u => removeUnit( u, player, false ) );
+    }
+    if ( assets.chaos ) {
+        player.cards.chaos = player.cards.chaos.filter( c => !assets.chaos.includes( c ) );
+    }
 }
 
 function getEdenCount( player = currentPlayer ) {
