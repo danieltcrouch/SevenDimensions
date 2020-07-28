@@ -233,6 +233,7 @@ function showDoomsdayActions() {
                 units: currentPlayer.units
             },
             null,
+            false,
             function(total, assets) {
                 currentPlayer.special.liquify.value = total;
                 currentPlayer.special.liquify.units = assets.units;
@@ -269,11 +270,7 @@ function performDisaster() {
             function() {
                 if ( disaster.id === DISASTERS[ERUPTION].id ) {
                     const volcanoAdjacentTileIds = game.board.filter( t => t.name === TILE_TYPES[VOLCANO].name ).reduce( (result, t) => result.concat( t.id ).concat( getAdjacentTiles( t.id ) ), [] );
-                    currentPlayer.units.forEach( u => {
-                        if ( volcanoAdjacentTileIds.includes( u.tileId ) ) {
-                            removeUnit( u, currentPlayer );
-                        }
-                    } );
+                    removeUnits( currentPlayer.units.filter( u => volcanoAdjacentTileIds.includes( u.tileId ) ), currentPlayer );
                 }
                 else if ( disaster.id === DISASTERS[SCANDAL].id ) {
                     const districtCount = currentPlayer.districts.tileIds.length;
@@ -287,11 +284,7 @@ function performDisaster() {
                     currentPlayer.initiatives.politicalTokens = Math.max( Math.trunc( (remainingCount / 2) + pTokenOverCount ), 0 );
                 }
                 else if ( disaster.id === DISASTERS[THE_COST_OF_DISCIPLESHIP].id ) {
-                    currentPlayer.units.forEach( u => {
-                        if ( u.unitTypeId === UNIT_TYPES[JUGGERNAUT].id || u.unitTypeId === UNIT_TYPES[ROBOT].id ) {
-                            removeUnit( u, currentPlayer );
-                        }
-                    } );
+                    removeUnits( currentPlayer.units.filter( u => u.unitTypeId === UNIT_TYPES[JUGGERNAUT].id || u.unitTypeId === UNIT_TYPES[ROBOT].id ), currentPlayer );
                 }
                 else if ( disaster.id === DISASTERS[SHORTAGE].id ) {
                     game.state.events.shortage = true;
@@ -327,7 +320,7 @@ function performPayDayDisaster() {
                             currentPlayer.units[i].disbanded = true;
                         }
                     }
-                    currentPlayer.units.filter( u => u.disbanded ).forEach( u => removeUnit( u, currentPlayer ) );
+                    removeUnits( currentPlayer.units.filter( u => u.disbanded ), currentPlayer );
                     currentPlayer.turn.hasConvened = true;
                 }
                 else {

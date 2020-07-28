@@ -22,6 +22,7 @@ function tileClickCallback( tileId ) {
     if ( specialAction && specialAction.isValidTile( tileId ) ) {
         specialAction.callback( tileId );
         specialAction = null;
+        highlightSuggestedTiles( [], false );
     }
     else if ( selectedUnits.length &&  (
             ( isExpansionSubPhase() && ( suggestedPath.includes( tileId ) || (selectedUnits.every( u => u.tileId === DEFAULT_TILE ) && !isImpassibleTile( tileId, !hasTechnology( ADAPTIVE_MAPPING ) )) ) ) ||

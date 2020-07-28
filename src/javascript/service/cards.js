@@ -136,7 +136,7 @@ function performCoup() {
         function( response ) {
             if ( response ) {
                 const player = getPlayer( response );
-                player.units.filter( u => u.tileId === player.districts.capital ).forEach( u => removeUnit( u, player ) );
+                removeUnits( player.units.filter( u => u.tileId === player.districts.capital ), player );
                 remove( currentPlayer.cards.chaos, CHAOS[12].id );
             }
         },

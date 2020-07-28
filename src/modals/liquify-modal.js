@@ -1,11 +1,13 @@
 let liquifyTotal;
 let liquifyRequired;
+let liquifyRequiredValue;
 let liquifyModalValues;
 let liquifyModalCallback;
 
-function openLiquifyModal( currentPlayer, requiredValue, callback = function() {} ) {
+function openLiquifyModal( currentPlayer, requiredValue, isRequired, callback = function() {} ) {
     liquifyModalValues = currentPlayer;
-    liquifyRequired = requiredValue;
+    liquifyRequiredValue = requiredValue;
+    liquifyRequired = isRequired;
     liquifyModalCallback = callback;
 
     populatePlaceholders();
@@ -123,11 +125,11 @@ function submitLiquify() {
         cardValue +
         liquifyModalValues.units.reduce( (t,u) => u.getCost() + t, 0 );
 
-    if ( isNaN( liquifyRequired ) || ( liquifyTotal >= liquifyRequired ) || ( liquifyTotal === maxValue ) ) {
+    if ( ( isNaN( liquifyRequiredValue ) || !liquifyRequired ) || ( liquifyTotal >= liquifyRequiredValue ) || ( liquifyTotal === maxValue ) ) {
         closeOutTradeModal();
     }
     else {
-        showToaster( `Must select ${liquifyRequired || maxValue}WB worth of assets to liquify.` );
+        showToaster( `Must select ${liquifyRequiredValue || maxValue}WB worth of assets to liquify.` );
     }
 }
 

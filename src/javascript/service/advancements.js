@@ -160,11 +160,12 @@ function launchInquisition() {
         {
             warBucks: currentPlayer.warBucks,
             resources: currentPlayer.resources,
-            initiativeTokens: currentPlayer.initiativeTokens,
+            initiatives: currentPlayer.initiatives,
             units: currentPlayer.units,
             cards: currentPlayer.cards
         },
         currentPlayer.special.inquisition,
+        true,
         function(total, assets) {
             if ( total ) {
                 removeAssets( assets );
@@ -191,7 +192,7 @@ function removeAssets( assets, player = currentPlayer ) {
         player.initiatives.culturalTokens -= assets.initiatives.culturalTokens;
     }
     if ( assets.units ) {
-        assets.units.forEach( u => removeUnit( u, player, false ) );
+        removeUnits( assets.units, player, false );
     }
     if ( assets.chaos ) {
         player.cards.chaos = player.cards.chaos.filter( c => !assets.chaos.includes( c ) );

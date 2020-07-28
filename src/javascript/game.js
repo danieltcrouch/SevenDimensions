@@ -7,8 +7,6 @@
 //  With the exceptions of trading and battling, progress is lost between sessions;
 //      the results of battling and trading are also lost if the session is lost
 
-//todo 2 - Liquify Modal
-//[Push Changes and light test]
 //todo 3 - Chaos Abilities
 //  need to display card descriptions somewhere
 //  Only allow council-specific cards during harvest
@@ -381,7 +379,7 @@ function completeSubPhase() {
                     const unitMax = MAX_UNITS_TILE + (player.special.micro?MICRONIZATION_VALUE:0);
                     if ( us.units.length > unitMax ) {
                         const disbands = getLowestDisbands( us.units, us.units.length - unitMax );
-                        disbands.forEach( u => removeUnit( u, player, false ) );
+                        removeUnits( disbands, player, false );
                     }
                 } );
             } );

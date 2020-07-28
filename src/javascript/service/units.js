@@ -149,16 +149,16 @@ function killApostle( unit ) {
             true,
             false,
             function( playerIds ) {
-                enemyPlayers.filter( p => playerIds.includes( p.id ) ).forEach( p => {
-                    p.units.filter( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ).forEach( u => removeUnit( u, p ) );
-                } );
+                enemyPlayers.filter( p => playerIds.includes( p.id ) ).forEach( p =>
+                    removeUnits( p.units.filter( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ), p )
+                );
             },
             enemyPlayers
         );
     }
     else {
         const enemyPlayer = enemyPlayers[0];
-        enemyPlayer.units.filter( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ).forEach( u => removeUnit( u, enemyPlayer ) );
+        removeUnits( enemyPlayer.units.filter( u => u.unitTypeId === UNIT_TYPES[APOSTLE].id && u.tileId === tileId ), enemyPlayer );
     }
 }
 
@@ -233,6 +233,10 @@ function addUnit( unit, player, updateDisplay = true ) {
         updateUnitIconsFromId( tileId );
         displayTileDetails( tileId );
     }
+}
+
+function removeUnits( units, player, updateDisplay = true ) {
+    units.forEach( u => removeUnit( u, player, updateDisplay ) );
 }
 
 function removeUnit( unit, player, updateDisplay = true ) {

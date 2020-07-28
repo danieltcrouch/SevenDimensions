@@ -333,7 +333,7 @@ function debitTrade( player, tradeDetails ) {
     player.initiatives.politicalTokens -= tradeDetails.politicalTokens;
     tradeDetails.units.forEach( u => {
         for ( let i = 0; i < u.count; i ++ ) {
-            removeUnit( getUnitsByExposure( player ), player, false );
+            removeUnit( getUnitsByExposure( player ), player, false ); //todo 1
         }
     } );
     tradeDetails.chaos.forEach( c => remove( player.cards.chaos, c ) );

@@ -13,14 +13,14 @@ function performAnnexCallback( tileId ) {
     if ( enemyPlayer ) {
         showNumberPrompt(
             "Annexation",
-            `Enter the number of Political Initiative Tokens (out of ${currentPlayer.initiatives.politicalTokens}) to use:`,
+            "Enter the number of Political Initiative Tokens to use:",
             function( response ) {
                 const isCancel = response === undefined;
                 if ( !isCancel ) {
                     const tokenCount = parseInt( response );
                     if ( Number.isInteger( tokenCount ) ) {
                         if ( tokenCount <= currentPlayer.initiatives.politicalTokens ) {
-                            startAnnex( tokenCount, selectedTile, tileId );
+                            startAnnex( tokenCount, selectedTile.id, tileId );
                         }
                         else {
                             showToaster( "Token count too high." );
@@ -31,7 +31,7 @@ function performAnnexCallback( tileId ) {
                     }
                 }
             },
-            "1"
+            currentPlayer.initiatives.politicalTokens
         );
     }
 }
@@ -55,8 +55,10 @@ function startAnnex( tokenCount, fromTileId, toTileId ) {
         id: enemyPlayer.id,
         tileId: toTileId,
         warBucks: enemyPlayer.warBucks,
-        culturalTokens: enemyPlayer.special.squelched ? 0 : enemyPlayer.initiatives.culturalTokens,
-        culturalActive: culturalActive.length ? culturalActive[0] : 0, //reaperCount
+        initiatives: {
+            culturalTokens: enemyPlayer.special.squelched ? 0 : enemyPlayer.initiatives.culturalTokens,
+            culturalActive: culturalActive.length ? culturalActive[0] : 0 //reaperCount
+        },
         units: enemyPlayer.units.filter( u => u.tileId === toTileId )
     };
     createConflict(
@@ -97,16 +99,17 @@ function openAnnexDisplay( currentName, enemyName, currentPlayer, enemyPlayer, i
         } );
     }
     else {
-        const useTokens = currentPlayer.culturalActive === 0;
+        const hasActiveTokens = currentPlayer.initiatives.culturalActive > 0;
         openLiquifyModal(
             {
                 warBucks: currentPlayer.warBucks,
-                initiativeTokens: useTokens ? currentPlayer.initiativeTokens : ( currentPlayer.initiatives.culturalActive.find( c => c.tileId === currentPlayer.tileId ).reaperCount / REAPERS_IN_CR ),
+                initiatives: { culturalTokens: ( hasActiveTokens ? ( currentPlayer.initiatives.culturalActive / REAPERS_IN_CR ) : currentPlayer.initiatives.culturalTokens ) },
                 units: currentPlayer.units.filter( u => u.tileId === currentPlayer.tileId ).map( u => new Unit( u.id, u.unitTypeId, u.tileId ) ),
             },
-            currentPlayer.attackStrength,
+            enemyPlayer.attackStrength,
+            false,
             function( total, assets ) {
-                const isSuccess = total >= currentPlayer.attackStrength;
+                const isSuccess = total >= enemyPlayer.attackStrength;
                 saveInitiative(
                     {
                         id: currentPlayer.id,
@@ -115,8 +118,8 @@ function openAnnexDisplay( currentName, enemyName, currentPlayer, enemyPlayer, i
                         defendStrength: isSuccess ? total : 0,
                         defense: {
                             warBucks: isSuccess ? assets.warBucks : 0,
-                            culturalTokens: ( isSuccess && useTokens )  ? assets.initiatives.culturalTokens : 0,
-                            culturalActive: ( isSuccess && !useTokens ) ? ( assets.initiatives.culturalTokens * REAPERS_IN_CR ) : 0,
+                            culturalTokens: ( isSuccess && !hasActiveTokens ) ? assets.initiatives.culturalTokens : 0,
+                            culturalActive: ( isSuccess && hasActiveTokens )  ? ( assets.initiatives.culturalTokens * REAPERS_IN_CR ) : 0,
                             units: isSuccess ? assets.units : [],
                         }
                     },
@@ -166,19 +169,12 @@ function endAnnex( attackPlayerDetails, defendPlayerDetails ) {
             const defendPlayer = getPlayer( defendPlayerDetails.id );
             if ( annexResult === "W" ) {
                 swapDistrict( defendPlayer, currentPlayer, defendPlayerDetails.tileId );
-                defendPlayer.units.forEach( u => {
-                    if ( u.tileId === defendPlayerDetails.tileId && u.unitTypeId !== UNIT_TYPES[APOSTLE].id ) {
-                        removeUnit( u, defendPlayer );
-                    }
-                } );
+                removeUnits( defendPlayer.units.filter( u => u.tileId === defendPlayerDetails.tileId && u.unitTypeId !== UNIT_TYPES[APOSTLE].id ), defendPlayer );
+                showToaster( "Annexation attempt was a success." );
             }
             else {
                 defendPlayer.warBucks -= defendPlayerDetails.defense.warBucks;
-                defendPlayer.units.forEach( u => {
-                    if ( defendPlayerDetails.defense.units.includes( u.id ) ) {
-                        removeUnit( u, defendPlayer );
-                    }
-                } );
+                removeUnits( defendPlayer.units.filter( u => defendPlayerDetails.defense.units.includes( u.id ) ), defendPlayer );
 
                 if ( defendPlayerDetails.defense.culturalTokens ) {
                     defendPlayer.initiatives.culturalTokens -= defendPlayerDetails.defense.culturalTokens;
@@ -191,7 +187,11 @@ function endAnnex( attackPlayerDetails, defendPlayerDetails ) {
                 else {
                     defendPlayer.initiatives.culturalActive.find( i => i.tileId === defendPlayerDetails.tileId ).reaperCount -= defendPlayerDetails.defense.culturalActive;
                 }
+                showToaster( "Annexation attempt was a failure." );
             }
+
+            updateInitiativeIcons( getTileDetails( attackPlayerDetails.tileId ).politicalInitiatives );
+            updateInitiativeIcons( getTileDetails( defendPlayerDetails.tileId ).politicalInitiatives );
         }
     );
 }
@@ -203,6 +203,6 @@ function endAnnex( attackPlayerDetails, defendPlayerDetails ) {
 function hasInitiative( fromTileId, toTileId, checkPolitical ) {
     return game.players.some( p => {
         let activeInitiatives = checkPolitical ? p.initiatives.politicalActive : p.initiatives.culturalActive;
-        return activeInitiatives.includes( i => i.from === fromTileId && (!checkPolitical || i.to === toTileId) );
+        return activeInitiatives.some( i => i.from === fromTileId && (!checkPolitical || i.to === toTileId) );
     }  );
 }
