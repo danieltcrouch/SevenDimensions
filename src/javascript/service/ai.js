@@ -1,7 +1,8 @@
 /*** EVALUATE ***/
 
 
-function getTilesByThreat( enemyPlayerId = null, player = currentPlayer ) { //todo 4 - I can't remember; if you're sorting based on proximity to enemy units, sort instead based on proximity to Capital
+//returns a list of tiles with enemy units sorted by proximity to player's tiles
+function getTilesByThreat( enemyPlayerId = null, player = currentPlayer ) {
     let result = [];
     const allTiles = game.board.map( t => t.id );
     const checkVolcano = enemyPlayerId ? !hasTechnology( ADAPTIVE_MAPPING, getPlayer( enemyPlayerId ) ) : true;
@@ -22,6 +23,27 @@ function getTilesByThreat( enemyPlayerId = null, player = currentPlayer ) { //to
         result.push( tile );
     } );
     return result.sort( (t1,t2) => t1.distance - t2.distance ).map( t => t.tileId );
+}
+
+//todo 4 - make getTilesByProximity where they're sorted by closeness to player Capital (should this be used instead of getTilesByThreat() in some instances?)
+
+function getFarthestTile( tileId, playersToAllow = [] ) {
+    let result = {
+        tileId: DEFAULT_TILE,
+        maxDistance: 0
+    };
+    const allTiles = game.board.map( t => t.id );
+    const availableTiles = allTiles.filter( t => !game.players.filter( p => !(playersToAllow.includes( p.id ) || p.id === currentPlayer.id) ).some( p => p.units.some( u => u.tileId === t ) ) );
+    const checkVolcano = !playersToAllow.some( p => hasTechnology( ADAPTIVE_MAPPING, getPlayer( p ) ) );
+    const impassableTiles = allTiles.filter( t => isImpassibleTile( t, checkVolcano, false ) );
+    availableTiles.forEach( t => {
+        const distance = calculateShortestPath( t, tileId, allTiles, impassableTiles, 10 ).length;
+        if ( distance > 0 && distance > result.maxDistance ) {
+            result.tileId = t;
+            result.maxDistance = distance;
+        }
+    } );
+    return result.tileId;
 }
 
 function getUnitsByExposure( player = currentPlayer, enemyPlayerId = null, prioritizeValue = true, includeApostle = true ) {

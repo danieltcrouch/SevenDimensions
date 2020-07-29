@@ -203,6 +203,10 @@ function getControlledTiles( player = currentPlayer ) {
     return game.board.filter( t => getTileDetails( t.id ).controlPlayerId === player.id ).map( t => t.id );
 }
 
+function isTileAdjacent( tile1, tile2 ) {
+    return getAllAdjacentHexes( getHexFromId( tile1 ) ).some( h => h.id === tile2 );
+}
+
 function hasDistrict( tileId ) {
     return Boolean( getDistrictPlayer( tileId ) );
 }

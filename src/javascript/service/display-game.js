@@ -119,7 +119,6 @@ function showHarvestActions() {
                             currentPlayer.resources.push( {id: r.id, count: r.count} );
                         }
                     } );
-                    currentPlayer.special.doubleDown = false;
                     currentPlayer.turn.hasReaped = true;
                 }
         } );
@@ -196,11 +195,11 @@ function showDoomsdayActions() {
         );
     }
     else if ( event.id === EVENTS[EVENT_DISASTER].id ) {
-        if ( !hasChaos( 36 ) ) {
-            performDisaster();
+        if ( hasChaos( 35 ) ) {
+            remove( currentPlayer.cards.chaos, CHAOS[35].id );
         }
         else {
-            remove( currentPlayer.cards.chaos, CHAOS[35].id );
+            performDisaster();
         }
     }
     else if ( event.id === EVENTS[EVENT_MIDTERM].id ) {
@@ -370,38 +369,38 @@ function getChaosAbilities() {
                 }
             }
             else {
-                if ( hasChaos( 65 ) ) {
-                    result.push( { name: CHAOS[65].name, ability: performNepotism } );
+                if ( hasChaos( 64 ) ) {
+                    result.push( { name: CHAOS[64].name, ability: performNepotism } );
                 }
-                if ( hasChaos( 76 ) && currentPlayer.dimensions.some( d => !d.wonderTileId && !game.players.some( p => p.dimensions.some( pd => pd.id === d.id && pd.wonderTileId ) ) ) ) {
-                    result.push( { name: CHAOS[65].name, ability: performSacred } );
+                if ( hasChaos( 75 ) && currentPlayer.dimensions.some( d => !d.wonderTileId && !game.players.some( p => p.dimensions.some( pd => pd.id === d.id && pd.wonderTileId ) ) ) ) {
+                    result.push( { name: CHAOS[75].name, ability: performSacred } );
                 }
             }
         }
         else if ( isExpansionPhase() ) {
             if ( isPreExpansionPhase() ) {
-                if ( hasChaos( 59 ) ) {
-                    result.push( { name: CHAOS[59].name, ability: performMarchPreExpansion } );
+                if ( hasChaos( 58 ) ) {
+                    result.push( { name: CHAOS[58].name, ability: performMarchPreExpansion } );
                 }
             }
             else {
-                if ( hasChaos( 59 ) ) {
-                    result.push( { name: CHAOS[59].name, ability: performMarch } );
+                if ( hasChaos( 58 ) ) {
+                    result.push( { name: CHAOS[58].name, ability: performMarch } );
                 }
                 if ( hasChaos( 91 ) ) {
                     result.push( { name: CHAOS[91].name, ability: performSquelch } );
                 }
             }
-            if ( hasChaos( 27 ) ) {
-                result.push( { name: CHAOS[27].name, ability: performDoubleDown } );
+            if ( hasChaos( 26 ) ) {
+                result.push( { name: CHAOS[26].name, ability: performDoubleDown } );
             }
         }
         else if ( isHarvestPhase() ) {
-            if ( hasChaos( 27 ) ) {
-                result.push( { name: CHAOS[27].name, ability: performDoubleDownPostHarvest } );
+            if ( hasChaos( 26 ) ) {
+                result.push( { name: CHAOS[26].name, ability: performDoubleDownPostHarvest } );
             }
-            if ( hasChaos( 70 ) ) {
-                result.push( { name: CHAOS[70].name, ability: performPower } );
+            if ( hasChaos( 69 ) ) {
+                result.push( { name: CHAOS[69].name, ability: performPower } );
             }
         }
 
@@ -435,110 +434,122 @@ function getChaosAbilities() {
         if ( hasChaos( 12 ) ) {
             result.push( { name: CHAOS[12].name, ability: performCoup } );
         }
+        if ( hasChaos( 14 ) ) {
+            result.push( { name: CHAOS[14].name, ability: performDDay } );
+        }
         if ( hasChaos( 15 ) ) {
-            result.push( { name: CHAOS[15].name, ability: performDDay } );
+            result.push( { name: CHAOS[15].name, ability: performDark } );
         }
         if ( hasChaos( 16 ) ) {
-            result.push( { name: CHAOS[16].name, ability: performDark } );
+            result.push( { name: CHAOS[16].name, ability: performDefector } );
         }
         if ( hasChaos( 17 ) ) {
-            result.push( { name: CHAOS[17].name, ability: performDefector } );
-        }
-        if ( hasChaos( 18 ) ) {
-            result.push( { name: CHAOS[18].name, ability: performDeserter } );
+            result.push( { name: CHAOS[17].name, ability: performDeserter } );
         }
         if ( currentPlayer.cards.chaos.some( c => isDitto(c) ) ) {
-            result.push( { name: CHAOS[18].name, ability: performDitto } );
+            result.push( { name: CHAOS[DITTO[0]].name, ability: performDitto } );
+        }
+        if ( hasChaos( 24 ) ) {
+            result.push( { name: CHAOS[24].name, ability: performDiversify } );
         }
         if ( hasChaos( 25 ) ) {
-            result.push( { name: CHAOS[25].name, ability: performDiversify } );
+            result.push( { name: CHAOS[25].name, ability: performDoubleCross } );
         }
-        if ( hasChaos( 29 ) ) {
-            result.push( { name: CHAOS[29].name, ability: performEpiphany } );
+        if ( hasChaos( 28 ) ) {
+            result.push( { name: CHAOS[28].name, ability: performEpiphany } );
         }
         if ( currentPlayer.cards.chaos.some( c => isEspionage(c) ) ) {
-            result.push( { name: CHAOS[29].name, ability: performEspionage } );
+            result.push( { name: CHAOS[ESPIONAGE[0]].name, ability: performEspionage } );
+        }
+        if ( hasChaos( 32 ) ) {
+            result.push( { name: CHAOS[32].name, ability: performExclusive } );
         }
         if ( hasChaos( 33 ) ) {
-            result.push( { name: CHAOS[33].name, ability: performExclusive } );
+            result.push( { name: CHAOS[33].name, ability: performExhaust } );
         }
         if ( hasChaos( 34 ) ) {
-            result.push( { name: CHAOS[34].name, ability: performExhaust } );
+            result.push( { name: CHAOS[34].name, ability: performFamine } );
         }
-        if ( hasChaos( 35 ) ) {
-            result.push( { name: CHAOS[35].name, ability: performFamine } );
+        if ( hasChaos( 37 ) ) {
+            result.push( { name: CHAOS[37].name, ability: performFTerms } );
         }
         if ( hasChaos( 38 ) ) {
-            result.push( { name: CHAOS[38].name, ability: performFTerms } );
+            result.push( { name: CHAOS[38].name, ability: performFrontLines } );
         }
-        if ( hasChaos( 40 ) ) {
-            result.push( { name: CHAOS[38].name, ability: performGamebreaker } );
+        if ( hasChaos( 49 ) ) {
+            result.push( { name: CHAOS[39].name, ability: performGamebreaker } );
+        }
+        if ( hasChaos( 41 ) ) {
+            result.push( { name: CHAOS[41].name, ability: performGideon } );
         }
         if ( hasChaos( 42 ) ) {
-            result.push( { name: CHAOS[42].name, ability: performGideon } );
+            result.push( { name: CHAOS[42].name, ability: performGiveTired } );
         }
         if ( hasChaos( 43 ) ) {
-            result.push( { name: CHAOS[43].name, ability: performGiveTired } );
+            result.push( { name: CHAOS[43].name, ability: performGJail } );
         }
-        if ( hasChaos( 44 ) ) {
-            result.push( { name: CHAOS[44].name, ability: performGJail } );
+        if ( hasChaos( 44 ) && game.players.some( p => p.religion ) ) {
+            result.push( { name: CHAOS[44].name, ability: performGAwakening } );
         }
-        if ( hasChaos( 45 ) && game.players.some( p => p.religion ) ) {
-            result.push( { name: CHAOS[45].name, ability: performGAwakening } );
+        if ( hasChaos( 45 ) && !currentPlayer.units.some( u => u.unitTypeId === UNIT_TYPES[GODHAND].id ) ) {
+            result.push( { name: CHAOS[45].name, ability: performHGod } );
         }
-        if ( hasChaos( 46 ) && !currentPlayer.units.some( u => u.unitTypeId === UNIT_TYPES[GODHAND].id ) ) {
-            result.push( { name: CHAOS[46].name, ability: performHGod } );
+        if ( hasChaos( 54 ) ) {
+            result.push( { name: CHAOS[54].name, ability: performIdentity } );
         }
         if ( hasChaos( 55 ) ) {
-            result.push( { name: CHAOS[55].name, ability: performIdentity } );
+            result.push( { name: CHAOS[55].name, ability: performInspired } );
         }
         if ( hasChaos( 56 ) ) {
-            result.push( { name: CHAOS[56].name, ability: performInspired } );
+            result.push( { name: CHAOS[56].name, ability: performLaissez } );
         }
-        if ( hasChaos( 58 ) ) {
-            result.push( { name: CHAOS[58].name, ability: performManifest } );
+        if ( hasChaos( 57 ) ) {
+            result.push( { name: CHAOS[57].name, ability: performManifest } );
+        }
+        if ( hasChaos( 59 ) ) {
+            result.push( { name: CHAOS[59].name, ability: performMaster } );
         }
         if ( hasChaos( 60 ) ) {
-            result.push( { name: CHAOS[60].name, ability: performMaster } );
+            result.push( { name: CHAOS[59].name, ability: performMenOfSteel } );
+        }
+        if ( hasChaos( 61 ) ) {
+            result.push( { name: CHAOS[61].name, ability: performMicro } );
         }
         if ( hasChaos( 62 ) ) {
-            result.push( { name: CHAOS[62].name, ability: performMicro } );
+            result.push( { name: CHAOS[62].name, ability: performMonopoly } );
         }
-        if ( hasChaos( 63 ) ) {
-            result.push( { name: CHAOS[63].name, ability: performMonopoly } );
+        if ( hasChaos( 65 ) ) {
+            result.push( { name: CHAOS[65].name, ability: performParks } );
         }
         if ( hasChaos( 66 ) ) {
-            result.push( { name: CHAOS[66].name, ability: performParks } );
+            result.push( { name: CHAOS[66].name, ability: performPenny } );
         }
         if ( hasChaos( 67 ) ) {
-            result.push( { name: CHAOS[67].name, ability: performPenny } );
+            result.push( { name: CHAOS[67].name, ability: performPersecution } );
         }
-        if ( hasChaos( 68 ) ) {
-            result.push( { name: CHAOS[68].name, ability: performPersecution } );
-        }
-        if ( hasChaos( 69 ) && currentPlayer.districts.tileIds.length !== MAX_DISTRICTS ) {
+        if ( hasChaos( 68 ) && currentPlayer.districts.tileIds.length !== MAX_DISTRICTS ) {
             result.push( { name: CHAOS[68].name, ability: performPioneers } );
         }
+        if ( hasChaos( 71 ) ) {
+            result.push( { name: CHAOS[71].name, ability: performPublic } );
+        }
         if ( hasChaos( 72 ) ) {
-            result.push( { name: CHAOS[72].name, ability: performPublic } );
+            result.push( { name: CHAOS[72].name, ability: performPuppeteer } );
         }
         if ( hasChaos( 73 ) ) {
-            result.push( { name: CHAOS[73].name, ability: performPuppeteer } );
+            result.push( { name: CHAOS[73].name, ability: performInquisition } );
         }
         if ( hasChaos( 74 ) ) {
-            result.push( { name: CHAOS[74].name, ability: performInquisition } );
+            result.push( { name: CHAOS[74].name, ability: performRInvestment } );
         }
-        if ( hasChaos( 75 ) ) {
-            result.push( { name: CHAOS[75].name, ability: performRInvestment } );
+        if ( hasChaos( 77 ) ) {
+            result.push( { name: CHAOS[77].name, ability: performScourge } );
         }
         if ( hasChaos( 78 ) ) {
-            result.push( { name: CHAOS[78].name, ability: performScourge } );
+            result.push( { name: CHAOS[78].name, ability: performSeductress } );
         }
         if ( hasChaos( 79 ) ) {
-            result.push( { name: CHAOS[79].name, ability: performSeductress } );
-        }
-        if ( hasChaos( 81 ) ) {
-            result.push( { name: CHAOS[81].name, ability: performShift } );
+            result.push( { name: CHAOS[79].name, ability: performShift } );
         }
         if ( currentPlayer.cards.chaos.some( c => isShutUp( c ) ) ) {
             result.push( { name: CHAOS[SHUT_UP[0]].name, ability: performShutUp } );
@@ -554,6 +565,9 @@ function getChaosAbilities() {
         }
         if ( hasChaos( 92 ) ) {
             result.push( { name: CHAOS[92].name, ability: performStrategic } );
+        }
+        if ( hasChaos( 93 ) ) {
+            result.push( { name: CHAOS[93].name, ability: performStrongholds } );
         }
         if ( hasChaos( 94 ) ) {
             result.push( { name: CHAOS[94].name, ability: performTRefund } );

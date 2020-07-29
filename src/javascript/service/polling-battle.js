@@ -163,9 +163,11 @@ function end() {
 }
 
 function endBattle( attackPlayerDetails, defendPlayerDetails ) {
-    const attackResult = defendPlayerDetails.units.filter( u => !u.disbanded ).length ?
+    let attackResult =    defendPlayerDetails.units.filter( u => !u.disbanded ).length ?
                         ( attackPlayerDetails.units.filter( u => !u.disbanded ).length ? "D" : "L" ) :
                         ( attackPlayerDetails.units.filter( u => !u.disbanded ).length ? "W" : "D" );
+    attackResult = defendPlayerDetails.bonuses.getOuttaDodge ? "D" : attackResult;
+
     endConflict(
         attackPlayerDetails,
         defendPlayerDetails,
@@ -189,13 +191,10 @@ function endBattle( attackPlayerDetails, defendPlayerDetails ) {
                     }
                 }
                 else {
-                    let unit = currentPlayer.units.find( du => du.id === u.id );
                     unit.hitDeflections = u.hitDeflections;
-                    if ( attackResult === "W" && u.roll ) {
-                        unit.tileId = tileId;
-                    }
                 }
             } );
+            removeCards( attackPlayerDetails.bonuses, currentPlayer );
 
             const defendPlayer = game.players.find( p => p.id === defendPlayerDetails.id );
             defendPlayerDetails.units.forEach( u => {
@@ -217,12 +216,13 @@ function endBattle( attackPlayerDetails, defendPlayerDetails ) {
                         unit.hitDeflections = u.hitDeflections;
                     }
                 }
-                if ( defendPlayerDetails.bonuses.potential.culturalTokens < 0 ) {
-                    defendPlayer.initiatives.culturalTokens += defendPlayerDetails.bonuses.potential.culturalTokens;
-                    const remainingReaperCount = defendPlayerDetails.units.filter( u => u.unitTypeId === UNIT_TYPES[REAPER].id && !defendPlayer.units.some( un => un.id === u.id ) ).length;
-                    defendPlayer.initiatives.culturalActive.push( {tileId: tileId, reaperCount: remainingReaperCount} );
-                }
             } );
+            if ( defendPlayerDetails.bonuses.potential.culturalTokens < 0 ) {
+                defendPlayer.initiatives.culturalTokens += defendPlayerDetails.bonuses.potential.culturalTokens;
+                const remainingReaperCount = defendPlayerDetails.units.filter( u => u.unitTypeId === UNIT_TYPES[REAPER].id && !defendPlayer.units.some( un => un.id === u.id ) ).length;
+                defendPlayer.initiatives.culturalActive.push( {tileId: tileId, reaperCount: remainingReaperCount} );
+            }
+            removeCards( defendPlayerDetails.bonuses, defendPlayer );
 
             if ( attackResult === "W" ) {
                 attackPlayerDetails.units.filter( u => u.roll && !u.disbanded ).forEach( u => {
@@ -230,13 +230,25 @@ function endBattle( attackPlayerDetails, defendPlayerDetails ) {
                     unit.tileId = tileId;
                     unit.movesRemaining--;
                 } );
-                if ( getTileDetails(tileId).districtPlayerId ) {
+                if ( defendPlayerDetails.bonuses.scorchedEarth ) {
+                    remove( defendPlayer.districts.tileIds, tileId );
+                    defendPlayer.warBucks += SCORCHED_EARTH_VALUE;
+                }
+                if ( getTileDetails(tileId).districtPlayerId === defendPlayerDetails.id ) {
                     swapDistrict( defendPlayerDetails.id, attackPlayerDetails.id, tileId );
                 }
                 if ( game.state.special.bounty === defendPlayerDetails.id ) {
                     currentPlayer.warBucks += BOUNTY_VALUE;
                     game.state.special.bounty = null;
                 }
+            }
+            else if ( defendPlayerDetails.bonuses.getOuttaDodge ) {
+                const distantTileId = isTileAdjacent( currentPlayer.districts.capital, tileId ) ? getFarthestTile( tileId, [currentPlayer.id] ) : currentPlayer.districts.capital;
+                attackPlayerDetails.units.forEach( u => {
+                    let unit = currentPlayer.units.find( du => du.id === u.id );
+                    unit.tileId = distantTileId;
+                    unit.movesRemaining--;
+                } );
             }
         }
     );
@@ -247,11 +259,27 @@ function endBattle( attackPlayerDetails, defendPlayerDetails ) {
 
 
 function getPlayerBattleDetails( player, tileId, enemyPlayer, toTileId = null ) {
-    const tileUnits = player.units.filter( u => u.tileId === tileId );
     const isPlayerDistrict = player.districts.tileIds.includes( tileId );
     const isAttacking = Boolean( toTileId );
     const isDefending = !isAttacking;
+    const tileUnits = player.units.filter( u => u.tileId === tileId );
     const combatUnits = tileUnits.filter( u => u.unitTypeId !== UNIT_TYPES[APOSTLE].id && (isDefending || u.movesRemaining > 0) );
+    const isDoubleCross = (isAttacking && player.special.doubleCross) || (isDefending && enemyPlayer.special.doubleCross);
+    if ( isDoubleCross ) {
+        if ( isAttacking ) {
+            const enemyReapers = enemyPlayer.units.filter( u => u.tileId === toTileId && u.unitTypeId === UNIT_TYPES[REAPER].id );
+            combatUnits.push( ...enemyReapers );
+        }
+        else {
+            removeAllObjects( combatUnits, ( u => u.unitTypeId === UNIT_TYPES[REAPER].id ) );
+        }
+    }
+    const isFrontLines = (isAttacking && player.special.frontLines) || (isDefending && enemyPlayer.special.frontLines);
+    if ( isFrontLines ) {
+        if ( isDefending ) {
+            removeAllObjects( combatUnits, ( u => u.unitTypeId === UNIT_TYPES[REAPER].id || u.unitTypeId === UNIT_TYPES[BOOMER].id ) );
+        }
+    }
     if ( isDefending && player.initiatives.culturalActive ) {
         let currentCR = player.initiatives.culturalActive.find( i => i.tileId === tileId );
         for ( let i = 0; currentCR && i < currentCR.reaperCount; i++ ) {
@@ -262,6 +290,7 @@ function getPlayerBattleDetails( player, tileId, enemyPlayer, toTileId = null ) 
     if ( isHangingGardenDefense ) {
         combatUnits.push( new Unit( getRandomUnitId(), UNIT_TYPES[BOOMER].id, tileId ) ); //todo 4 - make a special unit so name displays in modal as "Hanging Garden"
     }
+
     return {
         id: player.id,
         tileId: tileId,
@@ -273,12 +302,23 @@ function getPlayerBattleDetails( player, tileId, enemyPlayer, toTileId = null ) 
             waterGardens: hasGarden( WATER_GARDEN, player ) && isDefending && player.districts.tileIds.includes( tileId ) && !enemyPlayer.special.scourge,
             hangingGardens: hasGarden( HANGING_GARDEN, player ) && isDefending && player.districts.tileIds.includes( tileId ) && !isHangingGardenDefense && !enemyPlayer.special.scourge, //bonus for additional hit deflections, not undefended district
             bulldozer: player.special.bulldozer,
+            criticalHit: false,
             dDay: isAttacking && game.state.special.dDay === toTileId,
-            menOfSteel: false,
+            doubleCross: isDoubleCross,
+            friendlyFire: false,
+            frontLines: isFrontLines,
+            getOuttaDodge: false,
+            menOfSteel: false, //tracks if done during battle, not if pre-existing
+            scorchedEarth: false,
+            strongholds: player.special.strongholds && isAttacking && getTileDetails( toTileId ).population >= TILE_TYPES[5].value,
             potential: {
-                criticalHit: hasChaos( 14, player ),
-                menOfSteel: hasChaos( 61, player ),
-                culturalTokens: player.initiatives.culturalActive.find( i => i.tileId === tileId ) ? player.initiatives.culturalTokens : 0
+                criticalHit: hasChaos( 13, player ),
+                friendlyFire: hasChaos( 37, player ),
+                getOuttaDodge: hasChaos( 40, player ) && isDefending && isPlayerDistrict,
+                menOfSteel: hasChaos( 60, player ),
+                scorchedEarth: hasChaos( 76, player ) && isDefending && isPlayerDistrict,
+                strongholds: hasChaos( 93, player ) && isAttacking && getTileDetails( toTileId ).population >= TILE_TYPES[5].value,
+                culturalTokens: player.initiatives.culturalActive.find( i => i.tileId !== tileId ) ? player.initiatives.culturalTokens : 0
             }
         },
         units: combatUnits.map( u => ({
@@ -290,6 +330,10 @@ function getPlayerBattleDetails( player, tileId, enemyPlayer, toTileId = null ) 
             disbanded: false
         }) )
     };
+}
+
+function addMenOfSteelHitDeflections( units ) {
+    units.forEach( u => u.hitDeflections++ );
 }
 
 function rollForUnits( units, bonuses = {} ) {
@@ -311,10 +355,13 @@ function rollForUnits( units, bonuses = {} ) {
                     hitValue += WATER_GARDEN_HIT;
                 }
                 if ( bonuses.bulldozer ) {
-                    hitValue ++;
+                    hitValue++;
                 }
                 if ( bonuses.dDay ) {
-                    hitValue ++;
+                    hitValue++;
+                }
+                if ( bonuses.strongholds ) {
+                    hitValue++;
                 }
             }
 
@@ -365,8 +412,32 @@ function addDisbandsToDetails( playerDetails, disbands, deflections = [] ) {
     return playerDetails;
 }
 
-function countHits( currentUnits, enemyUnits ) {
-    const hits = enemyUnits.filter( (total, u) => total + u.hits, 0 );
-    const livingUnits = currentUnits.filter( u => !u.disbanded ).length;
-    return Math.min( hits, livingUnits );
+function countHits( currentUnits, enemyDetails ) {
+    const hits = enemyDetails.units.reduce( (total, u) => total + u.hits, 0 );
+    const livingUnits = currentUnits.filter( u => !u.disbanded );
+    const friendlyFire = enemyDetails.bonuses.friendlyFire ? Math.min( livingUnits.filter( u => u.unitTypeId === UNIT_TYPES[REAPER].id ).length, currentUnits.reduce( (total, u) => total + u.hits, 0 ) ) : 0;
+    return Math.min( hits, livingUnits.length ) + friendlyFire;
+}
+
+function removeCards( playerDetails, player ) {
+    if ( playerDetails.criticalHit && player.cards.chaos.includes( CHAOS[13].id ) ) {
+        remove( player.cards.chaos, CHAOS[13].id );
+    }
+    if ( playerDetails.menOfSteel && player.cards.chaos.includes( CHAOS[60].id ) ) {
+        remove( player.cards.chaos, CHAOS[60].id );
+    }
+    if ( playerDetails.strongholds && player.cards.chaos.includes( CHAOS[93].id ) ) {
+        remove( player.cards.chaos, CHAOS[93].id );
+    }
+
+    //special attributes
+    if ( playerDetails.doubleCross ) {
+        player.special.doubleCross = false;
+    }
+    if ( playerDetails.frontLines ) {
+        player.special.frontLines = false;
+    }
+    if ( playerDetails.strongholds ) {
+        player.special.strongholds = false;
+    }
 }

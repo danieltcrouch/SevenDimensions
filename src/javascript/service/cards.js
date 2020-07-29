@@ -2,10 +2,10 @@
 
 
 function performPurchasedCards( player, newCardIds ) {
-    if ( newCardIds.includes( CHAOS[28] ) ) {
+    if ( newCardIds.includes( CHAOS[27] ) ) {
         const bonusCardIds = Deck.getCurrentDeck( CHAOS, game.players.map( p => p.cards.chaos ) ).getRandomCards( DUALISM_VALUE ).map( c => c.id );
         player.cards.chaos = player.cards.chaos.concat( bonusCardIds );
-        remove( player.cards.chaos, CHAOS[28].id );
+        remove( player.cards.chaos, CHAOS[27].id );
         showToaster( "Your Dualism card has been replaced with 2 new cards." );
     }
 }
@@ -149,7 +149,7 @@ function performDDay() {
         function( tileId ) { return !isImpassibleTile( tileId, false, false ); },
         function( tileId ) {
             game.state.special.dDay = tileId;
-            remove( currentPlayer.cards.chaos, CHAOS[15].id );
+            remove( currentPlayer.cards.chaos, CHAOS[14].id );
         }
     );
 }
@@ -161,7 +161,7 @@ function performDark() {
         function( response ) {
             if ( response ) {
                 getPlayer( response ).special.dark = true;
-                remove( currentPlayer.cards.chaos, CHAOS[16].id );
+                remove( currentPlayer.cards.chaos, CHAOS[15].id );
             }
         },
         getChaosPlayerVictims()
@@ -180,7 +180,7 @@ function performDefector() {
         }
     } );
     displayUnassignedUnits();
-    remove( currentPlayer.cards.chaos, CHAOS[17].id );
+    remove( currentPlayer.cards.chaos, CHAOS[16].id );
 }
 
 function performDeserter() {
@@ -211,7 +211,7 @@ function performDeserter() {
                         removeUnit( maxUnit, p, true );
                     }
                 } );
-                remove( currentPlayer.cards.chaos, CHAOS[18].id );
+                remove( currentPlayer.cards.chaos, CHAOS[17].id );
             }
             else {
                 showToaster( "Must choose up to three players" );
@@ -225,8 +225,8 @@ function performDeserter() {
 function performDitto() {
     const cards = Deck.getCurrentDeck( CHAOS, game.players.map( p => p.cards.chaos ) ).cards;
     showPicks(
-        CHAOS[20].name,
-        CHAOS[20].description,
+        CHAOS[19].name,
+        CHAOS[19].description,
         cards.map( c => c.name ),
         false,
         false,
@@ -243,27 +243,32 @@ function performDiversify() {
     if ( currentPlayer.resources.filter( r => r.count ).length === RESOURCES.length ) {
         currentPlayer.resources.forEach( r => r.count-- );
         currentPlayer.warBucks += DIVERSIFY_VALUE;
-        remove( currentPlayer.cards.chaos, CHAOS[25].id );
+        remove( currentPlayer.cards.chaos, CHAOS[24].id );
     }
     else {
         showToaster( "Must have one of each resource type" );
     }
 }
 
+function performDoubleCross() {
+    currentPlayer.special.doubleCross = true;
+    remove( currentPlayer.cards.chaos, CHAOS[25].id );
+}
+
 function performDoubleDown() {
     currentPlayer.special.doubleDown = true;
-    remove( currentPlayer.cards.chaos, CHAOS[27].id );
+    remove( currentPlayer.cards.chaos, CHAOS[26].id );
 }
 
 function performDoubleDownPostHarvest() {
     currentPlayer.warBucks += calculateWarBuckHarvestReward();
-    remove( currentPlayer.cards.chaos, CHAOS[27].id );
+    remove( currentPlayer.cards.chaos, CHAOS[26].id );
 }
 
 function performEpiphany() {
     receiveFreeAdvancements( 1 );
     displayUnassignedAdvancements();
-    remove( currentPlayer.cards.chaos, CHAOS[29].id );
+    remove( currentPlayer.cards.chaos, CHAOS[28].id );
 }
 
 function performEspionage() {
@@ -276,7 +281,7 @@ function performEspionage() {
                 const randomIndex = player.cards.chaos.findIndex( c => !isHeavensGate( c ) );
                 const stolenCard = player.cards.chaos.splice(randomIndex, 1)[0];
                 currentPlayer.cards.chaos.push( stolenCard );
-                remove( currentPlayer.cards.chaos, CHAOS[30].id );
+                remove( currentPlayer.cards.chaos, currentPlayer.cards.chaos.find( c => isEspionage(c) ).id );
             }
         },
         getChaosPlayerVictims().filter( p => p.cards.chaos.some( c => !isHeavensGate( c ) ) )
@@ -285,7 +290,7 @@ function performEspionage() {
 
 function performExclusive() {
     game.state.special.exclusiveCardClub = currentPlayer.id;
-    remove( currentPlayer.cards.chaos, CHAOS[33].id );
+    remove( currentPlayer.cards.chaos, CHAOS[32].id );
 }
 
 function performExhaust() {
@@ -293,7 +298,7 @@ function performExhaust() {
         function( tileId ) { return hasEnemyUnits( tileId, true ); },
         function( tileId ) {
             getPlayer( getEnemyPlayer( tileId, true ).id ).special.exhaust = tileId;
-            remove( currentPlayer.cards.chaos, CHAOS[34].id );
+            remove( currentPlayer.cards.chaos, CHAOS[33].id );
         }
     );
 }
@@ -302,25 +307,30 @@ function performFamine() {
     game.players.forEach( p => {
         p.resources.forEach( r => r.count = 0 );
     } );
-    remove( currentPlayer.cards.chaos, CHAOS[35].id );
+    remove( currentPlayer.cards.chaos, CHAOS[34].id );
 }
 
 function performFTerms() {
     currentPlayer.special.friendlyTerms = true;
+    remove( currentPlayer.cards.chaos, CHAOS[37].id );
+}
+
+function performFrontLines() {
+    currentPlayer.special.frontLines = true;
     remove( currentPlayer.cards.chaos, CHAOS[38].id );
 }
 
 function performGamebreaker() {
     showPicks(
-        CHAOS[40].name,
-        CHAOS[40].description,
+        CHAOS[39].name,
+        CHAOS[39].description,
         EVENTS.map( e => e.name ),
         false,
         false,
         function( response ) {
             if ( Number.isInteger( response ) ) {
                 game.state.event = response;
-                remove( currentPlayer.cards.chaos, CHAOS[40].id );
+                remove( currentPlayer.cards.chaos, CHAOS[39].id );
             }
         }
     );
@@ -333,7 +343,7 @@ function performGideon() {
             setSpecialAction(
                 function( defendTileId ) { return game.players.some( p => p.units.some( u => u.tileId === defendTileId ) ); },
                 function( defendTileId ) {
-                    remove( currentPlayer.cards.chaos, CHAOS[42].id );
+                    remove( currentPlayer.cards.chaos, CHAOS[41].id );
                     launchBattle( defendTileId, attackTileId, getPlayer( getEnemyPlayer( attackTileId ).id ) ); //todo 3 - will this save after the battle?
                 }
             );
@@ -367,7 +377,7 @@ function performGiveTired() {
                                 player.initiatives.politicalActive -= tokenCount;
                                 currentPlayer.initiatives.politicalTokens += tokenCount;
                             }
-                            remove( currentPlayer.cards.chaos, CHAOS[43].id );
+                            remove( currentPlayer.cards.chaos, CHAOS[42].id );
                         }
                     }
                 );
@@ -384,7 +394,7 @@ function performGJail() {
         function( response ) {
             if ( response ) {
                 getPlayer( response ).special.jail = true;
-                remove( currentPlayer.cards.chaos, CHAOS[44].id );
+                remove( currentPlayer.cards.chaos, CHAOS[43].id );
             }
         },
         getChaosPlayerVictims()
@@ -394,7 +404,7 @@ function performGJail() {
 function performGAwakening() {
     const activeReligions = game.players.filter( p => p.religion ).map( p => p.religion.id );
     showPicks(
-        CHAOS[45].name,
+        CHAOS[44].name,
         "Choose a religion to spread:",
         activeReligions.map( r => getReligion( r ).name ),
         false,
@@ -426,7 +436,7 @@ function performGAwakening() {
                                     addReligion( religionPlayer, availableDistrict );
                                 }
                             } );
-                            remove( currentPlayer.cards.chaos, CHAOS[45].id );
+                            remove( currentPlayer.cards.chaos, CHAOS[44].id );
                         }
                         else {
                             showToaster( "Must choose up to three players" );
@@ -442,7 +452,7 @@ function performGAwakening() {
 
 function performHGod() {
     addUnit( new Unit( getRandomUnitId(), UNIT_TYPES[GODHAND].id, DEFAULT_TILE ), currentPlayer );
-    remove( currentPlayer.cards.chaos, CHAOS[46].id );
+    remove( currentPlayer.cards.chaos, CHAOS[45].id );
 }
 
 function performIdentity() {
@@ -454,7 +464,7 @@ function performIdentity() {
                 const player = getPlayer( response );
                 player.special.identity = player.factionId;
                 player.factionId = null;
-                remove( currentPlayer.cards.chaos, CHAOS[55].id );
+                remove( currentPlayer.cards.chaos, CHAOS[54].id );
             }
         },
         getChaosPlayerVictims()
@@ -475,20 +485,25 @@ function performInspired() {
                 else {
                     currentPlayer.initiatives.politicalTokens += INSPIRED_LEADERSHIP_VALUE;
                 }
-                remove( currentPlayer.cards.chaos, CHAOS[56].id );
+                remove( currentPlayer.cards.chaos, CHAOS[55].id );
             }
         }
     );
 }
 
+function performLaissez() {
+    game.state.special.laissez = currentPlayer.id;
+    remove( currentPlayer.cards.chaos, CHAOS[56].id );
+}
+
 function performManifest() {
     currentPlayer.special.manifestDestiny = true;
-    remove( currentPlayer.cards.chaos, CHAOS[58].id );
+    remove( currentPlayer.cards.chaos, CHAOS[57].id );
 }
 
 function performMarchPreExpansion() {
     currentPlayer.special.manifestDestiny = true;
-    remove( currentPlayer.cards.chaos, CHAOS[59].id );
+    remove( currentPlayer.cards.chaos, CHAOS[58].id );
 }
 
 function performMarch( player = currentPlayer ) {
@@ -496,25 +511,31 @@ function performMarch( player = currentPlayer ) {
         const usedMoves = getUnitType( u.unitTypeId ).move - u.movesRemaining;
         u.movesRemaining = MARCH_VALUE - usedMoves;
     } );
-    if ( player.cards.chaos.includes( CHAOS[59].id ) ) {
-        remove( player.cards.chaos, CHAOS[59].id );
+    if ( player.cards.chaos.includes( CHAOS[58].id ) ) {
+        remove( player.cards.chaos, CHAOS[58].id );
     }
 }
 
 function performMaster() {
     currentPlayer.districts.tileIds.forEach( t => addUnit( new Unit( getRandomUnitId(), UNIT_TYPES[REAPER].id, t ), currentPlayer ) );
-    remove( currentPlayer.cards.chaos, CHAOS[60].id );
+    remove( currentPlayer.cards.chaos, CHAOS[59].id );
+}
+
+function performMenOfSteel() {
+    currentPlayer.units.forEach( u => u.hitDeflections++ );
+    currentPlayer.special.menOfSteel = true;
+    remove( currentPlayer.cards.chaos, CHAOS[61].id );
 }
 
 function performMicro() {
     currentPlayer.special.micro = true;
-    remove( currentPlayer.cards.chaos, CHAOS[62].id );
+    remove( currentPlayer.cards.chaos, CHAOS[61].id );
 }
 
 function performMonopoly() {
     showPicks(
-        CHAOS[63].name,
-        CHAOS[63].description,
+        CHAOS[62].name,
+        CHAOS[62].description,
         RESOURCES.map( r => r.name ),
         false,
         false,
@@ -530,7 +551,7 @@ function performMonopoly() {
                     currentPlayer.resources.find( r => r.id === resourceId ).count += playerResource.count;
                     playerResource.count = 0;
                 } );
-                remove( currentPlayer.cards.chaos, CHAOS[63].id );
+                remove( currentPlayer.cards.chaos, CHAOS[62].id );
             }
         }
     );
@@ -540,8 +561,8 @@ function performNepotism() {
     const affordableAuctions = AUCTIONS.filter( a => !currentPlayer.advancements.auctions.includes( a.id ) && !a.isLocked( game.players ) && a.getMinimumBid() <= currentPlayer.warBucks );
     if ( affordableAuctions.length ) {
         showPicks(
-            CHAOS[65].name,
-            CHAOS[65].description,
+            CHAOS[64].name,
+            CHAOS[64].description,
             affordableAuctions.map( a => a.name ),
             false,
             false,
@@ -550,7 +571,7 @@ function performNepotism() {
                     const auctionLot = affordableAuctions[response];
                     currentPlayer.advancements.auctions.push( auctionLot.id );
                     currentPlayer.warBucks -= auctionLot.getMinimumBid();
-                    remove( currentPlayer.cards.chaos, CHAOS[65].id );
+                    remove( currentPlayer.cards.chaos, CHAOS[64].id );
                 }
             }
         );
@@ -570,7 +591,7 @@ function performParks() { //if you decide this should be limited to players with
                 if ( Number.isInteger( response ) ) {
                     currentPlayer.initiatives.culturalTokens--;
                     currentPlayer.advancements.gardens.push( remainingGardens[response].id );
-                    remove( currentPlayer.cards.chaos, CHAOS[66].id );
+                    remove( currentPlayer.cards.chaos, CHAOS[65].id );
                 }
             }
         );
@@ -582,13 +603,13 @@ function performParks() { //if you decide this should be limited to players with
 
 function performPenny() { //todo 4 - may be affected by Midnight
     showNumberPrompt(
-        CHAOS[67].name,
+        CHAOS[66].name,
         `Enter an amount to invest (maximum of ${currentPlayer.warBucks}WB)`,
         function( response ) {
             if ( Number.isInteger( response ) && response <= currentPlayer.warBucks ) {
                 currentPlayer.warBucks -= response;
                 currentPlayer.special.gambitBet += response;
-                remove( currentPlayer.cards.chaos, CHAOS[67].id );
+                remove( currentPlayer.cards.chaos, CHAOS[66].id );
             }
             else {
                 showToaster( "Cannot invest more War-Bucks than you have" );
@@ -600,8 +621,8 @@ function performPenny() { //todo 4 - may be affected by Midnight
 function performPersecution() {
     const activeReligions = getChaosPlayerVictims().filter( p => p.religion ).map( p => p.religion.id );
     showPicks(
-        CHAOS[68].name,
-        CHAOS[68].description,
+        CHAOS[67].name,
+        CHAOS[67].description,
         activeReligions.map( r => getReligion( r ).name ),
         false,
         false,
@@ -609,7 +630,7 @@ function performPersecution() {
             if ( Number.isInteger( religion ) ) {
                 const religionPlayer = game.players.find( p => p.religion && p.religion.id === activeReligions[religion] );
                 religionPlayer.religion.tileIds = religionPlayer.religion.tileIds.filter( t => t === religionPlayer.districts.capital );
-                remove( currentPlayer.cards.chaos, CHAOS[68].id );
+                remove( currentPlayer.cards.chaos, CHAOS[67].id );
             }
         }
     );
@@ -620,14 +641,14 @@ function performPioneers() {
         function( tileId ) { return !isImpassibleTile( tileId, true, true ) && !hasDistrict( tileId ); },
         function( tileId ) {
             addDistrict( currentPlayer, tileId );
-            remove( currentPlayer.cards.chaos, CHAOS[69].id );
+            remove( currentPlayer.cards.chaos, CHAOS[68].id );
         }
     );
 }
 
 function performPower() {
     game.state.special.powerStruggle = true;
-    remove( currentPlayer.cards.chaos, CHAOS[70].id );
+    remove( currentPlayer.cards.chaos, CHAOS[69].id );
 }
 
 function performPublic() {
@@ -635,7 +656,7 @@ function performPublic() {
         const remainingDoctrines = DOCTRINES.filter( d => !currentPlayer.advancements.doctrines.includes( d.id ) );
         currentPlayer.initiatives.politicalActive--;
         currentPlayer.advancements.doctrines.push( remainingDoctrines.slice( 0, Math.min( remainingDoctrines.length, PUBLIC_ARTS_VALUE ) ).map( d => d.id ) );
-        remove( currentPlayer.cards.chaos, CHAOS[72].id );
+        remove( currentPlayer.cards.chaos, CHAOS[71].id );
     }
     else {
         showToaster( "Must have political initiative tokens" );
@@ -645,15 +666,15 @@ function performPublic() {
 function performPuppeteer() {
     const availableOffices = OFFICES.filter( o => !game.players.some( p => p.cards.offices.includes( o.id ) ) );
     showPicks(
-        CHAOS[73].name,
-        CHAOS[73].description,
+        CHAOS[72].name,
+        CHAOS[72].description,
         availableOffices.map( o => o.name ),
         false,
         false,
         function( office ) {
             if ( Number.isInteger( office ) ) {
                 game.state.events.office = availableOffices[office].id;
-                remove( currentPlayer.cards.chaos, CHAOS[73].id );
+                remove( currentPlayer.cards.chaos, CHAOS[72].id );
             }
         }
     );
@@ -662,7 +683,7 @@ function performPuppeteer() {
 function performInquisitionChaos() {
     performInquisition(
         function() {
-
+            //todo 3
         }
     );
 }
@@ -679,13 +700,13 @@ function performRInvestment() {
                 const maxCount = isCulture ? currentPlayer.initiatives.culturalTokens : currentPlayer.initiatives.politicalTokens;
                 const exchangeValue = calculateVP( currentPlayer );
                 showNumberPrompt(
-                    CHAOS[75].name,
+                    CHAOS[74].name,
                     `Enter an amount to exchange up to ${maxCount} (worth ${exchangeValue}WB)`,
                     function( response ) {
                         if ( Number.isInteger( response ) && response <= maxCount ) {
                             isCulture ? ( currentPlayer.initiatives.culturalTokens -= response ) : ( currentPlayer.initiatives.politicalTokens -= response );
                             currentPlayer.warBucks += ( response * exchangeValue );
-                            remove( currentPlayer.cards.chaos, CHAOS[75].id );
+                            remove( currentPlayer.cards.chaos, CHAOS[74].id );
                         }
                     }
                 );
@@ -698,7 +719,7 @@ function performSacred() {
     const availableWonders = WONDERS.filter( w => !w.isLocked( currentPlayer, game.players ) );
     if ( availableWonders.length > 1 ) {
         showPicks(
-            CHAOS[76],
+            CHAOS[75],
             "Choose a wonder to construct:",
             availableWonders.map( w => w.name ),
             false,
@@ -722,14 +743,14 @@ function performSacredCallback( wonderId ) {
             const wonder = getWonder( wonderId );
             const dimensionId = wonder.getDimensionId();
             currentPlayer.dimensions.find( d => d.id === dimensionId ).wonderTileId = tileId;
-            remove( currentPlayer.cards.chaos, CHAOS[76].id );
+            remove( currentPlayer.cards.chaos, CHAOS[75].id );
         }
     );
 }
 
 function performScourge() {
     currentPlayer.special.scourge = true;
-    remove( currentPlayer.cards.chaos, CHAOS[78].id );
+    remove( currentPlayer.cards.chaos, CHAOS[77].id );
 }
 
 function performSeductress() {
@@ -742,7 +763,7 @@ function performSeductress() {
                 const player = getPlayer( response );
                 const officeId = player.cards.offices.splice( 0, 1 );
                 currentPlayer.cards.offices.push( officeId );
-                remove( currentPlayer.cards.chaos, CHAOS[79].id );
+                remove( currentPlayer.cards.chaos, CHAOS[78].id );
             }
         },
         availablePlayers
@@ -760,13 +781,13 @@ function performShift() {
                 const isCulture = response === 0;
                 const maxCount = isCulture ? currentPlayer.initiatives.culturalTokens : currentPlayer.initiatives.politicalTokens;
                 showNumberPrompt(
-                    CHAOS[81].name,
+                    CHAOS[79].name,
                     `Enter an amount to covert up to ${maxCount}`,
                     function( response ) {
                         if ( Number.isInteger( response ) && response <= maxCount ) {
                             isCulture ? ( currentPlayer.initiatives.culturalTokens -= response ) : ( currentPlayer.initiatives.politicalTokens -= response );
                             isCulture ? ( currentPlayer.initiatives.politicalTokens += response ) : ( currentPlayer.initiatives.culturalTokens += response );
-                            remove( currentPlayer.cards.chaos, CHAOS[81].id );
+                            remove( currentPlayer.cards.chaos, CHAOS[79].id );
                         }
                     }
                 );
@@ -865,6 +886,11 @@ function performStrategic() {
             );
         }
     );
+}
+
+function performStrongholds() {
+    currentPlayer.special.strongholds = true;
+    remove( currentPlayer.cards.chaos, CHAOS[93].id );
 }
 
 function performTRefund() {

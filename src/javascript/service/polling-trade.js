@@ -13,7 +13,7 @@ function startTrade() {
                 );
             }
         },
-        game.players.filter( p => p.id !== currentPlayer.id ),
+        game.players.filter( p => p.id !== currentPlayer.id && ( !game.state.special.laissez || game.state.special.laissez === p.id || game.state.special.laissez === currentPlayer.id ) ),
         "Select a player to trade with:"
     );
     //todo 7 - when I cancel, the background gray background doesn't disappear

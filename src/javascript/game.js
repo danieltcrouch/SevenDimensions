@@ -154,6 +154,10 @@ function loadRecurringEffects() {
                 performMarch( p );
                 p.special.march = false;
             }
+            if ( p.special.menOfSteel ) {
+                //if they did it in a previous phase
+                p.units.forEach( u => u.hitDeflections++ );
+            }
         } );
     }
 }
@@ -463,8 +467,10 @@ function completeSubPhase() {
                 p.special.bulldozer = false;
                 p.special.cease = false;
                 p.special.dark = false;
+                p.special.doubleDown = false;
                 p.special.exhaust = null;
                 p.special.insurrection = false;
+                p.special.menOfSteel = false;
                 p.special.scourge = false;
                 p.special.shutUp = false;
                 p.special.shutUpProtect = false;
@@ -490,6 +496,7 @@ function completeSubPhase() {
             } );
             game.state.special.dDay = null;
             game.state.special.exclusiveCardClub = null;
+            game.state.special.laissez = null;
             game.state.special.powerStruggle = false;
         }
     }

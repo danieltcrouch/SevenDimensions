@@ -23,6 +23,13 @@ function openBattleModal( currentName, enemyName, currentPlayer, enemyPlayer, is
 
     //todo 4 - add link from home screen to join battle if you close it
 
+    if ( !isAttacker && enemyPlayerDetails.bonuses.doubleCross ) {
+        showToaster( "You have been double-crossed! (Chaos)" );
+    }
+    else if ( !isAttacker && enemyPlayerDetails.bonuses.frontLines ) {
+        showToaster( "Your units have perished on the front lines! (Chaos)" );
+    }
+
     show( "battleModal", true, "block" );
     setCloseHandlersJS( "battleModal" );
     blurBackground();
@@ -141,7 +148,7 @@ function showSpecialAttacks() {
 
 function showHitDeflections() {
     const isDisbandPhase = status.status === 'D';
-    if ( (currentPlayerDetails.bonuses.hangingGardens || currentPlayerDetails.bonuses.menOfSteel) && isDisbandPhase ) {
+    if ( (currentPlayerDetails.bonuses.hangingGardens || currentPlayerDetails.bonuses.menOfSteel) && isDisbandPhase && !enemyPlayerDetails.bonuses.criticalHit ) {
         currentPlayerDetails.units.forEach( u => {
             if ( u.hitDeflections ) {
                 show( `unit-${u.id}-deflection` );
@@ -179,7 +186,15 @@ function updateLinks() {
     const isAttackPhase = status.status === 'A';
     if ( isAttackPhase ) {
         show( 'resistance', currentPlayerDetails.bonuses.potential.culturalTokens > 0 );
+        show( 'criticalHit', currentPlayerDetails.bonuses.potential.criticalHit && enemyPlayerDetails.units.some( u => !u.disbanded && u.hitDeflections ) );
+        show( 'friendlyFire', currentPlayerDetails.bonuses.potential.friendlyFire && enemyPlayerDetails.units.some( u => !u.disbanded && u.unitTypeId === UNIT_TYPES[REAPER].id ) );
+        show( 'strongholds', currentPlayerDetails.bonuses.potential.strongholds );
     }
+    else {
+        show( 'getOuttaDodge', currentPlayerDetails.bonuses.potential.getOuttaDodge && enemyPlayerDetails.units.filter( u => !u.disbanded ).length <= countHits( currentPlayerDetails.units, enemyPlayerDetails ) );
+        show( 'scorchedEarth', currentPlayerDetails.bonuses.potential.scorchedEarth && enemyPlayerDetails.units.filter( u => !u.disbanded ).length <= countHits( currentPlayerDetails.units, enemyPlayerDetails ) );
+    }
+    show( 'menOfSteel', currentPlayerDetails.bonuses.potential.menOfSteel && enemyPlayerDetails.units.filter( u => !u.disbanded ).length );
 }
 
 function updateStatusDisplay() {
@@ -243,7 +258,8 @@ function attack() {
                 crusade: currentPlayerDetails.bonuses.crusade,
                 waterGardens: currentPlayerDetails.bonuses.waterGardens,
                 bulldozer: currentPlayerDetails.bonuses.bulldozer,
-                dDay: currentPlayerDetails.bonuses.dDay
+                dDay: currentPlayerDetails.bonuses.dDay,
+                strongholds: currentPlayerDetails.bonuses.strongholds
             };
             const rollResults = rollForUnits( assignedUnits, bonuses );
             currentPlayerDetails = addRollsToDetails( currentPlayerDetails, rollResults );
@@ -302,7 +318,7 @@ function getOpponentAttackCallback( enemyPlayer ) {
 function disband() {
     if ( getStatus() === null ) {
         const assignedUnits = getSelectedUnits();
-        if ( assignedUnits && assignedUnits.length === countHits( currentPlayerDetails.units, enemyPlayerDetails.units )  ) {
+        if ( assignedUnits && assignedUnits.length === countHits( currentPlayerDetails.units, enemyPlayerDetails )  ) {
             const deflectionIds = getDeflectionIds();
             currentPlayerDetails = addDisbandsToDetails( currentPlayerDetails, assignedUnits, deflectionIds );
 
@@ -412,6 +428,43 @@ function addResistanceCallback( tokenCount ) {
     addUnitGroup( tokenCount * REAPERS_IN_CR, UNIT_TYPES[REAPER].id, currentPlayerDetails, false );
     currentPlayerDetails.bonuses.potential.culturalTokens = (tokenCount * -1);
     hide('resistance');
+}
+
+function addCriticalHit() {
+    currentPlayerDetails.bonuses.criticalHit = true;
+    currentPlayerDetails.bonuses.potential.criticalHit = false;
+    hide('criticalHit');
+}
+
+function addFriendlyFire() {
+    currentPlayerDetails.bonuses.friendlyFire = true;
+    currentPlayerDetails.bonuses.potential.friendlyFire = false;
+    hide('friendlyFire');
+}
+
+function addGetOuttaDodge() {
+    currentPlayerDetails.bonuses.getOuttaDodge = true;
+    currentPlayerDetails.bonuses.potential.getOuttaDodge = false;
+    hide('getOuttaDodge');
+}
+
+function addMenOfSteel() {
+    addMenOfSteelHitDeflections( currentPlayerDetails.units );
+    currentPlayerDetails.bonuses.menOfSteel = true;
+    currentPlayerDetails.bonuses.potential.menOfSteel = false;
+    hide('menOfSteel');
+}
+
+function addScorchedEarth() {
+    currentPlayerDetails.bonuses.scorchedEarth = true;
+    currentPlayerDetails.bonuses.potential.scorchedEarth = false;
+    hide('scorchedEarth');
+}
+
+function addStrongholds() {
+    currentPlayerDetails.bonuses.strongholds = true;
+    currentPlayerDetails.bonuses.potential.strongholds = false;
+    hide('strongholds');
 }
 
 function retreat() {
